@@ -8,6 +8,7 @@ File này là bộ quy tắc **tối thiểu** mà agent của mỗi thành viê
 2. Bạn được thêm, sửa hoặc sắp xếp lại nội dung trong file của mình cho phù hợp với cách làm việc riêng, nhưng **phải giữ ít nhất toàn bộ nội dung của khuôn mẫu này**. Nếu quy tắc riêng mâu thuẫn với khuôn mẫu, khuôn mẫu được ưu tiên.
 3. **Tuyệt đối không commit** file hướng dẫn agent của riêng bạn. Các tên file này đã có trong `.gitignore`.
 4. Mỗi khi kéo code mới về (`git pull`), kiểm tra xem `AGENTS_TEMPLATE.md` có thay đổi không (ví dụ bằng `git log -p -- AGENTS_TEMPLATE.md`). Nếu có, cập nhật file của bạn cho đầy đủ trước khi giao việc tiếp cho agent.
+5. Gợi ý, không bắt buộc: kết nối cho agent một công cụ chạy được Colab, ví dụ [Colab MCP server](https://github.com/googlecolab/colab-mcp) của Google hoặc một MCP server, plugin tương đương. Khi đó agent tự build và chạy test trên Colab T4, bạn không phải tải notebook và source code lên Colab sau mỗi lần sửa code.
 
 Phần dưới đây là nội dung dành cho agent.
 
@@ -47,7 +48,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 2. Đọc phần đề bài và quy định của Nhóm liên quan tới task.
 3. Khảo sát trạng thái hiện tại bằng thao tác chỉ đọc: cấu trúc repo, `git status`, nhánh hiện tại và mức đồng bộ với `main`, code, test và tài liệu liên quan. Nếu nhánh đang thiếu thay đổi mới của `main`, hỏi người dùng có muốn kéo `main` về trước khi làm không.
 4. Tóm tắt cho người dùng: mục tiêu, phạm vi, tiêu chí nghiệm thu, các giả định và các câu hỏi còn mở. Chỉ bắt đầu sửa đổi khi người dùng đã xác nhận.
-5. **Kiểm tra công cụ để tự kiểm chứng.** Liệt kê các tool, MCP server, skill hoặc plugin cần dùng để build, chạy test và rà soát (ví dụ shell, `git`, `nvcc`, Python, trình chạy notebook, quyền đọc/ghi file). Nếu thiếu công cụ hoặc thiếu quyền, phải báo rõ cho người dùng là cần cấp gì, và không được bắt đầu phần việc cần kiểm chứng khi chưa có đủ.
+5. **Kiểm tra công cụ để tự kiểm chứng.** Liệt kê các tool, MCP server, skill hoặc plugin cần dùng để build, chạy test và rà soát (ví dụ shell, `git`, `nvcc`, Python, trình chạy notebook, quyền đọc/ghi file). Nếu thiếu công cụ hoặc thiếu quyền, phải báo rõ cho người dùng là cần cấp gì, và không được bắt đầu phần việc cần kiểm chứng khi chưa có đủ. Nếu chưa có công cụ nào để tự chạy trên Colab T4, gợi ý người dùng kết nối một công cụ như ở bước 5 của mục "Cách sử dụng".
 6. Làm việc trên đúng nhánh theo loại thay đổi (mục 10 của `docs/midterm-plan.md`):
     - code và test của stage mình: nhánh giai đoạn `<tên thành viên>/p<số giai đoạn>`, ví dụ `de/p1`;
     - file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`, `stb_impl.cpp`, `docs/interface.md`): nhánh riêng `<tên thành viên>/shared-<mô tả ngắn>` và một pull request riêng, nhỏ;

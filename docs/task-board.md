@@ -26,9 +26,9 @@ Hạn của giai đoạn: **06/10 (T3)**.
     <tr>
       <td rowspan="4">Cả nhóm</td>
       <td>P0-T01</td>
-      <td>Thống nhất số lượng ảnh/cặp mỗi người chụp và cách chọn ảnh (có bình chọn hay không)</td>
+      <td>Thống nhất cách chọn ảnh (có bình chọn hay không)</td>
       <td></td>
-      <td>Kết quả ghi vào <a href="dataset.md">dataset</a> mục 2 và mục 6</td>
+      <td>Kết quả ghi vào <a href="dataset.md">dataset</a> mục 6</td>
       <td>Chưa làm</td>
       <td></td>
     </tr>
@@ -43,8 +43,8 @@ Hạn của giai đoạn: **06/10 (T3)**.
     <tr>
       <td>P0-T03</td>
       <td>Chụp ảnh theo quy định, upload ảnh gốc, điền bảng ứng viên</td>
-      <td>P0-T01, P0-T06</td>
-      <td>Đủ số lượng đã thống nhất ở P0-T01</td>
+      <td>P0-T06</td>
+      <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
       <td>Chưa làm</td>
       <td></td>
     </tr>

@@ -42,7 +42,9 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 | Tuấn | S1 | Kernel S1 | Tối ưu S1 nếu profiling cho thấy S1 là bottleneck |
 | Thành | S2, S3 | Kernel S2, S3 (gồm thu gom keypoint và top-K) | Tối ưu S2/S3 theo profiling |
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
-| Chương | S6, khung chương trình | Kernel S6, quản lý bộ nhớ host-device, timing bằng CUDA event | Tối ưu S6 và tối ưu cấp pipeline theo profiling |
+| Chương | S6 | Kernel S6 | Tối ưu S6 theo profiling |
+
+Các phần việc chung như khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
 
 ## 3. Các giai đoạn
 
@@ -180,7 +182,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 ## 10. Quy định viết code
 
 1. **Build:** dùng `nvcc -arch=sm_75` theo quy định trên lớp, chạy trên Colab T4.
-2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Các file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`) do Chương quản lý.
+2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Người quản lý các file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`): chưa phân công.
 3. **Comment đầu file bắt buộc** ở mọi file nhóm viết hoặc sửa:
 
     ```cpp
@@ -229,7 +231,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 2. **Một nguồn code duy nhất:** cell setup lấy `src/` (upload hoặc từ Drive) và build. Không dùng `%%writefile` và không chép code vào notebook, chỉ trích các đoạn ngắn để minh họa.
 3. **Số liệu từ output:** bảng và biểu đồ do code sinh từ CSV. Lời phân tích chỉ dùng những con số đã in ra trong output. Sau lần Run all cuối cùng, rà lại từng con số trong lời văn.
 4. Panorama hiển thị bản thu nhỏ trong notebook để file không quá nặng.
-5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Chương ghép các phần vào notebook. Sau khi ghép, nội dung cần sửa được gửi cho Chương để tránh conflict trên file `.ipynb`.
+5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Một người ghép các phần vào notebook (chưa phân công). Sau khi ghép, nội dung cần sửa được gửi cho người này để tránh conflict trên file `.ipynb`.
 6. **Trích dẫn:** trong suốt quá trình làm, mỗi người ghi nguồn đã tham khảo vào `docs/report/references.md` (URL, ngày truy cập, dùng cho phần nào). Code hoặc ý tưởng lấy từ bên ngoài phải được ghi nguồn cả ở đầu file code lẫn trong notebook.
 
 ## 15. Tiêu chí hoàn thành một task

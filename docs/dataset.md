@@ -1,6 +1,6 @@
 # Dataset: quy định chụp ảnh và chuẩn bị dữ liệu
 
-Người điều phối: Thành. Hạn của các việc liên quan nằm trong [bảng công việc](task-board.md).
+Người điều phối: chưa phân công. Hạn của các việc liên quan nằm trong [bảng công việc](task-board.md).
 
 ## 1. Yêu cầu của đề
 
@@ -14,11 +14,17 @@ Người điều phối: Thành. Hạn của các việc liên quan nằm trong 
 
 ## 2. Số lượng ảnh mỗi người chụp
 
-Số lượng ảnh/cặp mỗi người chụp **chưa chốt**. Cả Nhóm sẽ thống nhất trong task P0-T01 và ghi kết quả vào đây.
+Mỗi người chọn 1 địa điểm và chụp ít nhất:
 
-Đề xuất để Nhóm cân nhắc: mỗi người chọn 1 địa điểm và chụp ít nhất 3 cặp chuẩn (3 hướng nhìn khác nhau) cùng 2 cặp khó (mỗi cặp một yếu tố khó khác nhau). Như vậy mỗi người có tối thiểu 10 ảnh. Nên chụp lặp mỗi cặp thêm một lần để dự phòng ảnh mờ hoặc rung.
+| Loại | Số cặp tối thiểu | Ghi chú |
+|---|---:|---|
+| Cặp chuẩn | 3 | 3 hướng nhìn khác nhau tại cùng địa điểm |
+| Cặp khó | 2 | Mỗi cặp có một yếu tố khó khác nhau |
+| **Tổng** | **5 cặp = 10 ảnh** | |
 
-Các quy định áp dụng dù Nhóm chốt số lượng nào:
+Nên chụp lặp mỗi cặp thêm một lần để dự phòng ảnh mờ hoặc rung.
+
+Các quy định khác:
 
 - Các thành viên **được chụp ở cùng địa điểm**, nhưng **ảnh không được trùng nhau**. Mỗi ảnh phải do chính người nộp chụp, không dùng lại ảnh của người khác và không nộp một ảnh hai lần.
 - 3 địa điểm được chọn cuối cùng phải là 3 địa điểm khác nhau, nên có ít nhất 1 trong nhà và 1 ngoài trời.
@@ -99,7 +105,7 @@ Thành kiểm tra mọi cặp ứng viên có đạt các yêu cầu ở mục 1
 
 ## 6. Cách chọn ảnh
 
-**Chưa chốt** cách chọn ảnh (có bình chọn hay không). Cả Nhóm sẽ quyết định trong task P0-T01, cùng lúc với số lượng ảnh ở mục 2, và ghi kết quả vào đây.
+**Chưa chốt** cách chọn ảnh (có bình chọn hay không). Cả Nhóm sẽ quyết định trong task P0-T01 và ghi kết quả vào đây.
 
 ## 7. Chuẩn bị dataset
 

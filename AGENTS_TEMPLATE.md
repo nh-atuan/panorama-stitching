@@ -16,7 +16,7 @@ Phần dưới đây là nội dung dành cho agent.
 Agent phải đọc và tuân thủ các nguồn sau, theo thứ tự ưu tiên giảm dần:
 
 1. Yêu cầu hiện tại của người dùng, trong phạm vi đề bài cho phép.
-2. Đề bài chính thức của môn học: đặc tả giữa kỳ và cuối kỳ (PDF). Hai file giải thích `docs/midterm-spec-explanation.md` và `docs/final-spec-explanation.md` chỉ là bản diễn giải; khi có khác biệt, PDF là chuẩn.
+2. Đề bài chính thức của môn học trong `docs/specs/`: `CSC14120_2026_Final Project_MidTerm.md` (đề giữa kỳ) và `CSC14120_2026_Final Project.md` (đề cuối kỳ). Đây là bản chép nguyên văn từ hai file PDF cùng tên. Các file PDF không được commit, mỗi thành viên tự đặt vào `docs/specs/`. Khi có khác biệt, PDF là chuẩn.
 3. Quy định của Nhóm trong `docs/midterm-plan.md`.
 4. Task đang làm trong `docs/task-board.md`, được xác định bằng mã task dạng `P<số giai đoạn>-T<số thứ tự>`.
 5. Các tài liệu liên quan khác trong `docs/`: `dataset.md`, `interface.md` và `docs/stages/*.md` khi đã có.

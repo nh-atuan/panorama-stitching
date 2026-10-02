@@ -14,7 +14,7 @@ Mỗi người tự cập nhật cột **Trạng thái** và **Ghi chú / PR** c
 | P0-T02 | Tạo Google Drive chung để nộp ảnh gốc, cập nhật link vào [dataset](dataset.md) mục 4 | Tuấn | 03/10 (T7) | | Cả 4 người mở và upload được | Chưa làm | |
 | P0-T03 | Tìm starter notebook; nếu chưa có thì hỏi Thầy/trợ giảng; đưa starter vào thư mục `starter/` của repo | Chương | 03/10 (T7) | P0-T01 | Starter nằm trong repo, hoặc đã hỏi và áp dụng phương án dự phòng ở mục 7 của kế hoạch | Chưa làm | |
 | P0-T04 | Thống nhất số lượng ảnh/cặp mỗi người chụp và cách chọn ảnh (có bình chọn hay không) | Cả nhóm | 03/10 (T7) | | Kết quả ghi vào [dataset](dataset.md) mục 2 và mục 6 | Chưa làm | |
-| P0-T05 | Đọc 2 đặc tả, 2 file giải thích và kế hoạch giữa kỳ | Cả nhóm | 04/10 (CN) | | Mỗi người tự đánh dấu xong | Chưa làm | |
+| P0-T05 | Đọc đề giữa kỳ, đề cuối kỳ trong `docs/specs/` và kế hoạch giữa kỳ | Cả nhóm | 04/10 (CN) | | Mỗi người tự đánh dấu xong | Chưa làm | |
 | P0-T06 | Ghi địa điểm dự kiến vào [dataset](dataset.md) mục 5.1 | Cả nhóm | 03/10 (T7) | | Đủ 4 dòng | Chưa làm | |
 | P0-T07 | Chụp ảnh theo quy định, upload ảnh gốc, điền bảng ứng viên | Cả nhóm | 05/10 (T2) | P0-T02, P0-T04 | Đủ số lượng đã thống nhất ở P0-T04 | Chưa làm | |
 | P0-T08 | Viết script chuẩn bị dataset theo [dataset](dataset.md) mục 7 | Thành | 05/10 (T2) | | Chạy được trên Colab với ảnh mẫu | Chưa làm | |

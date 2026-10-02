@@ -15,8 +15,7 @@ Mốc hiện tại là bài nộp giữa kỳ (proposal và phiên bản tuần 
 | `docs/midterm-plan.md` | Kế hoạch giữa kỳ: phân vai, các giai đoạn, quy định về code, Git, Colab, đo thời gian, notebook |
 | `docs/task-board.md` | Bảng công việc: task theo giai đoạn, người phụ trách, hạn, trạng thái |
 | `docs/dataset.md` | Quy định chụp ảnh, danh sách địa điểm và cặp ảnh ứng viên, yêu cầu chuẩn bị dataset |
-| `docs/midterm-spec-explanation.md` | Giải thích chi tiết đề giữa kỳ |
-| `docs/final-spec-explanation.md` | Giải thích chi tiết đề cuối kỳ |
+| `docs/specs/` | Đề bài của môn học: bản Markdown chép nguyên văn từ PDF (`CSC14120_2026_Final Project_MidTerm.md`, `CSC14120_2026_Final Project.md`) cùng hình ảnh trong `images/`. Hai file PDF gốc đặt cùng thư mục nhưng không được commit |
 | `Group16_Midterm.ipynb` | Notebook báo cáo giữa kỳ, nộp cùng `src/` trong `Group16_Midterm.zip` |
 | `src/` | Toàn bộ mã nguồn C/C++/CUDA của chương trình `stitch` |
 

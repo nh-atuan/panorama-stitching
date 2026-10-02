@@ -7,7 +7,7 @@ Tài liệu đi kèm:
 
 - [Bảng công việc](task-board.md): danh sách task theo giai đoạn, người phụ trách, hạn và trạng thái.
 - [Dataset](dataset.md): quy định chụp ảnh và chuẩn bị dữ liệu.
-- [Giải thích đề giữa kỳ](midterm-spec-explanation.md) và [giải thích đề cuối kỳ](final-spec-explanation.md).
+- [Đề giữa kỳ](specs/CSC14120_2026_Final%20Project_MidTerm.md) và [đề cuối kỳ](specs/CSC14120_2026_Final%20Project.md): bản chép nguyên văn từ PDF của môn học.
 
 Quy ước ngày: mọi hạn ghi theo dạng `dd/mm (thứ)` của năm 2026.
 
@@ -242,7 +242,7 @@ Task viết báo cáo được coi là xong khi bản nháp đã nằm trong `do
 
 ## 16. Checklist trước khi nộp
 
-Dùng checklist ở mục 10 của [giải thích đề giữa kỳ](midterm-spec-explanation.md), bổ sung thêm:
+Đối chiếu lại toàn bộ yêu cầu trong [đề giữa kỳ](specs/CSC14120_2026_Final%20Project_MidTerm.md), bổ sung thêm:
 
 - [ ] Bảng thành viên có đủ họ tên và MSSV.
 - [ ] Notebook có mục tài liệu tham khảo.

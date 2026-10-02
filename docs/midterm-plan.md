@@ -44,7 +44,7 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
 | Chương | S6 | Kernel S6 | Tối ưu S6 theo profiling |
 
-Các phần việc chung như khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
+Ngoài các task đã giao trong P0, các phần việc chung như duy trì khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
 
 ## 3. Các giai đoạn
 
@@ -69,7 +69,7 @@ flowchart LR
 
 Kết quả cần có khi kết thúc P0:
 
-- repo GitHub và Google Drive chung đã sẵn sàng, starter đã được lấy về;
+- repo GitHub và Google Drive chung đã sẵn sàng, khung `src/` đã được tạo và build được;
 - ảnh gốc đã chụp và được kiểm tra;
 - mỗi người phụ trách đã chọn sơ bộ phương pháp và xác định đầu vào/đầu ra cho stage của mình;
 - interface chung đã chốt.
@@ -140,20 +140,7 @@ URL, ngày truy cập, dùng cho phần nào.
 
 Nội dung mục 1, 2 và 6 của file này được chuyển thành mục 3.3 và 3.7 trong notebook.
 
-## 7. Starter notebook
-
-Đề giữa kỳ có ba chi tiết cho thấy môn học có thể phát sẵn một notebook mẫu (starter notebook) kèm khung code:
-
-1. Mục 3.4 yêu cầu V0 "using the interfaces in the starter notebook".
-2. Cây thư mục của bài nộp liệt kê sẵn `common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`, tách riêng khỏi file của nhóm (`v0_<name>.cpp`) và "any other .c / .cpp / .h files you added".
-3. Mục 3.5 yêu cầu đo sai số homography trên "the synthetic pair, compared against the ground truth"; đề cuối kỳ cũng nhắc tới "the provided ... image pairs".
-
-Đây là suy luận từ đề, chưa được xác nhận. Task P0-T12 dùng để xác định môn học có phát starter hay không.
-
-- **Nếu có starter:** đặt các file code của starter vào `src/`, file notebook và dữ liệu đi kèm (nếu có) vào `docs/specs/` cùng với đề bài. Giữ nguyên interface và tên file của starter; `docs/interface.md` chỉ bổ sung những quy ước mà starter chưa nêu. Nếu starter có cặp synthetic và metric sai số, dùng đúng cặp và metric đó.
-- **Nếu không có starter:** Chương dựng interface theo giao diện dòng lệnh của đặc tả cuối kỳ, dùng đúng các tên file trong cây thư mục của đề giữa kỳ. Đế tự chuẩn bị cặp synthetic, chọn metric sai số và giải thích lựa chọn trong tài liệu thiết kế S5. Nếu sau này starter mới được phát, báo lại cho cả Nhóm để cùng quyết định cách chuyển sang interface của starter.
-
-## 8. Interface và quy ước dữ liệu
+## 7. Interface và quy ước dữ liệu
 
 Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt tối thiểu các mục sau:
 
@@ -171,7 +158,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 | Timing | Struct chứa thời gian 6 stage và tổng, định dạng dòng CSV in ra |
 | Lỗi | Cách báo lỗi cho: thiếu file, ảnh không đọc được, version không tồn tại, `--runs` không dương, không đủ match, homography suy biến |
 
-## 9. Quy ước ngôn ngữ
+## 8. Quy ước ngôn ngữ
 
 | Loại | Ngôn ngữ |
 |---|---|
@@ -179,7 +166,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 | Tên file, tên thư mục, tên nhánh, code, tên biến, tên hàm, comment trong code, commit message | Tiếng Anh |
 | Ngoại lệ | Tên riêng như tên thành viên và tên địa điểm chụp. Khi dùng trong tên file hoặc thư mục thì viết không dấu, ví dụ `tuan`, `can-tin-b` |
 
-## 10. Quy định viết code
+## 9. Quy định viết code
 
 1. **Build:** dùng `nvcc -arch=sm_75` theo quy định trên lớp, chạy trên Colab T4.
 2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Người quản lý các file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`): chưa phân công.
@@ -198,7 +185,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 7. **Debug:** ảnh debug và log chi tiết chỉ bật bằng cờ riêng (ví dụ `--debug`) và nằm ngoài vùng đo thời gian.
 8. **Mã hóa:** file lưu UTF-8 không BOM, xuống dòng LF.
 
-## 11. Quy định Git
+## 10. Quy định Git
 
 1. Repo GitHub **private**, cả 4 người là collaborator. Không đưa code cho nhóm khác.
 2. `main` luôn build được. Mọi thay đổi code vào `main` qua pull request. Riêng phần cập nhật trạng thái task của mình trong `docs/task-board.md` được commit trực tiếp.
@@ -209,14 +196,14 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 7. Không commit: ảnh dataset, output, token và mật khẩu, notebook còn output (trừ notebook nộp bài), file PDF.
 8. Không force-push lên `main` và không sửa lịch sử của người khác.
 
-## 12. Quy định chạy và kiểm thử trên Colab
+## 11. Quy định chạy và kiểm thử trên Colab
 
 1. **Mọi build, test và đo thời gian chính thức đều chạy trên Google Colab với GPU Tesla T4**, theo quy định của Thầy. Có thể biên dịch trên máy cá nhân để kiểm tra cú pháp nhanh, nhưng kết quả dán vào pull request phải lấy từ Colab T4.
 2. Chọn `Runtime -> Change runtime type -> T4 GPU`. Cell đầu tiên của mọi notebook in `nvidia-smi` để xác nhận đang dùng GPU T4.
 3. Nếu clone repo private trong Colab, token GitHub chỉ được lưu trong **Colab Secrets** (biểu tượng chìa khóa). Không ghi token vào code, không để token xuất hiện trong output. Xóa output trước khi commit notebook.
 4. Tiết kiệm hạn mức GPU: tắt runtime khi xong việc (`Runtime -> Disconnect and delete runtime`) và không để phiên chạy không. Nếu hết hạn mức, báo lại cho cả Nhóm để người khác chạy hộ. Không dùng kết quả từ runtime khác T4 làm số liệu chính thức.
 
-## 13. Quy định đo thời gian V0
+## 12. Quy định đo thời gian V0
 
 1. Dùng `std::chrono::high_resolution_clock` (đúng yêu cầu của đề) đo từng stage và đo tổng end-to-end. Không tính thời gian đọc và ghi ảnh.
 2. Chạy warm-up 1 lần, sau đó chạy `--runs 5` lần có đo. Báo trung bình, kèm giá trị nhỏ nhất.
@@ -225,7 +212,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 5. Mọi số liệu trong cùng một bảng phải đo trong cùng một phiên Colab T4. In tên GPU và tên CPU cùng kết quả.
 6. Khi đang đo, không chạy cell nặng nào khác trong cùng phiên.
 
-## 14. Quy định notebook báo cáo
+## 13. Quy định notebook báo cáo
 
 1. Tên file `Group16_Midterm.ipynb`, cấu trúc theo đúng mục 3.1-3.7 của đề. Thêm mục cài đặt (setup) ở đầu và mục tài liệu tham khảo ở cuối.
 2. **Một nguồn code duy nhất:** cell setup lấy `src/` (upload hoặc từ Drive) và build. Không dùng `%%writefile` và không chép code vào notebook, chỉ trích các đoạn ngắn để minh họa.
@@ -234,7 +221,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Một người ghép các phần vào notebook (chưa phân công). Sau khi ghép, nội dung cần sửa được gửi cho người này để tránh conflict trên file `.ipynb`.
 6. **Trích dẫn:** trong suốt quá trình làm, mỗi người ghi nguồn đã tham khảo vào `docs/report/references.md` (URL, ngày truy cập, dùng cho phần nào). Code hoặc ý tưởng lấy từ bên ngoài phải được ghi nguồn cả ở đầu file code lẫn trong notebook.
 
-## 15. Tiêu chí hoàn thành một task
+## 14. Tiêu chí hoàn thành một task
 
 Một task cài đặt stage được coi là xong khi:
 
@@ -242,13 +229,13 @@ Một task cài đặt stage được coi là xong khi:
 2. build bằng `nvcc -arch=sm_75` trên Colab T4 không lỗi;
 3. các test trong tài liệu thiết kế stage đạt, output được dán trong pull request;
 4. tài liệu thiết kế stage được cập nhật;
-5. không vi phạm quy định V0 ở mục 10;
+5. không vi phạm quy định V0 ở mục 9;
 6. đã merge vào `main`;
 7. trạng thái trên bảng công việc đã chuyển sang `Xong`.
 
 Task viết báo cáo được coi là xong khi bản nháp đã nằm trong `docs/report/`.
 
-## 16. Checklist trước khi nộp
+## 15. Checklist trước khi nộp
 
 Đối chiếu lại toàn bộ yêu cầu trong [đề giữa kỳ](specs/CSC14120_2026_Final%20Project_MidTerm.md), bổ sung thêm:
 

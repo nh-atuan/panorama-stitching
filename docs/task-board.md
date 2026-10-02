@@ -109,8 +109,8 @@ Hạn của giai đoạn: **06/10 (T3)**.
     <tr>
       <td>Đế</td>
       <td>P0-T11</td>
-      <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; phương án cặp synthetic và metric sai số</td>
-      <td>P0-T12</td>
+      <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; tự chuẩn bị phương án cặp synthetic và metric sai số homography</td>
+      <td></td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> có mục 1 và 2</td>
       <td>Chưa làm</td>
       <td></td>
@@ -118,9 +118,9 @@ Hạn của giai đoạn: **06/10 (T3)**.
     <tr>
       <td rowspan="3">Chương</td>
       <td>P0-T12</td>
-      <td>Tìm starter notebook trên trang môn học; nếu không thấy thì hỏi Thầy/trợ giảng xem môn có phát starter không. Nếu có, xử lý theo mục 7 của kế hoạch</td>
-      <td></td>
-      <td>Đã xác định có hay không có starter; nếu có thì starter đã được đưa vào repo</td>
+      <td>Tự tạo và setup khung <code>src/</code> theo cây thư mục của đề giữa kỳ (<code>common.h</code>, <code>cuda_utils.cuh</code>, <code>versions.h</code>, <code>main.cu</code>, <code>stb_impl.cpp</code>), nhận đúng tham số dòng lệnh của đề cuối kỳ</td>
+      <td>P0-T05</td>
+      <td>Khung đã merge vào <code>main</code>, build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4</td>
       <td>Chưa làm</td>
       <td></td>
     </tr>
@@ -134,7 +134,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
     </tr>
     <tr>
       <td>P0-T14</td>
-      <td>Soạn nháp <code>common.h</code> và <code>docs/interface.md</code> theo mục 8 của kế hoạch</td>
+      <td>Soạn nháp <code>common.h</code> và <code>docs/interface.md</code> theo mục 7 của kế hoạch</td>
       <td>P0-T07, P0-T08, P0-T11, P0-T12, P0-T13</td>
       <td>Pull request mở để cả nhóm góp ý</td>
       <td>Chưa làm</td>

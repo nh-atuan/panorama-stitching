@@ -27,7 +27,7 @@ Nên chụp lặp mỗi cặp thêm một lần để dự phòng ảnh mờ ho�
 Các quy định khác:
 
 - Các thành viên **được chụp ở cùng địa điểm**, nhưng **ảnh không được trùng nhau**. Mỗi ảnh phải do chính người nộp chụp, không dùng lại ảnh của người khác và không nộp một ảnh hai lần.
-- 3 địa điểm được chọn cuối cùng phải là 3 địa điểm khác nhau, nên có ít nhất 1 trong nhà và 1 ngoài trời.
+- 3 địa điểm được chọn cuối cùng phải là 3 địa điểm khác nhau.
 
 ## 3. Quy định khi chụp
 

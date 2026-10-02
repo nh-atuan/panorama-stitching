@@ -1,0 +1,57 @@
+# Personal agent instructions (copied from AGENTS_TEMPLATE.md, never committed)
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.claude/
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+
+# Datasets, photos and run outputs (shared through Google Drive instead)
+dataset/
+raw/
+results/
+*.zip
+
+# Course documents
+*.pdf
+
+# Build outputs
+/stitch
+build/
+bin/
+obj/
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.exe
+*.out
+
+# Profiling outputs
+*.nsys-rep
+*.ncu-rep
+*.qdrep
+*.sqlite
+
+# Python and notebooks
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Secrets
+.env
+*.token
+
+# Editor and operating-system files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini

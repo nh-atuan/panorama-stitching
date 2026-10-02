@@ -2,7 +2,7 @@
 
 Quy tắc chung nằm trong [kế hoạch giữa kỳ](midterm-plan.md). Kế hoạch được lập cuốn chiếu: chỉ giai đoạn hiện tại có task chi tiết. Giai đoạn kế tiếp được lập khi giai đoạn trước hoàn thành. Hạn được ghi cho cả giai đoạn; mọi task trong giai đoạn phải xong trước hạn đó. Mốc cố định duy nhất là **23/10 (T6)**.
 
-Mã task có dạng `P<số giai đoạn>-T<số thứ tự>` và được dùng trong tên nhánh và commit message, ví dụ nhánh `tuan/p0-t05-create-repo`.
+Mã task có dạng `P<số giai đoạn>-T<số thứ tự>` và được dùng làm scope trong commit message, ví dụ `feat(p1-t05): add RANSAC hypothesis loop` trên nhánh giai đoạn `de/p1`. Cách chọn nhánh và pull request theo loại thay đổi nằm ở mục 10 của [kế hoạch](midterm-plan.md).
 
 Task được nhóm theo thành viên, theo thứ tự stage phụ trách. Mỗi người tự cập nhật cột **Trạng thái** và **Ghi chú / PR** của task mình. Trạng thái dùng một trong các giá trị: `Chưa làm`, `Đang làm`, `Chờ review`, `Xong`, `Bị chặn`.
 

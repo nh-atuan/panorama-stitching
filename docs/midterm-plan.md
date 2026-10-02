@@ -188,17 +188,25 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 ## 10. Quy định Git
 
 1. Repo GitHub **private**, cả 4 người là collaborator. Không đưa code cho nhóm khác.
-2. `main` luôn build được. Mọi thay đổi code vào `main` qua pull request. Riêng phần cập nhật trạng thái task của mình trong `docs/task-board.md` được commit trực tiếp.
+2. `main` luôn build được.
 3. **Mã task** có dạng `P<số giai đoạn>-T<số thứ tự>`, ví dụ `P0-T03`, được ghi trong [bảng công việc](task-board.md).
-4. **Tên nhánh:** `<tên thành viên>/<mã task viết thường>-<mô tả ngắn>`. Phần mô tả đặt tự do, miễn dễ hiểu. Tên thành viên dùng `tuan`, `thanh`, `chuong`, `de`. Ví dụ: `de/p1-t05-ransac`, `thanh/p0-t09-dataset-script`.
-5. **Commit message** theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/), có thể dùng mã task làm scope. Ví dụ: `feat(p1-t05): add RANSAC hypothesis loop`, `fix(p1-t02): handle border pixels in blur`.
-6. Pull request ghi mã task, mô tả thay đổi và dán output build/test chạy trên Colab T4.
-7. Không commit: ảnh dataset, output, token và mật khẩu, notebook còn output (trừ notebook nộp bài), file PDF.
-8. Không force-push lên `main` và không sửa lịch sử của người khác.
+4. **Nhánh và pull request theo loại thay đổi.** Tên thành viên trong tên nhánh dùng `tuan`, `thanh`, `chuong`, `de`.
+
+    | Loại thay đổi | Cách làm |
+    |---|---|
+    | Code và test của stage mình | Mỗi giai đoạn, mỗi người dùng **một nhánh** `<tên thành viên>/p<số giai đoạn>`, ví dụ `thanh/p1`, `de/p1`. Mỗi task là một hoặc vài commit trên nhánh này. Cuối giai đoạn mở **một pull request** để merge vào `main`. Nếu thành viên khác cần code sớm hơn thì merge sớm hơn |
+    | File dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`, `stb_impl.cpp`, `docs/interface.md`) | Mỗi thay đổi đi qua **một pull request riêng, nhỏ**, từ nhánh `<tên thành viên>/shared-<mô tả ngắn>`, ví dụ `chuong/shared-interface` |
+    | Tài liệu trong phạm vi của mình: trạng thái task trong `docs/task-board.md`, các bảng trong `docs/dataset.md`, `docs/stages/<stage của mình>.md`, `docs/report/<phần của mình>.md` | **Commit thẳng lên `main`**, không cần nhánh hay pull request |
+
+5. **Đồng bộ thường xuyên:** kéo `main` mới về nhánh của mình (`git pull origin main` hoặc rebase), ít nhất mỗi khi có pull request file dùng chung vừa được merge.
+6. **Trước khi mở pull request:** nhánh phải build và chạy test đạt trên Colab T4. Pull request ghi các mã task đã làm, mô tả thay đổi và dán output build/test.
+7. **Commit message** theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/), dùng mã task làm scope. Ví dụ: `feat(p1-t05): add RANSAC hypothesis loop`, `fix(p1-t02): handle border pixels in blur`.
+8. Không commit: ảnh dataset, output, token và mật khẩu, notebook còn output (trừ notebook nộp bài), file PDF.
+9. Không force-push lên `main` và không sửa lịch sử của người khác.
 
 ## 11. Quy định chạy và kiểm thử trên Colab
 
-1. **Mọi build, test và đo thời gian chính thức đều chạy trên Google Colab với GPU Tesla T4**, theo quy định của Thầy. Có thể biên dịch trên máy cá nhân để kiểm tra cú pháp nhanh, nhưng kết quả dán vào pull request phải lấy từ Colab T4.
+1. **Mọi build, test và đo thời gian chính thức đều chạy trên Google Colab với GPU Tesla T4**, theo quy định của Thầy. Có thể biên dịch trên máy cá nhân để kiểm tra cú pháp nhanh, nhưng kết quả ghi trong commit hoặc pull request phải lấy từ Colab T4.
 2. Chọn `Runtime -> Change runtime type -> T4 GPU`. Cell đầu tiên của mọi notebook in `nvidia-smi` để xác nhận đang dùng GPU T4.
 3. Nếu clone repo private trong Colab, token GitHub chỉ được lưu trong **Colab Secrets** (biểu tượng chìa khóa). Không ghi token vào code, không để token xuất hiện trong output. Xóa output trước khi commit notebook.
 4. Tiết kiệm hạn mức GPU: tắt runtime khi xong việc (`Runtime -> Disconnect and delete runtime`) và không để phiên chạy không. Nếu hết hạn mức, báo lại cho cả Nhóm để người khác chạy hộ. Không dùng kết quả từ runtime khác T4 làm số liệu chính thức.
@@ -227,10 +235,10 @@ Một task cài đặt stage được coi là xong khi:
 
 1. code nằm đúng file, có comment tác giả và nguồn;
 2. build bằng `nvcc -arch=sm_75` trên Colab T4 không lỗi;
-3. các test trong tài liệu thiết kế stage đạt, output được dán trong pull request;
+3. các test trong tài liệu thiết kế stage đạt trên Colab T4;
 4. tài liệu thiết kế stage được cập nhật;
 5. không vi phạm quy định V0 ở mục 9;
-6. đã merge vào `main`;
+6. đã commit theo đúng quy định Git ở mục 10 (code stage nằm trên nhánh giai đoạn của mình, file dùng chung đã merge qua pull request riêng);
 7. trạng thái trên bảng công việc đã chuyển sang `Xong`.
 
 Task viết báo cáo được coi là xong khi bản nháp đã nằm trong `docs/report/`.

@@ -45,10 +45,15 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 
 1. Xác định mã task, đọc mô tả, phụ thuộc và tiêu chí xong của task, cùng hạn của giai đoạn chứa task, trong `docs/task-board.md`.
 2. Đọc phần đề bài và quy định của Nhóm liên quan tới task.
-3. Khảo sát trạng thái hiện tại bằng thao tác chỉ đọc: cấu trúc repo, `git status`, nhánh hiện tại, code, test và tài liệu liên quan.
+3. Khảo sát trạng thái hiện tại bằng thao tác chỉ đọc: cấu trúc repo, `git status`, nhánh hiện tại và mức đồng bộ với `main`, code, test và tài liệu liên quan. Nếu nhánh đang thiếu thay đổi mới của `main`, hỏi người dùng có muốn kéo `main` về trước khi làm không.
 4. Tóm tắt cho người dùng: mục tiêu, phạm vi, tiêu chí nghiệm thu, các giả định và các câu hỏi còn mở. Chỉ bắt đầu sửa đổi khi người dùng đã xác nhận.
 5. **Kiểm tra công cụ để tự kiểm chứng.** Liệt kê các tool, MCP server, skill hoặc plugin cần dùng để build, chạy test và rà soát (ví dụ shell, `git`, `nvcc`, Python, trình chạy notebook, quyền đọc/ghi file). Nếu thiếu công cụ hoặc thiếu quyền, phải báo rõ cho người dùng là cần cấp gì, và không được bắt đầu phần việc cần kiểm chứng khi chưa có đủ.
-6. Làm việc trên đúng nhánh theo quy định: `<tên thành viên>/<mã task viết thường>-<mô tả ngắn>`, ví dụ `de/p1-t05-ransac`. Nếu đang ở `main` hoặc ở nhánh khác, hỏi người dùng trước khi tạo hoặc chuyển nhánh.
+6. Làm việc trên đúng nhánh theo loại thay đổi (mục 10 của `docs/midterm-plan.md`):
+    - code và test của stage mình: nhánh giai đoạn `<tên thành viên>/p<số giai đoạn>`, ví dụ `de/p1`;
+    - file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`, `stb_impl.cpp`, `docs/interface.md`): nhánh riêng `<tên thành viên>/shared-<mô tả ngắn>` và một pull request riêng, nhỏ;
+    - tài liệu trong phạm vi của mình (trạng thái task, bảng trong `docs/dataset.md`, tài liệu stage và phần báo cáo của mình): commit thẳng lên `main`.
+
+    Nếu đang ở nhánh không đúng với loại thay đổi, hỏi người dùng trước khi tạo hoặc chuyển nhánh.
 
 ## 4. Trong khi thực hiện
 
@@ -89,9 +94,9 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - tiêu chí nghiệm thu nào đã đạt, tiêu chí nào chưa;
     - trạng thái working tree.
 2. Chỉ commit, push hoặc tạo pull request khi người dùng yêu cầu. Khi làm thì tuân thủ:
-    - commit message bằng tiếng Anh theo Conventional Commits, có thể dùng mã task làm scope, ví dụ `feat(p1-t05): add RANSAC hypothesis loop`;
+    - commit message bằng tiếng Anh theo Conventional Commits, dùng mã task làm scope, ví dụ `feat(p1-t05): add RANSAC hypothesis loop`;
     - chỉ stage các file thuộc task và xem lại nội dung đã stage trước khi commit;
-    - pull request ghi mã task, mô tả thay đổi và output build/test trên Colab T4;
+    - trước khi mở pull request, nhánh phải build và chạy test đạt trên Colab T4; pull request ghi các mã task đã làm, mô tả thay đổi và output build/test;
     - không force-push lên `main`, không sửa lịch sử hay amend commit của người khác;
     - không commit file hướng dẫn agent cá nhân, dataset, output, token, PDF hoặc notebook còn output (trừ notebook nộp bài).
 3. Nếu bị chặn, nêu nguyên nhân cụ thể, những gì đã thử, và thông tin hoặc quyền cần người dùng bổ sung.

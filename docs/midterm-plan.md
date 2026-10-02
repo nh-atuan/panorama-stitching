@@ -30,10 +30,10 @@ Tiêu chí hoàn thành:
 
 | Thành viên | MSSV | Stage phụ trách | Phần việc chung |
 |---|---|---|---|
-| Tuấn | (bổ sung sau) | S1 Preprocessing | Tạo repo GitHub và Google Drive chung, nộp bài, mục 3.1 và 3.2 của notebook |
-| Thành | (bổ sung sau) | S2 Keypoint detection, S3 Description | Dataset (chuẩn bị, kiểm tra ảnh), gallery, tài liệu tham khảo |
-| Chương | (bổ sung sau) | S6 Warping and blending | Starter, interface, khung chương trình, ghép pipeline, benchmark, ghép notebook, đóng gói ZIP |
-| Đế | (bổ sung sau) | S4 Matching, S5 Homography | Cặp synthetic và sai số homography, hot stage, Amdahl, tổng hợp kế hoạch GPU |
+| Tuấn | | S1 Preprocessing | |
+| Thành | | S2 Keypoint detection, S3 Description | |
+| Đế | | S4 Matching, S5 Homography | |
+| Chương | | S6 Warping and blending | |
 
 Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook). V2 và V3 chỉ được chốt sau khi có profiling V1.
 
@@ -41,8 +41,8 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 |---|---|---|---|
 | Tuấn | S1 | Kernel S1 | Tối ưu S1 nếu profiling cho thấy S1 là bottleneck |
 | Thành | S2, S3 | Kernel S2, S3 (gồm thu gom keypoint và top-K) | Tối ưu S2/S3 theo profiling |
-| Chương | S6, khung chương trình | Kernel S6, quản lý bộ nhớ host-device, timing bằng CUDA event | Tối ưu S6 và tối ưu cấp pipeline theo profiling |
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
+| Chương | S6, khung chương trình | Kernel S6, quản lý bộ nhớ host-device, timing bằng CUDA event | Tối ưu S6 và tối ưu cấp pipeline theo profiling |
 
 ## 3. Các giai đoạn
 
@@ -50,7 +50,7 @@ Kế hoạch được lập **cuốn chiếu**: chỉ giai đoạn hiện tại 
 
 ```mermaid
 flowchart LR
-    P0["P0 Khởi động"] --> P1["P1 Cài đặt từng stage"]
+    P0["P0 Chuẩn bị"] --> P1["P1 Cài đặt từng stage"]
     P1 --> P2["P2 Ghép và kiểm chứng V0"]
     P2 --> P3["P3 Đo và phân tích"]
     P3 --> P4["P4 Hoàn thiện và nộp"]
@@ -59,7 +59,7 @@ flowchart LR
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
 |---|---|---|
-| P0 | Khởi động | Đã lập, kết thúc 06/10 (T3) |
+| P0 | Chuẩn bị | Đã lập, kết thúc 06/10 (T3) |
 | P1 | Cài đặt từng stage | Lập khi P0 hoàn thành |
 | P2 | Ghép và kiểm chứng V0 | Lập khi P1 hoàn thành |
 | P3 | Đo và phân tích | Lập khi P2 hoàn thành |
@@ -140,14 +140,20 @@ Nội dung mục 1, 2 và 6 của file này được chuyển thành mục 3.3 v
 
 ## 7. Starter notebook
 
-Đề giữa kỳ yêu cầu V0 "using the interfaces in the starter notebook" và liệt kê sẵn các file `common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`. Starter phải được lấy về trước khi chốt interface.
+Đề giữa kỳ có ba chi tiết cho thấy môn học có thể phát sẵn một notebook mẫu (starter notebook) kèm khung code:
 
-- **Nếu có starter:** giữ nguyên interface và tên file của starter; `docs/interface.md` chỉ bổ sung những quy ước mà starter chưa nêu. Nếu starter có cặp synthetic và metric sai số, dùng đúng cặp và metric đó.
-- **Nếu đến 03/10 (T7) vẫn chưa có starter:** Chương dựng interface theo giao diện dòng lệnh của đặc tả cuối kỳ, đặt file trùng tên với danh sách trên, và chuyển sang interface của starter ngay khi starter được phát. Đế tự chuẩn bị cặp synthetic, chọn metric sai số và giải thích lựa chọn trong tài liệu thiết kế S5.
+1. Mục 3.4 yêu cầu V0 "using the interfaces in the starter notebook".
+2. Cây thư mục của bài nộp liệt kê sẵn `common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`, tách riêng khỏi file của nhóm (`v0_<name>.cpp`) và "any other .c / .cpp / .h files you added".
+3. Mục 3.5 yêu cầu đo sai số homography trên "the synthetic pair, compared against the ground truth"; đề cuối kỳ cũng nhắc tới "the provided ... image pairs".
+
+Đây là suy luận từ đề, chưa được xác nhận. Task P0-T12 dùng để xác định môn học có phát starter hay không.
+
+- **Nếu có starter:** đặt các file code của starter vào `src/`, file notebook và dữ liệu đi kèm (nếu có) vào `docs/specs/` cùng với đề bài. Giữ nguyên interface và tên file của starter; `docs/interface.md` chỉ bổ sung những quy ước mà starter chưa nêu. Nếu starter có cặp synthetic và metric sai số, dùng đúng cặp và metric đó.
+- **Nếu không có starter:** Chương dựng interface theo giao diện dòng lệnh của đặc tả cuối kỳ, dùng đúng các tên file trong cây thư mục của đề giữa kỳ. Đế tự chuẩn bị cặp synthetic, chọn metric sai số và giải thích lựa chọn trong tài liệu thiết kế S5. Nếu sau này starter mới được phát, báo lại cho cả Nhóm để cùng quyết định cách chuyển sang interface của starter.
 
 ## 8. Interface và quy ước dữ liệu
 
-Trước 06/10 (T3), `docs/interface.md` và `common.h` phải chốt tối thiểu các mục sau:
+Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt tối thiểu các mục sau:
 
 | Mục | Nội dung cần chốt |
 |---|---|
@@ -195,7 +201,7 @@ Trước 06/10 (T3), `docs/interface.md` và `common.h` phải chốt tối thi�
 1. Repo GitHub **private**, cả 4 người là collaborator. Không đưa code cho nhóm khác.
 2. `main` luôn build được. Mọi thay đổi code vào `main` qua pull request. Riêng phần cập nhật trạng thái task của mình trong `docs/task-board.md` được commit trực tiếp.
 3. **Mã task** có dạng `P<số giai đoạn>-T<số thứ tự>`, ví dụ `P0-T03`, được ghi trong [bảng công việc](task-board.md).
-4. **Tên nhánh:** `<tên thành viên>/<mã task viết thường>-<mô tả ngắn>`. Phần mô tả đặt tự do, miễn dễ hiểu. Tên thành viên dùng `tuan`, `thanh`, `chuong`, `de`. Ví dụ: `de/p1-t05-ransac`, `thanh/p0-t08-dataset-script`.
+4. **Tên nhánh:** `<tên thành viên>/<mã task viết thường>-<mô tả ngắn>`. Phần mô tả đặt tự do, miễn dễ hiểu. Tên thành viên dùng `tuan`, `thanh`, `chuong`, `de`. Ví dụ: `de/p1-t05-ransac`, `thanh/p0-t09-dataset-script`.
 5. **Commit message** theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/), có thể dùng mã task làm scope. Ví dụ: `feat(p1-t05): add RANSAC hypothesis loop`, `fix(p1-t02): handle border pixels in blur`.
 6. Pull request ghi mã task, mô tả thay đổi và dán output build/test chạy trên Colab T4.
 7. Không commit: ảnh dataset, output, token và mật khẩu, notebook còn output (trừ notebook nộp bài), file PDF.

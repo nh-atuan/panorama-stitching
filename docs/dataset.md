@@ -14,7 +14,7 @@ Người điều phối: Thành. Hạn của các việc liên quan nằm trong 
 
 ## 2. Số lượng ảnh mỗi người chụp
 
-Số lượng ảnh/cặp mỗi người chụp **chưa chốt**. Cả Nhóm sẽ thống nhất trong task P0-T04 và ghi kết quả vào đây.
+Số lượng ảnh/cặp mỗi người chụp **chưa chốt**. Cả Nhóm sẽ thống nhất trong task P0-T01 và ghi kết quả vào đây.
 
 Đề xuất để Nhóm cân nhắc: mỗi người chọn 1 địa điểm và chụp ít nhất 3 cặp chuẩn (3 hướng nhìn khác nhau) cùng 2 cặp khó (mỗi cặp một yếu tố khó khác nhau). Như vậy mỗi người có tối thiểu 10 ảnh. Nên chụp lặp mỗi cặp thêm một lần để dự phòng ảnh mờ hoặc rung.
 
@@ -60,7 +60,7 @@ Các quy định áp dụng dù Nhóm chốt số lượng nào:
 
 ## 4. Nộp ảnh gốc
 
-**Hiện chưa có link Google Drive.** Tuấn sẽ tạo và cập nhật link vào đây (task P0-T02).
+**Hiện chưa có link Google Drive.** Tuấn sẽ tạo và cập nhật link vào đây (task P0-T06).
 
 Link Drive: (chưa có)
 
@@ -99,7 +99,7 @@ Thành kiểm tra mọi cặp ứng viên có đạt các yêu cầu ở mục 1
 
 ## 6. Cách chọn ảnh
 
-**Chưa chốt** cách chọn ảnh (có bình chọn hay không). Cả Nhóm sẽ quyết định trong task P0-T04, cùng lúc với số lượng ảnh ở mục 2, và ghi kết quả vào đây.
+**Chưa chốt** cách chọn ảnh (có bình chọn hay không). Cả Nhóm sẽ quyết định trong task P0-T01, cùng lúc với số lượng ảnh ở mục 2, và ghi kết quả vào đây.
 
 ## 7. Chuẩn bị dataset
 

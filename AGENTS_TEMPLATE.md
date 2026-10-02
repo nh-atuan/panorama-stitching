@@ -43,7 +43,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 
 ## 3. Trước khi thực hiện
 
-1. Xác định mã task, đọc mô tả, hạn, phụ thuộc và tiêu chí xong của task trong `docs/task-board.md`.
+1. Xác định mã task, đọc mô tả, phụ thuộc và tiêu chí xong của task, cùng hạn của giai đoạn chứa task, trong `docs/task-board.md`.
 2. Đọc phần đề bài và quy định của Nhóm liên quan tới task.
 3. Khảo sát trạng thái hiện tại bằng thao tác chỉ đọc: cấu trúc repo, `git status`, nhánh hiện tại, code, test và tài liệu liên quan.
 4. Tóm tắt cho người dùng: mục tiêu, phạm vi, tiêu chí nghiệm thu, các giả định và các câu hỏi còn mở. Chỉ bắt đầu sửa đổi khi người dùng đã xác nhận.
@@ -101,7 +101,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 1. Nội dung báo cáo, markdown trong notebook, tài liệu `.md`, phần giải thích lựa chọn và phân tích kết quả viết bằng **tiếng Việt**. Giữ nguyên thuật ngữ tiếng Anh khi không nên dịch hoặc bản dịch không phổ biến (keypoint, descriptor, homography, kernel, thread, warp, block, speedup...).
 2. Tên file, tên thư mục, tên nhánh, code, tên biến, tên hàm, comment trong code và commit message viết bằng **tiếng Anh**. Ngoại lệ là tên riêng như tên thành viên và tên địa điểm chụp; khi dùng trong tên file hoặc thư mục thì viết không dấu.
 3. Không dùng blockquote Markdown (dòng bắt đầu bằng `>`). Mọi sơ đồ trong Markdown viết bằng Mermaid trong code fence `mermaid`.
-4. Gọi thành viên bằng tên. Hạn ghi theo dạng `dd/mm (thứ)`, không ghi giờ, không ghi theo khoảng ngày.
+4. Gọi thành viên bằng tên. Hạn ghi theo dạng `dd/mm (thứ)`, không ghi giờ, không ghi theo khoảng ngày. Trong bảng công việc, hạn chỉ ghi cho cả giai đoạn, không ghi cho từng task; task được nhóm theo thành viên.
 5. Không chỉ định người duyệt trong tài liệu của Nhóm. Với vấn đề cần quyết định chung, ghi "báo lại cho cả Nhóm để cùng quyết định".
 6. Mọi con số trong lời văn của notebook phải xuất hiện trong output của notebook. Notebook build từ chính `src/`, không chép code vào cell bằng `%%writefile`.
 

@@ -1,9 +1,3 @@
-![fit@hcmus](images/fit-hcmus-logo.png)
-
-Vietnam National University, Ho Chi Minh City\
-University of Science\
-**Faculty of Information Technology**
-
 # CSC14120 – PARALLEL PROGRAMMING
 
 ## FINAL PROJECT

@@ -18,9 +18,9 @@ Mỗi người chọn 1 địa điểm và chụp ít nhất:
 
 | Loại | Số cặp tối thiểu | Ghi chú |
 |---|---:|---|
-| Cặp chuẩn | 3 | 3 hướng nhìn khác nhau tại cùng địa điểm |
-| Cặp khó | 2 | Mỗi cặp có một yếu tố khó khác nhau |
-| **Tổng** | **5 cặp = 10 ảnh** | |
+| Cặp chuẩn | 2 | 2 khu vực hoặc khung cảnh khác nhau trong cùng địa điểm |
+| Cặp khó | 1 | Có một yếu tố khó chính |
+| **Tổng** | **3 cặp = 6 ảnh** | |
 
 Nên chụp lặp mỗi cặp thêm một lần để dự phòng ảnh mờ hoặc rung.
 

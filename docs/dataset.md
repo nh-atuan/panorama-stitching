@@ -66,9 +66,7 @@ Các quy định khác:
 
 ## 4. Nộp ảnh gốc
 
-**Hiện chưa có link Google Drive.** Tuấn sẽ tạo và cập nhật link vào đây (task P0-T06).
-
-Link Drive: (chưa có)
+Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0QiOq?usp=sharing
 
 1. Upload ảnh **gốc, chưa chỉnh sửa**.
 2. Đặt tên file bằng tiếng Anh:

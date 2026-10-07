@@ -70,9 +70,9 @@ Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0
 
 1. Upload ảnh **gốc, chưa chỉnh sửa**.
 2. Đặt tên file bằng tiếng Anh:
-    - cặp chuẩn: `pair1_left.jpg`, `pair1_right.jpg`, `pair2_left.jpg`, ...;
+    - cặp chuẩn: `standard1_left.jpg`, `standard1_right.jpg`, `standard2_left.jpg`, ...;
     - cặp khó: `challenge1_left.jpg`, `challenge1_right.jpg`, ...;
-    - lần chụp lặp: thêm hậu tố `_b`, ví dụ `pair1_left_b.jpg`.
+    - lần chụp lặp: thêm hậu tố `_b`, ví dụ `standard1_left_b.jpg`.
 3. Điền thông tin vào bảng ứng viên ở mục 5.2.
 
 ## 5. Địa điểm và ứng viên
@@ -92,7 +92,7 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 
 | Mã cặp | Người chụp | Site slug | Loại (chuẩn / khó) | Yếu tố khó (nếu có) | Ngày, giờ chụp | Điện thoại | Độ phân giải gốc |
 |---|---|---|---|---|---|---|---|
-| tuan-pair1 | Tuấn | | chuẩn | | | | |
+| tuan-standard1 | Tuấn | | chuẩn | | | | |
 
 ### 5.3 Kết quả kiểm tra
 

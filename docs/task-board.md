@@ -37,16 +37,16 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>Ghi địa điểm dự kiến vào <a href="dataset.md">dataset</a> mục 5.1</td>
       <td></td>
       <td>Đủ 4 dòng</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Tuấn đã điền dòng của mình</td>
     </tr>
     <tr>
       <td>P0-T03</td>
       <td>Chụp ảnh theo quy định, upload ảnh gốc, điền bảng ứng viên</td>
       <td>P0-T06</td>
       <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Tuấn đã chụp và điền bảng ứng viên</td>
     </tr>
     <tr>
       <td>P0-T04</td>
@@ -62,7 +62,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>Tạo repo GitHub private, mời 3 thành viên, push lịch sử hiện có</td>
       <td></td>
       <td>Cả 4 người clone được repo</td>
-      <td>Chưa làm</td>
+      <td>Xong</td>
       <td></td>
     </tr>
     <tr>
@@ -70,7 +70,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>Tạo Google Drive chung để nộp ảnh gốc, cập nhật link vào <a href="dataset.md">dataset</a> mục 4</td>
       <td></td>
       <td>Cả 4 người mở và upload được</td>
-      <td>Chưa làm</td>
+      <td>Xong</td>
       <td></td>
     </tr>
     <tr>

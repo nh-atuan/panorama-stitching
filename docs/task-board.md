@@ -78,7 +78,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S1</td>
       <td></td>
       <td><code>docs/stages/s1-preprocessing.md</code> có mục 1 và 2</td>
-      <td>Chưa làm</td>
+      <td>Xong</td>
       <td></td>
     </tr>
     <tr>

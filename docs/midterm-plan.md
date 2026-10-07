@@ -32,7 +32,7 @@ Tiêu chí hoàn thành:
 |---|---|---|---|
 | Tuấn | 23120185 | S1 Preprocessing | Repo, Drive chung, dataset, báo cáo phần bài toán và dataset |
 | Thành | 23120166 | S2 Keypoint detection, S3 Description | Script chuẩn bị dataset, kiểm tra ảnh |
-| Đế | 23120232 | S4 Matching, S5 Homography | Cặp synthetic và đo sai số homography |
+| Đế | 23120232 | S4 Matching, S5 Homography | |
 | Chương | 23120195 | S6 Warping and blending | Interface, các file dùng chung, khung chạy chương trình |
 
 Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook). V2 và V3 chỉ được chốt sau khi có profiling V1.
@@ -40,7 +40,7 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 | Thành viên | V0 | V1 Basic CUDA | V2, V3 |
 |---|---|---|---|
 | Tuấn | S1 | Kernel S1 | Tối ưu S1 nếu profiling cho thấy S1 là bottleneck |
-| Thành | S2, S3 | Kernel S2, S3 (gồm thu gom keypoint và top-K) | Tối ưu S2/S3 theo profiling |
+| Thành | S2, S3 | Kernel S2, S3 | Tối ưu S2/S3 theo profiling |
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
 | Chương | S6 | Kernel S6 | Tối ưu S6 theo profiling |
 

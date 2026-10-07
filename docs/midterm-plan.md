@@ -1,7 +1,7 @@
 # Kế hoạch thực hiện bài nộp giữa kỳ CSC14120
 
 **Bài nộp:** Midterm Submission - Proposal and Sequential Version (10% điểm đồ án).
-**Hạn:** 23/10/2026 (T6). Mọi phần việc phải hoàn thành trước ngày này.
+**Hạn:** 23/10/2026 (Thứ 6). Mọi phần việc phải hoàn thành trước ngày này.
 
 Tài liệu đi kèm:
 
@@ -61,8 +61,8 @@ flowchart LR
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
 |---|---|---|
-| P0 | Chuẩn bị | Đã lập, kết thúc 06/10 (T3) |
-| P1 | Cài đặt từng stage | Đã lập, kết thúc 13/10 (T3) |
+| P0 | Chuẩn bị | Đã lập, kết thúc 06/10 (Thứ 3) |
+| P1 | Cài đặt từng stage | Đã lập, kết thúc 13/10 (Thứ 3) |
 | P2 | Ghép và kiểm chứng V0 | Lập khi P1 hoàn thành |
 | P3 | Đo và phân tích | Lập khi P2 hoàn thành |
 | P4 | Hoàn thiện và nộp | Lập khi P3 hoàn thành |

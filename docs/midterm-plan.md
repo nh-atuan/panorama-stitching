@@ -30,10 +30,10 @@ Tiêu chí hoàn thành:
 
 | Thành viên | MSSV | Stage phụ trách | Phần việc chung |
 |---|---|---|---|
-| Tuấn | | S1 Preprocessing | |
-| Thành | | S2 Keypoint detection, S3 Description | |
-| Đế | | S4 Matching, S5 Homography | |
-| Chương | | S6 Warping and blending | |
+| Tuấn | 23120185 | S1 Preprocessing | |
+| Thành | 23120166 | S2 Keypoint detection, S3 Description | |
+| Đế | 23120232 | S4 Matching, S5 Homography | |
+| Chương | 23120195 | S6 Warping and blending | |
 
 Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook). V2 và V3 chỉ được chốt sau khi có profiling V1.
 

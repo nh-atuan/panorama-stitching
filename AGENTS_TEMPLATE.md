@@ -41,6 +41,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - đọc lại đề bài và tài liệu của Nhóm, rồi trích dẫn những đoạn liên quan cho người dùng;
     - nếu tài liệu vẫn không trả lời được, đề nghị người dùng báo lại cho cả Nhóm để cùng quyết định, và tạm dừng phần việc đó cho đến khi có kết quả.
 5. Agent không được thay Nhóm đưa ra quyết định chung, kể cả khi người dùng bảo "cứ làm đại".
+6. Không tự ý làm việc người dùng chưa yêu cầu, kể cả sửa file, commit hay push. Khi người dùng chỉ hỏi ý kiến hoặc nhờ đề xuất, chỉ trả lời và đề xuất; chờ người dùng yêu cầu rõ rồi mới thực hiện.
 
 ## 3. Trước khi thực hiện
 
@@ -85,6 +86,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - tài liệu liên quan (tài liệu thiết kế stage, `docs/interface.md`) đã được cập nhật nếu hành vi hoặc interface thay đổi;
     - `git diff --check` không báo lỗi.
 5. Đối chiếu từng tiêu chí xong của task trong `docs/task-board.md` và mục "Tiêu chí hoàn thành một task" trong `docs/midterm-plan.md`. Tiêu chí nào chưa đạt phải được nêu rõ.
+6. Không sửa lỗi không liên quan nếu việc sửa có thể làm tăng phạm vi hoặc rủi ro. Ghi nhận ngắn gọn để người dùng quyết định.
 
 ## 6. Sau khi thực hiện
 
@@ -96,7 +98,9 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - trạng thái working tree.
 2. Chỉ commit, push hoặc tạo pull request khi người dùng yêu cầu. Khi làm thì tuân thủ:
     - commit message bằng tiếng Anh theo Conventional Commits, dùng mã task làm scope, ví dụ `feat(p1-t05): add RANSAC hypothesis loop`;
+    - không thêm dòng `Co-Authored-By` của AI vào commit message, không thêm dòng ghi công AI (như "Generated with Claude Code") vào mô tả pull request;
     - chỉ stage các file thuộc task và xem lại nội dung đã stage trước khi commit;
+    - sau khi commit, kiểm tra bằng `git show --check --oneline HEAD`;
     - trước khi mở pull request, nhánh phải build và chạy test đạt trên Colab T4; pull request ghi các mã task đã làm, mô tả thay đổi và output build/test;
     - không force-push lên `main`, không sửa lịch sử hay amend commit của người khác;
     - không commit file hướng dẫn agent cá nhân, dataset, output, token, PDF hoặc notebook còn output (trừ notebook nộp bài).
@@ -107,9 +111,14 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 1. Nội dung báo cáo, markdown trong notebook, tài liệu `.md`, phần giải thích lựa chọn và phân tích kết quả viết bằng **tiếng Việt**. Giữ nguyên thuật ngữ tiếng Anh khi không nên dịch hoặc bản dịch không phổ biến (keypoint, descriptor, homography, kernel, thread, warp, block, speedup...).
 2. Tên file, tên thư mục, tên nhánh, code, tên biến, tên hàm, comment trong code và commit message viết bằng **tiếng Anh**. Ngoại lệ là tên riêng như tên thành viên và tên địa điểm chụp; khi dùng trong tên file hoặc thư mục thì viết không dấu.
 3. Không dùng blockquote Markdown (dòng bắt đầu bằng `>`). Mọi sơ đồ trong Markdown viết bằng Mermaid trong code fence `mermaid`.
-4. Gọi thành viên bằng tên. Hạn ghi theo dạng `dd/mm (thứ)`, không ghi giờ, không ghi theo khoảng ngày. Trong bảng công việc, hạn chỉ ghi cho cả giai đoạn, không ghi cho từng task; task được nhóm theo thành viên.
-5. Không chỉ định người duyệt trong tài liệu của Nhóm. Với vấn đề cần quyết định chung, ghi "báo lại cho cả Nhóm để cùng quyết định".
-6. Mọi con số trong lời văn của notebook phải xuất hiện trong output của notebook. Notebook build từ chính `src/`, không chép code vào cell bằng `%%writefile`.
+4. Gọi thành viên bằng tên, không dùng ký hiệu chữ cái thay cho tên.
+5. Hạn chót ghi bằng mốc ngày cụ thể dạng `dd/mm (Thứ n)` (ví dụ `06/10 (Thứ 3)`), viết đầy đủ, không viết tắt như T3; không ghi giờ, không ghi theo khoảng ngày. Không đặt thêm các loại hạn như "hạn nội bộ" hay "hạn của nhóm" ngoài hạn nộp chính thức. Không ghi hạn ở cuối tiêu đề mục; hạn chỉ được quản lý trong bảng công việc.
+6. Trong bảng công việc, hạn chỉ ghi cho cả giai đoạn, không ghi cho từng task. Task được nhóm theo thành viên (theo thứ tự stage phụ trách), các ô tên liên tiếp của cùng một người được gộp lại bằng bảng HTML có `rowspan`.
+7. Kế hoạch được lập cuốn chiếu: chỉ ghi nội dung và hạn chi tiết cho giai đoạn hiện tại cùng mốc nộp bài; các giai đoạn sau chỉ ghi tên và được lập chi tiết khi giai đoạn trước hoàn thành.
+8. Cột "Phần việc chung" trong bảng phân vai chỉ ghi các phần việc chung đã có task đến giai đoạn hiện tại; không ghi trước phần việc của các giai đoạn sau hay của V1-V3. Mỗi ô ghi ngắn gọn theo mảng việc, không kèm mã task và không liệt kê chi tiết như tên file. Không ghi vào cột này các việc thuộc stage của chính người đó (ví dụ công cụ kiểm thử của stage); thành viên không có phần việc chung thì để trống.
+9. Không chỉ định người duyệt hay quy trình duyệt trong tài liệu của Nhóm. Với vấn đề cần quyết định chung, ghi "báo lại cho cả Nhóm để cùng quyết định".
+10. Không đưa quy định về việc sử dụng công cụ AI vào tài liệu quản lý dự án của Nhóm.
+11. Mọi con số trong lời văn của notebook phải xuất hiện trong output của notebook. Notebook build từ chính `src/`, không chép code vào cell bằng `%%writefile`.
 
 ## 8. Các mục sẽ bổ sung
 

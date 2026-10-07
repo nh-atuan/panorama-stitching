@@ -38,7 +38,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td></td>
       <td>Đủ 4 dòng</td>
       <td>Đang làm</td>
-      <td>Tuấn đã điền dòng của mình</td>
+      <td></td>
     </tr>
     <tr>
       <td>P0-T03</td>
@@ -46,7 +46,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>P0-T06</td>
       <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
       <td>Đang làm</td>
-      <td>Tuấn đã chụp và điền bảng ứng viên</td>
+      <td></td>
     </tr>
     <tr>
       <td>P0-T04</td>
@@ -77,7 +77,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>P0-T07</td>
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S1</td>
       <td></td>
-      <td><code>docs/stages/s1-preprocessing.md</code> có mục 1 và 2</td>
+      <td><code>docs/stages/s1-preprocessing.md</code> có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
       <td>Xong</td>
       <td></td>
     </tr>
@@ -86,7 +86,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>P0-T08</td>
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S2, S3</td>
       <td></td>
-      <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> có mục 1 và 2</td>
+      <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
       <td>Chưa làm</td>
       <td></td>
     </tr>
@@ -111,7 +111,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>P0-T11</td>
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; tự chuẩn bị phương án cặp synthetic và metric sai số homography</td>
       <td></td>
-      <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> có mục 1 và 2</td>
+      <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
       <td>Chưa làm</td>
       <td></td>
     </tr>
@@ -128,7 +128,7 @@ Hạn của giai đoạn: **06/10 (T3)**.
       <td>P0-T13</td>
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S6</td>
       <td></td>
-      <td><code>docs/stages/s6-warp-blend.md</code> có mục 1 và 2</td>
+      <td><code>docs/stages/s6-warp-blend.md</code> có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
       <td>Chưa làm</td>
       <td></td>
     </tr>

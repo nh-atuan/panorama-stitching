@@ -81,7 +81,7 @@ Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0
 
 | Người chụp | Tên địa điểm | Site slug | Loại (trong nhà / ngoài trời) | Mô tả ngắn |
 |---|---|---|---|---|
-| Tuấn | | | | |
+| Tuấn | Ẩn Coffee | an-coffee | Cả hai | Quán cà phê; `standard1` chụp ngoài trời, `standard2` chụp trong nhà |
 | Thành | | | | |
 | Chương | | | | |
 | Đế | | | | |
@@ -92,7 +92,9 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 
 | Mã cặp | Người chụp | Site slug | Loại (chuẩn / khó) | Yếu tố khó (nếu có) | Ngày, giờ chụp | Điện thoại | Độ phân giải gốc |
 |---|---|---|---|---|---|---|---|
-| tuan-standard1 | Tuấn | | chuẩn | | | | |
+| tuan-standard1 | Tuấn | an-coffee | chuẩn | | 07/10 12:09; bản `_b` 12:42, bản `_c` 12:43 | nubia Neo 3 GT 5G | 8160×6144; bản `_b`, `_c`: 4080×3072 |
+| tuan-standard2 | Tuấn | an-coffee | chuẩn | | 07/10 12:10 | nubia Neo 3 GT 5G | 8160×6144 |
+| tuan-challenge1 | Tuấn | an-coffee | khó | Ít texture | 07/10 12:35 | nubia Neo 3 GT 5G | 8160×6144 |
 
 ### 5.3 Kết quả kiểm tra
 

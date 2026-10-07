@@ -44,7 +44,7 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
 | Chương | S6 | Kernel S6 | Tối ưu S6 theo profiling |
 
-Ngoài các task đã giao trong P0, các phần việc chung như duy trì khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
+Ngoài các task đã giao trong P0 và P1, các phần việc chung như duy trì khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
 
 ## 3. Các giai đoạn
 
@@ -62,7 +62,7 @@ flowchart LR
 | Mã | Giai đoạn | Kế hoạch chi tiết |
 |---|---|---|
 | P0 | Chuẩn bị | Đã lập, kết thúc 06/10 (T3) |
-| P1 | Cài đặt từng stage | Lập khi P0 hoàn thành |
+| P1 | Cài đặt từng stage | Đã lập, kết thúc 13/10 (T3) |
 | P2 | Ghép và kiểm chứng V0 | Lập khi P1 hoàn thành |
 | P3 | Đo và phân tích | Lập khi P2 hoàn thành |
 | P4 | Hoàn thiện và nộp | Lập khi P3 hoàn thành |
@@ -73,6 +73,14 @@ Kết quả cần có khi kết thúc P0:
 - ảnh gốc đã chụp và được kiểm tra;
 - mỗi người phụ trách đã chọn sơ bộ phương pháp và xác định đầu vào/đầu ra cho stage của mình;
 - interface chung đã chốt.
+
+Kết quả cần có khi kết thúc P1:
+
+- 6 stage V0 đã được cài đặt và kiểm thử độc lập trên Colab T4, tài liệu thiết kế của mỗi stage có mục 3, 4, 5, 7 và 8;
+- công cụ tạo cặp synthetic và tính sai số homography đã sẵn sàng, ngưỡng sai số đã chốt;
+- khung chạy chương trình (đo thời gian, in CSV, báo lỗi cấp chương trình) đã merge vào `main`;
+- `dataset/` đã được tạo và upload lên Drive chung;
+- nhánh `p1` của mọi thành viên đã merge vào `main`.
 
 ## 4. Làm song song, không chờ nhau
 
@@ -200,7 +208,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 
 5. **Đồng bộ thường xuyên:** kéo `main` mới về nhánh của mình (`git pull origin main` hoặc rebase), ít nhất mỗi khi có pull request file dùng chung vừa được merge.
 6. **Trước khi mở pull request:** nhánh phải build và chạy test đạt trên Colab T4. Pull request ghi các mã task đã làm, mô tả thay đổi và dán output build/test.
-7. **Commit message** theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/), dùng mã task làm scope. Ví dụ: `feat(p1-t05): add RANSAC hypothesis loop`, `fix(p1-t02): handle border pixels in blur`.
+7. **Commit message** theo chuẩn [Conventional Commits](https://www.conventionalcommits.org/), dùng mã task làm scope. Ví dụ: `feat(p1-t14): add RANSAC hypothesis loop`, `fix(p1-t04): handle border pixels in blur`.
 8. Không commit: ảnh dataset, output, token và mật khẩu, notebook còn output (trừ notebook nộp bài), file PDF.
 9. Không force-push lên `main` và không sửa lịch sử của người khác.
 

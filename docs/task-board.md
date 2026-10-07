@@ -2,7 +2,7 @@
 
 Quy tắc chung nằm trong [kế hoạch giữa kỳ](midterm-plan.md). Kế hoạch được lập cuốn chiếu: chỉ giai đoạn hiện tại có task chi tiết. Giai đoạn kế tiếp được lập khi giai đoạn trước hoàn thành. Hạn được ghi cho cả giai đoạn; mọi task trong giai đoạn phải xong trước hạn đó. Mốc cố định duy nhất là **23/10 (T6)**.
 
-Mã task có dạng `P<số giai đoạn>-T<số thứ tự>` và được dùng làm scope trong commit message, ví dụ `feat(p1-t05): add RANSAC hypothesis loop` trên nhánh giai đoạn `de/p1`. Cách chọn nhánh và pull request theo loại thay đổi nằm ở mục 10 của [kế hoạch](midterm-plan.md).
+Mã task có dạng `P<số giai đoạn>-T<số thứ tự>` và được dùng làm scope trong commit message, ví dụ `feat(p1-t14): add RANSAC hypothesis loop` trên nhánh giai đoạn `de/p1`. Cách chọn nhánh và pull request theo loại thay đổi nằm ở mục 10 của [kế hoạch](midterm-plan.md).
 
 Task được nhóm theo thành viên, theo thứ tự stage phụ trách. Mỗi người tự cập nhật cột **Trạng thái** và **Ghi chú / PR** của task mình. Trạng thái dùng một trong các giá trị: `Chưa làm`, `Đang làm`, `Chờ review`, `Xong`, `Bị chặn`.
 
@@ -145,7 +145,174 @@ Hạn của giai đoạn: **06/10 (T3)**.
 
 ## P1 - Cài đặt từng stage
 
-Lập chi tiết khi P0 hoàn thành.
+Hạn của giai đoạn: **13/10 (T3)**.
+
+Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệu tự tạo theo mục 4 của [kế hoạch](midterm-plan.md), nên task của các stage chỉ phụ thuộc vào P0. Việc nối 6 stage thành pipeline hoàn chỉnh thuộc P2. Mục 6 (mapping GPU) của tài liệu thiết kế stage được viết ở P3, sau khi có số đo.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2">Cả nhóm</td>
+      <td>P1-T01</td>
+      <td>Chốt ngưỡng sai số homography trên cặp synthetic</td>
+      <td>P0-T11</td>
+      <td>Ngưỡng ghi vào mục "Quyết định đã chốt"</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T02</td>
+      <td>Mỗi người mở pull request nhánh <code>&lt;tên&gt;/p1</code> và merge vào <code>main</code></td>
+      <td>Các task code của mình trong P1</td>
+      <td><code>main</code> build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4 và có đủ 6 file <code>v0_*.cpp</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="4">Tuấn</td>
+      <td>P1-T03</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S1</td>
+      <td>P0-T04</td>
+      <td><code>docs/stages/s1-preprocessing.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T04</td>
+      <td>Cài đặt và kiểm thử <code>v0_preprocess.cpp</code></td>
+      <td>P0-T12, P1-T03</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S1 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T05</td>
+      <td>Chọn cặp theo cách đã chốt ở P0-T01, chạy script chuẩn bị dataset, upload <code>dataset/</code> lên Drive chung</td>
+      <td>P0-T01, P0-T09, P0-T10</td>
+      <td><a href="dataset.md">dataset</a> mục 8 đã điền; <code>dataset/</code> trên Drive có đủ 3 site và cặp khó, mỗi cặp đủ 3 kích thước</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T06</td>
+      <td>Viết nháp mục 3.2 và 3.6 của báo cáo giữa kỳ</td>
+      <td>P1-T05</td>
+      <td><code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="4">Thành</td>
+      <td>P1-T07</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S2</td>
+      <td>P0-T04, P0-T08</td>
+      <td><code>docs/stages/s2-detection.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T08</td>
+      <td>Cài đặt và kiểm thử <code>v0_detect.cpp</code></td>
+      <td>P0-T12, P1-T07</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S2 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T09</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S3</td>
+      <td>P0-T04, P0-T08</td>
+      <td><code>docs/stages/s3-description.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T10</td>
+      <td>Cài đặt và kiểm thử <code>v0_describe.cpp</code></td>
+      <td>P0-T12, P1-T09</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S3 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="5">Đế</td>
+      <td>P1-T11</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S4</td>
+      <td>P0-T04, P0-T11</td>
+      <td><code>docs/stages/s4-matching.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T12</td>
+      <td>Cài đặt và kiểm thử <code>v0_match.cpp</code></td>
+      <td>P0-T12, P1-T11</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T13</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S5, gồm seed RANSAC và cách xử lý khi không đủ match hoặc homography suy biến</td>
+      <td>P0-T04, P0-T11</td>
+      <td><code>docs/stages/s5-homography.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T14</td>
+      <td>Cài đặt và kiểm thử <code>v0_homography.cpp</code></td>
+      <td>P0-T12, P1-T13</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T15</td>
+      <td>Tạo cặp synthetic từ một homography biết trước và công cụ tính sai số homography so với ground truth</td>
+      <td>P0-T11</td>
+      <td>Tạo được cặp synthetic và in được sai số; cách tạo cặp và metric ghi trong mục 5 của tài liệu S5</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="3">Chương</td>
+      <td>P1-T16</td>
+      <td>Chốt tham số và viết thuật toán chi tiết cho S6, gồm cách tính kích thước khung ảnh đầu ra và độ lệch gốc tọa độ</td>
+      <td>P0-T04, P0-T13</td>
+      <td><code>docs/stages/s6-warp-blend.md</code> có mục 3, 4 và 8</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T17</td>
+      <td>Cài đặt và kiểm thử <code>v0_warp_blend.cpp</code></td>
+      <td>P0-T12, P1-T16</td>
+      <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S6 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P1-T18</td>
+      <td>Cài đặt khung chạy trong <code>main.cu</code>: đo thời gian từng stage và tổng theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a>, warm-up, <code>--runs</code>, in dòng CSV, cờ <code>--debug</code>, báo lỗi cấp chương trình (thiếu file, ảnh không đọc được, version không tồn tại, <code>--runs</code> không dương)</td>
+      <td>P0-T04, P0-T12</td>
+      <td>Merge vào <code>main</code> qua pull request file dùng chung; chạy được trên Colab T4 với các stage stub</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
 ## P2 - Ghép và kiểm chứng V0
 

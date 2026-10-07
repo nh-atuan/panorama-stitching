@@ -40,11 +40,11 @@ Chỉ chọn trường nếu Nhóm thiếu ảnh ngoài trời và có một gó
 
 | Mã cặp | Loại | Gợi ý cảnh | Lý do |
 |---|---|---|---|
-| `pair1` | Chuẩn, trong nhà | Đứng ở một góc quán, nhìn chéo về quầy pha chế, kệ ly, menu treo tường, tranh hoặc bảng chữ | Nhiều chữ và đồ vật nên có nhiều chi tiết; vùng chồng lấn cách máy từ 3–4 m trở lên |
-| `pair2` | Chuẩn, ngoài trời | Từ khu ngồi ngoài hoặc ban công, nhìn ra dãy nhà và bảng hiệu bên kia đường | Vật ở xa nên gần như không có parallax, lại có nhiều texture |
+| `standard1` | Chuẩn, trong nhà | Đứng ở một góc quán, nhìn chéo về quầy pha chế, kệ ly, menu treo tường, tranh hoặc bảng chữ | Nhiều chữ và đồ vật nên có nhiều chi tiết; vùng chồng lấn cách máy từ 3–4 m trở lên |
+| `standard2` | Chuẩn, ngoài trời | Từ khu ngồi ngoài hoặc ban công, nhìn ra dãy nhà và bảng hiệu bên kia đường | Vật ở xa nên gần như không có parallax, lại có nhiều texture |
 | `challenge1` | Khó | Chọn **một** yếu tố: người hoặc xe di chuyển trong vùng chồng lấn, góc quán thiếu sáng, hoặc tường gạch ốp lặp lại | Mỗi cặp khó chỉ có một yếu tố chính để dễ phân tích nguyên nhân thất bại |
 
-Nếu quán không có khu ngoài trời, `pair2` chụp ở một góc khác trong quán, miễn là khung cảnh khác hẳn `pair1`.
+Nếu quán không có khu ngoài trời, `standard2` chụp ở một góc khác trong quán, miễn là khung cảnh khác hẳn `standard1`.
 
 ## 5. Cách chụp mỗi cặp
 
@@ -59,13 +59,13 @@ Nếu quán không có khu ngoài trời, `pair2` chụp ở một góc khác tr
 ## 6. Sau khi chụp
 
 1. Đổi tên file theo [dataset](dataset.md) mục 4, ví dụ:
-   - `pair1_left.jpg`, `pair1_right.jpg`;
+   - `standard1_left.jpg`, `standard1_right.jpg`;
    - `challenge1_left.jpg`;
-   - bản chụp lặp: `pair1_left_b.jpg`.
-2. Upload ảnh gốc, chưa chỉnh sửa, lên Google Drive chung (task P0-T06).
+   - bản chụp lặp: `standard1_left_b.jpg`; nếu chụp lặp lần hai thì dùng `_c`, ví dụ `standard1_left_c.jpg`.
+2. Upload ảnh gốc, chưa chỉnh sửa, lên Google Drive chung, link ở [dataset](dataset.md) mục 4.
 3. Điền [dataset](dataset.md):
    - mục 5.1: dòng của Tuấn, gồm tên quán, site slug không dấu, loại và mô tả ngắn;
-   - mục 5.2: các dòng `tuan-pair1`, `tuan-pair2`, `tuan-challenge1`.
+   - mục 5.2: các dòng `tuan-standard1`, `tuan-standard2`, `tuan-challenge1`.
 4. Tự kiểm tra trước khi Thành kiểm tra chính thức ở P0-T10:
    - file là JPEG, không phải HEIC;
    - ảnh đủ độ phân giải;

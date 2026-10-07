@@ -30,10 +30,10 @@ Tiêu chí hoàn thành:
 
 | Thành viên | MSSV | Stage phụ trách | Phần việc chung |
 |---|---|---|---|
-| Tuấn | 23120185 | S1 Preprocessing | |
-| Thành | 23120166 | S2 Keypoint detection, S3 Description | |
-| Đế | 23120232 | S4 Matching, S5 Homography | |
-| Chương | 23120195 | S6 Warping and blending | |
+| Tuấn | 23120185 | S1 Preprocessing | Repo GitHub và Google Drive chung (P0-T05, P0-T06); tạo và upload `dataset/` (P1-T05); nháp mục 3.2 và 3.6 của báo cáo (P1-T06) |
+| Thành | 23120166 | S2 Keypoint detection, S3 Description | Script chuẩn bị dataset (P0-T09); kiểm tra cặp ảnh ứng viên (P0-T10) |
+| Đế | 23120232 | S4 Matching, S5 Homography | Cặp synthetic và công cụ tính sai số homography (P1-T15) |
+| Chương | 23120195 | S6 Warping and blending | Quản lý interface và toàn bộ file dùng chung: `common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`, `docs/interface.md` (P0-T12, P0-T14); khung chạy và đo thời gian V0 (P1-T18) |
 
 Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook). V2 và V3 chỉ được chốt sau khi có profiling V1.
 
@@ -44,7 +44,7 @@ Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook).
 | Đế | S4, S5 | Kernel S4, S5 | Tối ưu S4/S5 theo profiling |
 | Chương | S6 | Kernel S6 | Tối ưu S6 theo profiling |
 
-Ngoài các task đã giao trong P0 và P1, các phần việc chung như duy trì khung chương trình, quản lý bộ nhớ host-device, timing bằng CUDA event và tối ưu cấp pipeline hiện **chưa phân công**.
+Cột "Phần việc chung" chỉ ghi các phần việc chung đã có task đến giai đoạn hiện tại (P1). Phần việc chung của các giai đoạn sau được phân công khi lập kế hoạch chi tiết cho giai đoạn đó.
 
 ## 3. Các giai đoạn
 
@@ -177,7 +177,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 ## 9. Quy định viết code
 
 1. **Build:** dùng `nvcc -arch=sm_75` theo quy định trên lớp, chạy trên Colab T4.
-2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Người quản lý các file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`): chưa phân công.
+2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Người quản lý các file dùng chung (`common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`) và `docs/interface.md`: Chương. Mọi thay đổi vẫn đi qua pull request file dùng chung theo mục 10; thay đổi interface đã chốt thì báo lại cho cả Nhóm để cùng quyết định.
 3. **Comment đầu file bắt buộc** ở mọi file nhóm viết hoặc sửa:
 
     ```cpp

@@ -30,10 +30,10 @@ Tiêu chí hoàn thành:
 
 | Thành viên | MSSV | Stage phụ trách | Phần việc chung |
 |---|---|---|---|
-| Tuấn | 23120185 | S1 Preprocessing | Repo GitHub và Google Drive chung (P0-T05, P0-T06); tạo và upload `dataset/` (P1-T05); nháp mục 3.2 và 3.6 của báo cáo (P1-T06) |
-| Thành | 23120166 | S2 Keypoint detection, S3 Description | Script chuẩn bị dataset (P0-T09); kiểm tra cặp ảnh ứng viên (P0-T10) |
-| Đế | 23120232 | S4 Matching, S5 Homography | Cặp synthetic và công cụ tính sai số homography (P1-T15) |
-| Chương | 23120195 | S6 Warping and blending | Quản lý interface và toàn bộ file dùng chung: `common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`, `docs/interface.md` (P0-T12, P0-T14); khung chạy và đo thời gian V0 (P1-T18) |
+| Tuấn | 23120185 | S1 Preprocessing | Repo, Drive chung, dataset, báo cáo phần bài toán và dataset |
+| Thành | 23120166 | S2 Keypoint detection, S3 Description | Script chuẩn bị dataset, kiểm tra ảnh |
+| Đế | 23120232 | S4 Matching, S5 Homography | Cặp synthetic và đo sai số homography |
+| Chương | 23120195 | S6 Warping and blending | Interface, các file dùng chung, khung chạy chương trình |
 
 Phân công dự kiến đến cuối kỳ (dùng cho mục 3.1 của notebook). V2 và V3 chỉ được chốt sau khi có profiling V1.
 

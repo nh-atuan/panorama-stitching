@@ -68,12 +68,14 @@ Các quy định khác:
 
 Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0QiOq?usp=sharing
 
-1. Upload ảnh **gốc, chưa chỉnh sửa**.
-2. Đặt tên file bằng tiếng Anh:
+1. Upload ảnh **gốc, chưa chỉnh sửa** vào thư mục con mang tên mình (`tuan`, `thanh`, `chuong`, `de`). Tên file không lặp lại tên thành viên vì đã có trong tên thư mục; khi tải về để kiểm tra hoặc chạy script chuẩn bị dataset phải giữ nguyên cấu trúc `raw/<tên thành viên>/`.
+2. Đặt tên file bằng tiếng Anh theo dạng `<loại cặp><số>_<left|right>[_b<k>].jpg`, chỉ dùng chữ thường, không dấu cách:
     - cặp chuẩn: `standard1_left.jpg`, `standard1_right.jpg`, `standard2_left.jpg`, ...;
     - cặp khó: `challenge1_left.jpg`, `challenge1_right.jpg`, ...;
-    - lần chụp lặp: thêm hậu tố `_b`, ví dụ `standard1_left_b.jpg`.
-3. Điền thông tin vào bảng ứng viên ở mục 5.2.
+    - cặp backup: thêm hậu tố `_b1`, `_b2`, ..., ví dụ `standard1_left_b1.jpg`, `standard1_right_b1.jpg`.
+3. Cặp không có hậu tố là cặp chính mà người chụp đề xuất dùng. Số `k` trong `_b<k>` là thứ tự ưu tiên dự phòng do người chụp tự quyết định (`b1` được dùng trước `b2`), không phải thứ tự thời gian chụp.
+4. Ảnh trái và ảnh phải có cùng hậu tố tạo thành một cặp; không ghép ảnh của hai cặp khác nhau, ví dụ `standard1_left_b1.jpg` chỉ đi với `standard1_right_b1.jpg`.
+5. Điền thông tin vào bảng ứng viên ở mục 5.2, mỗi cặp chính và mỗi cặp backup một dòng.
 
 ## 5. Địa điểm và ứng viên
 
@@ -92,9 +94,16 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 
 | Mã cặp | Người chụp | Site slug | Loại (chuẩn / khó) | Yếu tố khó (nếu có) | Ngày, giờ chụp | Điện thoại | Độ phân giải gốc |
 |---|---|---|---|---|---|---|---|
-| tuan-standard1 | Tuấn | an-coffee | chuẩn | | 07/10 12:09; bản `_b` 12:42, bản `_c` 12:43 | nubia Neo 3 GT 5G | 8160×6144; bản `_b`, `_c`: 4080×3072 |
+| tuan-standard1 | Tuấn | an-coffee | chuẩn | | 07/10 12:09 | nubia Neo 3 GT 5G | 8160×6144 |
+| tuan-standard1-b1 | Tuấn | an-coffee | chuẩn | | 07/10 12:42 | nubia Neo 3 GT 5G | 4080×3072 |
+| tuan-standard1-b2 | Tuấn | an-coffee | chuẩn | | 07/10 12:43 | nubia Neo 3 GT 5G | 4080×3072 |
+| tuan-standard1-b3 | Tuấn | an-coffee | chuẩn | | | | |
 | tuan-standard2 | Tuấn | an-coffee | chuẩn | | 07/10 12:10 | nubia Neo 3 GT 5G | 8160×6144 |
+| tuan-standard2-b1 | Tuấn | an-coffee | chuẩn | | | | |
 | tuan-challenge1 | Tuấn | an-coffee | khó | Ít texture | 07/10 12:35 | nubia Neo 3 GT 5G | 8160×6144 |
+| tuan-challenge1-b1 | Tuấn | an-coffee | khó | | | | |
+
+Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương ứng với tên file ở mục 4, ví dụ `tuan-standard1-b1` gồm `tuan/standard1_left_b1.jpg` và `tuan/standard1_right_b1.jpg`.
 
 ### 5.3 Kết quả kiểm tra
 

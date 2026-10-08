@@ -126,3 +126,5 @@ Nhóm sẽ bổ sung dần các mục sau vào khuôn mẫu. Khi chúng xuất h
 
 - quy tắc viết markdown trong notebook sao cho tự nhiên như người viết;
 - quy tắc viết comment trong code.
+- quy tắc xóa output notebook trước khi commit.
+- quy tắc chia nhỏ file/hàm/module,... ra để giúp agent dễ đọc, dễ sửa, dễ test và dễ kiểm chứng, cũng giúp dễ debug khi có lỗi.

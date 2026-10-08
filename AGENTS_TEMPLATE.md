@@ -8,7 +8,14 @@ File này là bộ quy tắc **tối thiểu** mà agent của mỗi thành viê
 2. Bạn được thêm, sửa hoặc sắp xếp lại nội dung trong file của mình cho phù hợp với cách làm việc riêng, nhưng **phải giữ ít nhất toàn bộ nội dung của khuôn mẫu này**. Nếu quy tắc riêng mâu thuẫn với khuôn mẫu, khuôn mẫu được ưu tiên.
 3. **Tuyệt đối không commit** file hướng dẫn agent của riêng bạn. Các tên file này đã có trong `.gitignore`.
 4. Mỗi khi kéo code mới về (`git pull`), kiểm tra xem `AGENTS_TEMPLATE.md` có thay đổi không (ví dụ bằng `git log -p -- AGENTS_TEMPLATE.md`). Nếu có, cập nhật file của bạn cho đầy đủ trước khi giao việc tiếp cho agent.
-5. Gợi ý, không bắt buộc: kết nối cho agent một công cụ chạy được Colab, ví dụ [Colab MCP server](https://github.com/googlecolab/colab-mcp) của Google hoặc một MCP server, plugin tương đương. Khi đó agent tự build và chạy test trên Colab T4, bạn không phải tải notebook và source code lên Colab sau mỗi lần sửa code.
+5. Ghi họ tên và MSSV của bạn vào file hướng dẫn agent cá nhân theo mẫu sau để agent điền vào comment đầu file theo mục 4:
+
+    ```text
+    Họ tên (viết không dấu trong code): <Full name>
+    MSSV: <Student ID>
+    ```
+
+6. Gợi ý, không bắt buộc: kết nối cho agent một công cụ chạy được Colab, ví dụ [Colab MCP server](https://github.com/googlecolab/colab-mcp) của Google hoặc một MCP server, plugin tương đương. Khi đó agent tự build và chạy test trên Colab T4, bạn không phải tải notebook và source code lên Colab sau mỗi lần sửa code.
 
 Phần dưới đây là nội dung dành cho agent.
 
@@ -62,7 +69,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 1. Chỉ làm đúng phạm vi task. Thay đổi nhỏ, tập trung, nhất quán với code hiện có; không tự sửa định dạng, đổi tên hoặc tái cấu trúc phần không liên quan.
 2. Giữ nguyên các thay đổi sẵn có của người dùng. Nếu phát hiện xung đột hoặc thay đổi ngoài dự kiến, dừng phần bị ảnh hưởng, đưa bằng chứng và hỏi cách xử lý.
 3. Tuân thủ quy định viết code trong `docs/midterm-plan.md`, đặc biệt:
-    - comment đầu file ghi tác giả và nguồn bên ngoài (nếu có) ở mọi file được viết hoặc sửa;
+    - comment đầu file ở mọi file được viết hoặc sửa theo đúng mẫu ở mục 9 của `docs/midterm-plan.md` (đề bài yêu cầu ghi tác giả và nguồn bên ngoài nếu có): dòng `Authors:` gồm họ tên đầy đủ kèm MSSV của người viết hoặc sửa (lấy từ file hướng dẫn agent cá nhân), dòng `External source:` ghi `none` hoặc dòng `Adapted from:` kèm tên nguồn, URL, ngày truy cập và dòng `Changes:` mô tả phần Nhóm đã thay đổi so với nguồn;
     - V0 hoàn toàn tuần tự: không OpenMP, không `std::thread`, `std::async`, `std::execution`, không intrinsics SIMD, không cờ `-fopenmp`;
     - trong `src/` chỉ dùng thư viện chuẩn C/C++ và stb;
     - mọi yếu tố ngẫu nhiên dùng seed cố định;
@@ -73,6 +80,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 6. Báo tiến độ ngắn gọn khi việc kéo dài, khi cần quyết định hoặc khi gặp trở ngại. Không tuyên bố đã xong khi chưa kiểm chứng.
 7. Không bịa đặt kết quả, số đo, trạng thái test hoặc mức độ hoàn thành. Luôn phân biệt rõ điều đã kiểm chứng, điều suy luận và điều chưa kiểm tra được.
 8. Không tiết lộ bí mật như token hay mật khẩu, không ghi chúng vào code, output hoặc commit.
+9. **Chia nhỏ phần việc thành nhiều file, hàm và module.** Không gộp toàn bộ vào một file hay một hàm lớn. Module hóa stage và task của mình ở mức nhỏ nhất có thể, mỗi đơn vị làm một việc rõ ràng, để agent dễ đọc, dễ sửa, dễ viết test và kiểm chứng riêng từng phần, và dễ khoanh vùng khi debug. Vẫn giữ cấu trúc file đặt phẳng trong `src/` và tên file theo mục 9 của `docs/midterm-plan.md`; không tạo thêm file ngoài phạm vi task mà chưa hỏi theo mục 2.
 
 ## 5. Kiểm chứng và nghiệm thu
 
@@ -103,7 +111,8 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - sau khi commit, kiểm tra bằng `git show --check --oneline HEAD`;
     - trước khi mở pull request, nhánh phải build và chạy test đạt trên Colab T4; pull request ghi các mã task đã làm, mô tả thay đổi và output build/test;
     - không force-push lên `main`, không sửa lịch sử hay amend commit của người khác;
-    - không commit file hướng dẫn agent cá nhân, dataset, output, token, PDF hoặc notebook còn output (trừ notebook nộp bài).
+    - không commit file hướng dẫn agent cá nhân, dataset, output, token hoặc PDF;
+    - **tuyệt đối không commit output của notebook** để tránh conflict khi merge. Vẫn phải chạy notebook trước để biết nó chạy được hay không; chỉ khi commit mới xóa toàn bộ output (nút "Clear All Outputs" hoặc `jupyter nbconvert --clear-output --inplace <file>.ipynb`), rồi kiểm tra lại bằng `git diff --staged` rằng notebook không còn output (trừ notebook nộp bài nếu đề bài yêu cầu kèm output).
 3. Nếu bị chặn, nêu nguyên nhân cụ thể, những gì đã thử, và thông tin hoặc quyền cần người dùng bổ sung.
 
 ## 7. Quy ước tài liệu và ngôn ngữ
@@ -119,12 +128,4 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 9. Không chỉ định người duyệt hay quy trình duyệt trong tài liệu của Nhóm. Với vấn đề cần quyết định chung, ghi "báo lại cho cả Nhóm để cùng quyết định".
 10. Không đưa quy định về việc sử dụng công cụ AI vào tài liệu quản lý dự án của Nhóm.
 11. Mọi con số trong lời văn của notebook phải xuất hiện trong output của notebook. Notebook build từ chính `src/`, không chép code vào cell bằng `%%writefile`.
-
-## 8. Các mục sẽ bổ sung
-
-Nhóm sẽ bổ sung dần các mục sau vào khuôn mẫu. Khi chúng xuất hiện trên `main`, hãy cập nhật vào file của bạn:
-
-- quy tắc viết markdown trong notebook sao cho tự nhiên như người viết;
-- quy tắc viết comment trong code.
-- quy tắc xóa output notebook trước khi commit.
-- quy tắc chia nhỏ file/hàm/module,... ra để giúp agent dễ đọc, dễ sửa, dễ test và dễ kiểm chứng, cũng giúp dễ debug khi có lỗi.
+12. Khi dùng agent để viết báo cáo, file markdown hoặc cell markdown trong notebook, agent phải đọc trước trang [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) và tránh các dấu hiệu được liệt kê ở đó, để câu chữ tự nhiên như người viết. Sau khi viết xong, agent rà lại văn bản theo trang này và sửa các chỗ còn dấu hiệu.

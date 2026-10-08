@@ -107,14 +107,20 @@ Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương 
 
 ### 5.3 Kết quả kiểm tra
 
-Thành kiểm tra mọi cặp ứng viên có đạt các yêu cầu ở mục 1 và mục 3 hay không, rồi ghi kết quả vào bảng dưới.
+Thành soạn script kiểm tra các cặp chính của từng thành viên theo quy trình ở mục 6, rồi ghi kết quả vào bảng dưới. Không xét các cặp backup.
 
 | Mã cặp | Đạt? | Ghi chú |
 |---|---|---|
 
 ## 6. Cách chọn ảnh
 
-**Chưa chốt** cách chọn ảnh (có bình chọn hay không). Cả Nhóm sẽ quyết định trong task P0-T01 và ghi kết quả vào đây.
+1. **Phạm vi:** chỉ xét các cặp chính do từng thành viên chụp, tức các cặp không có hậu tố `_b<k>` ở mục 4. Các cặp backup không được đưa vào kiểm tra hoặc xếp ưu tiên trong bước chọn ảnh này.
+2. **Thành soạn script kiểm tra:** kiểm tra từng cặp chính có thỏa các yêu cầu của đề ở mục 1 và các quy định chụp ảnh ở mục 3 hay chưa. Kết quả phải ghi rõ tiêu chí đã kiểm tra, đạt hoặc chưa đạt và lý do; tiêu chí không thể xác minh tự động phải được đánh dấu để thành viên review, không mặc định là đạt.
+3. **Xếp thứ tự ưu tiên:** Thành dùng kết quả kiểm tra để xếp các cặp chính theo mức độ phù hợp, kèm lý do cho thứ tự đề xuất. Cặp chuẩn và cặp khó được xếp riêng theo mục đích sử dụng; yếu tố khó có chủ đích không tự động khiến cặp khó bị đánh giá là không phù hợp. Ghi kết quả kiểm tra ở mục 5.3 và thứ tự ưu tiên đề xuất trong bảng dưới.
+4. **Review và chốt:** từng thành viên review lại kết quả kiểm tra, thứ tự ưu tiên và ảnh thực tế; xác nhận hoặc ghi rõ điều chỉnh cùng lý do. Sau khi từng thành viên review, cả Nhóm chốt các cặp được chọn và ghi kết quả cuối cùng ở mục 8, bảo đảm đủ 3 địa điểm khác nhau, mỗi địa điểm 1 cặp chuẩn và ít nhất 1 cặp khó. Nếu có vấn đề chưa thống nhất, báo lại cho cả Nhóm để cùng quyết định.
+
+| Loại (chuẩn / khó) | Thứ tự ưu tiên đề xuất | Mã cặp chính | Lý do đề xuất | Kết quả review của từng thành viên |
+|---|---|---|---|---|
 
 ## 7. Chuẩn bị dataset
 

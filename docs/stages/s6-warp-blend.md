@@ -4,7 +4,7 @@ Người phụ trách: Chương (23120195). Cập nhật lần cuối: 12/10/202
 
 Task hiện tại: **P0-T13 — chọn sơ bộ phương pháp và xác định đầu vào/đầu ra**. Phương pháp sơ bộ chọn là **inverse warping trên mặt phẳng ảnh A, bilinear interpolation tự tính và feather blending theo khoảng cách đến biên ảnh nguồn**. Giữ phương pháp này cho V0–V3 nếu đạt kiểm chứng chất lượng ở P1. Chưa có code, ảnh kết quả hoặc số đo S6; tài liệu này không chứng nhận các task P1 đã hoàn thành.
 
-Các quy ước dữ liệu bên dưới là đề xuất của S6 để góp vào P0-T14. `docs/interface.md` và `common.h` chưa tồn tại trong checkout tại thời điểm viết; kiểu dữ liệu, tên trường và interface chung cần cả Nhóm thống nhất trước khi cài đặt. Dataset đã chụp và chuẩn bị đầy đủ theo xác nhận của Chương; chưa chạy S6 trên dataset đó.
+Các quy ước dữ liệu bên dưới là đề xuất ban đầu của S6. P0-T14 đã có [`docs/interface.md`](../interface.md) và `common.h` theo yêu cầu của Chương, gồm Homography float32 và stride byte; bản interface còn cần cả Nhóm góp ý và thống nhất trước khi cài pipeline thật. Dataset đã chụp và chuẩn bị đầy đủ theo xác nhận của Chương; chưa chạy S6 trên dataset đó.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -97,7 +97,7 @@ flowchart LR
 | Kích thước | Mỗi ảnh có width/height riêng, đều dương; không giả định luôn bằng nhau | Cần chốt ở P0-T14 |
 | Stride | Byte mỗi hàng, có khai báo; trường hợp packed là 3 * width | Cần chốt ở P0-T14 |
 | Tọa độ | Gốc trên trái; x sang phải, y xuống dưới; tâm pixel ở tọa độ nguyên | Cần chốt ở P0-T14 |
-| Homography H | Ma trận 3×3 row-major, tác động lên vector cột, chiều B → A; đề xuất `double` cho interface hình học | Cần thống nhất với Đế và cả Nhóm |
+| Homography H | Ma trận `float[9]` row-major, tác động lên vector cột, chiều B → A; tính toán nội bộ có thể dùng double | Theo yêu cầu mới P0-T14; cả Nhóm cần xác nhận |
 | H nghịch đảo | S6 tự tính và kiểm tra từ H; không bắt S5 trả thêm H^-1 | Đề xuất ranh giới trách nhiệm |
 | Cấu hình | Các trường S6 trong struct cấu hình chung; không hard-code khác nhau theo version | Giá trị ở P1-T16 |
 | Panorama | RGB `uint8_t`, row-major; width/height/stride của canvas và offset A → canvas | Cần chốt ở P0-T14 |

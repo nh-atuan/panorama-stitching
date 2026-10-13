@@ -185,7 +185,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S1</td>
       <td>P0-T04</td>
       <td><code>docs/stages/s1-preprocessing.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
+      <td>Xong</td>
       <td></td>
     </tr>
     <tr>
@@ -193,7 +193,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_preprocess.cpp</code></td>
       <td>P0-T12, P1-T03</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S1 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
+      <td>Bị chặn</td>
       <td></td>
     </tr>
     <tr>

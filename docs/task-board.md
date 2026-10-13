@@ -112,8 +112,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; tự chuẩn bị phương án cặp synthetic và metric sai số homography</td>
       <td></td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đế đã chốt S4 exact 2-NN Hamming + ratio 0.80, cross-check=false; S5 uniform RANSAC + normalized DLT double + MSAC/adaptive/refit. Đã viết input/output, phương án synthetic/metric và nguồn. Chưa commit tài liệu; interface/cấu hình tích hợp còn cần cả Nhóm xác nhận.</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -251,8 +251,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S4</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s4-matching.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã chốt và cập nhật mục 1, 3, 4, 8: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, deterministic indexA; cập nhật mục 5/6/7. Chưa commit; P0-T04 chưa hoàn tất. Chưa cài/kiểm thử P1-T12.</td>
     </tr>
     <tr>
       <td>P1-T12</td>
@@ -267,8 +267,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S5, gồm seed RANSAC và cách xử lý khi không đủ match hoặc homography suy biến</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s5-homography.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã viết method/thiết kế theo quyết định của Đế: seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, adaptive confidence 0.99, tau 2/3/6 px và tối đa hai all-inlier refits. Đã bổ sung degeneracy/error/test plan. Cần xác nhận tích hợp và numeric tolerances với cả Nhóm; chưa commit/cài/test.</td>
     </tr>
     <tr>
       <td>P1-T14</td>

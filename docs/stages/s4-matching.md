@@ -4,7 +4,7 @@ Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
 
 Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: Đế đã chốt phương pháp và cấu hình S4 ngày 13/10/2026.** Dùng nhất quán từ V0 đến Final, chỉ tối ưu implementation. Interface và cấu hình toàn pipeline cần cả Nhóm xác nhận ở P0-T04. Chưa cài `v0_match.cpp`, chưa chạy test hoặc benchmark; các kết quả mong đợi bên dưới không phải kết quả thực nghiệm.
+**Trạng thái: đã cài V0 và kiểm thử local ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Build C++11 warnings-as-errors bằng clang 23.1.3 trên Windows đạt; 59 checks của test S4 đạt. Chưa build/test Colab T4 hoặc benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -70,7 +70,9 @@ Theo [`docs/interface.md`](../interface.md), mục 3, 4, 6 và 8, cùng [`src/co
 | Tọa độ | Gốc trái trên, x sang phải, y xuống dưới, tâm pixel nguyên; S4 không đọc hoặc biến đổi tọa độ |
 | Lỗi | Trả `ErrorCode` cho caller; không tự gọi `exit`, không đưa output lỗi sang S5 |
 
-Input được mượn chỉ đọc. Output và buffer tạm V0 sẽ được quản lý bằng RAII ở Host; chữ ký hàm, capacity và ownership cụ thể thuộc P1-T12, cần ghi rõ khi cài. Không truyền `std::vector` qua Device. Thất bại phải trả số match hợp lệ bằng 0 và dọn buffer tạm; không bàn giao output một phần như kết quả thành công.
+API nằm trong `src/v0_match.h`: `v0_match(FeatureView<Descriptor> left, FeatureView<Descriptor> right, std::vector<Match>& output, const Config& config)`. `FeatureView<T>` trong `src/feature_views.h` chứa pointer/count/capacity, chỉ mượn buffer; caller phải khai báo capacity đúng với allocation thật. Stage kiểm tra metadata và alignment, không thể tự xác minh một pointer tùy ý có allocation thật bao nhiêu byte.
+
+Output là vector Host do caller sở hữu, chỉ publish khi thành công; lỗi làm output rỗng. Buffer tạm dùng RAII. Không truyền vector qua Device và không có log trong hàm stage. Validation theo thứ tự: clear output → S4 config → view metadata/alignment → số ứng viên tối thiểu → thuật toán/số match. `configure_v0_features` trong `src/feature_config.h` chuẩn bị cấu hình đã chốt và tau theo kích thước A, giữ các trường của stage khác; config lỗi được giữ nguyên.
 
 ## 3. Tham số
 
@@ -142,7 +144,7 @@ Với nA, nB descriptor, mỗi cặp cần XOR và popcount 8 word. Thời gian 
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có kết quả. Khi làm P1-T12, ghi đáp án exact của descriptor tự tạo và kết quả thực tế. Khi nối pipeline, ghi số descriptor A/B, số ứng viên qua ratio, số match bàn giao, số inlier và MSAC score S5, sai số trên synthetic. Ghi cross-check=false cùng cấu hình; không báo một lượt cross-check chưa chạy.
+Đã kiểm tra local bằng descriptor có đáp án biết trước: hoán vị B, descriptor giống nhau/khác bit cuối, nhiều A cùng chọn B và ratio biên. Chưa có precision/recall hoặc panorama trên dataset. Khi nối pipeline, ghi số descriptor A/B, số ứng viên qua ratio, số match bàn giao, số inlier và MSAC score S5, sai số synthetic; ghi cross-check=false cùng cấu hình.
 
 Để đo precision/recall trên synthetic, nhãn đúng phải lấy từ correspondence hoặc H ground truth với tolerance hình học đã khai báo. Không dùng chính inlier mask của H ước lượng làm ground truth. Log chi tiết/ảnh debug nằm ngoài vùng timing.
 
@@ -154,7 +156,7 @@ Mapping thread/warp/block cùng ý tưởng tối ưu sẽ chốt ở P3 sau khi
 
 ## 7. Kiểm thử
 
-Kế hoạch cho P1-T12; **chưa chạy**. Các test lọc có dưới 4 match kiểm tra helper hoặc thêm các cặp độc lập để đạt số lượng tối thiểu; test tích hợp phải kiểm tra đúng `InsufficientMatches`.
+`tests/test_v0_match.cpp`: **59 checks đạt trên Windows/clang 23.1.3, chưa chạy Colab T4**. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; khi dưới 4 match stage trả đúng `InsufficientMatches`. Không dùng output local làm số liệu chính thức.
 
 | Trường hợp | Kết quả mong đợi |
 |---|---|
@@ -172,7 +174,16 @@ Kế hoạch cho P1-T12; **chưa chạy**. Các test lọc có dưới 4 match k
 | Input null với count dương; count âm; capacity sai | `InvalidArgument` |
 | Chạy lại cùng input/config | Output và thứ tự giống nhau |
 
-Build/test chính thức dùng Colab T4, `nvcc -arch=sm_75`, theo kế hoạch Nhóm. Mục này sẽ bổ sung output thực tế, lệnh build và ngày chạy khi có code.
+Build/test chính thức cần chạy trên Colab T4 từ repo root:
+
+```bash
+nvidia-smi
+mkdir -p build
+nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off -Isrc src/feature_config.cpp src/v0_match.cpp tests/test_v0_match.cpp -o build/test_v0_match
+./build/test_v0_match
+```
+
+Output mong đợi: `PASS S4: 59 checks; ratio=0.80 cross_check=0 seed=16`. Đây là output đã thấy ở local, chưa xác minh bằng nvcc/T4. Ghi lại GPU và output thực tế trước nghiệm thu.
 
 ## 8. Trường hợp biên và rủi ro
 
@@ -201,3 +212,4 @@ Nguồn OpenCV cung cấp mô tả để đối chiếu, không phải phụ thu
 |---|---|---|
 | 13/10/2026 | Soạn đề xuất exact Hamming + ratio 0.80 + cross-check, thuật toán và trường hợp biên | Chuẩn bị P0-T11/P1-T11 để Đế lựa chọn; chưa có tham số đã chốt |
 | 13/10/2026 | Đế chốt exact 2-NN Hamming 256 bit, ratio 0.80, cross-check=false, output tăng theo indexA | Giữ cùng method/cấu hình từ V0 đến Final; cập nhật mã giả, chi phí và test plan |
+| 13/10/2026 | Cài V0 S4, view/config helpers và test; 59 checks local đạt | Không đổi method/tham số; chờ kiểm chứng nvcc trên Colab T4 |

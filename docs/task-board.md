@@ -252,15 +252,15 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s4-matching.md</code> có mục 3, 4 và 8</td>
       <td>Đang làm</td>
-      <td>Đã chốt và cập nhật mục 1, 3, 4, 8: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, deterministic indexA; cập nhật mục 5/6/7. Chưa commit; P0-T04 chưa hoàn tất. Chưa cài/kiểm thử P1-T12.</td>
+      <td>Đã chốt và cập nhật mục 1, 3, 4, 8: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, deterministic indexA. P1-T12 đã có code/test local; P0-T04 còn cần xác nhận cả Nhóm.</td>
     </tr>
     <tr>
       <td>P1-T12</td>
       <td>Cài đặt và kiểm thử <code>v0_match.cpp</code></td>
       <td>P0-T12, P1-T11</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài sequential matching và view/config helpers trên de/p1; build C++11 warnings-as-errors bằng clang 23.1.3 Windows và 59 checks local đạt. Đã cập nhật API/ownership/validation và lệnh Colab trong tài liệu S4; chờ nvcc Colab T4 và nghiệm thu tích hợp.</td>
     </tr>
     <tr>
       <td>P1-T13</td>

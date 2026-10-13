@@ -4,7 +4,7 @@ Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
 
 Task: P0-T11 (method, input/output, synthetic/metric) và phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: đã cài V0 S5 và kiểm thử local ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. C++11 warnings-as-errors, ASan/UBSan và các fixture điểm/features đã đạt trên Windows/clang 23.1.3. Chưa build/test Colab T4, chưa cài generator cặp ảnh P1-T15 hoặc chạy panorama/benchmark dataset; P1-T14 chưa được nghiệm thu chính thức. Cấu hình tích hợp và tolerance chung cần cả Nhóm xác nhận ở P0-T04/P1-T01.
+**Trạng thái: đã cài V0 S5 và gộp file ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. Đế xác nhận bộ test bản trước khi gộp đã pass trên Colab. Bản sau khi gộp đạt C++11 warnings-as-errors và ASan/UBSan theo phạm vi mục 7 trên Windows/clang 23.1.3; cần chạy lại Colab T4. Chưa cài generator cặp ảnh P1-T15 hoặc chạy panorama/benchmark dataset. Cấu hình tích hợp và tolerance chung cần cả Nhóm xác nhận ở P0-T04/P1-T01.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -154,7 +154,9 @@ Với điểm normalized B=(x,y), A=(u,v), thêm hai hàng vào L:
 
 Giải homogeneous DLT: right singular vector của L ứng với singular value nhỏ nhất, nội bộ double, rồi reshape thành H_n. Với sample 4, L là 8×9 và cần **full right nullspace**, không chỉ thin SVD thiếu vector thứ 9. Khi n>4 có noise, L có thể rank 9; không yêu cầu exact nullspace bằng 0. Dùng SVD tự cài bằng chuẩn C++/CUDA khi triển khai, không thêm Eigen/OpenCV hoặc thay thành hệ 8 ẩn khóa h22=1. Không thay bằng normal equations không kiểm chứng vì làm xấu conditioning.
 
-Đã cài các module `homography_math`, `homography_svd`, `homography_dlt` và `ordered_reduction`. SVD dùng one-sided Jacobi cyclic, full right basis 9×9, tolerance orthogonality `16*epsilon(double)`, tối đa 128 sweeps và relative null-column floor. Đây là lựa chọn implementation của homogeneous DLT; không phải thay sang thuật toán homography khác. Inversion dùng scaled pivot/rcond tolerance 1e-12 như module S6; epsilon trong Config kiểm tra denominator. Gauge bàn giao max-abs=1 và hệ số max-abs đầu tiên có dấu dương để cố định dấu.
+Phép toán hình học, SVD, DLT, ordered reduction, sampling/adaptive termination, MSAC và estimator/refit đã được gộp vào `src/v0_homography.cpp`; mỗi công việc vẫn là hàm riêng, giữ nguyên thân hàm và thứ tự phép tính. `src/v0_homography_internal.h` giữ khai báo helper cho unit tests; `src/v0_homography.h` giữ API stage/report. Views và cấu hình S4/S5 nằm trong `src/feature_support.h/.cpp`. Các file dùng chung của Nhóm và S6 giữ nguyên.
+
+SVD dùng one-sided Jacobi cyclic, full right basis 9×9, tolerance orthogonality `16*epsilon(double)`, tối đa 128 sweeps và relative null-column floor. Đây là lựa chọn implementation của homogeneous DLT; không phải thay sang thuật toán homography khác. Inversion dùng scaled pivot/rcond tolerance 1e-12 như module S6; epsilon trong Config kiểm tra denominator. Gauge bàn giao max-abs=1 và hệ số max-abs đầu tiên có dấu dương để cố định dấu.
 
 Denormalize `H = inverse(T_A) * H_n * T_B`. Chuẩn hóa tọa độ khi fit khác chuẩn hóa max-abs của H khi bàn giao.
 
@@ -303,13 +305,13 @@ Các hypotheses có thể fit/chấm điểm độc lập; MSAC score/count cầ
 
 ## 7. Kiểm thử
 
-Đã chạy các suite local dưới đây; **chưa chạy Colab T4**. Bảng case bên dưới vẫn bao gồm kế hoạch kiểm chứng CPU–GPU và trường hợp cần fixture bổ sung, không tuyên bố toàn bộ test plan đã nghiệm thu.
+Đã chạy lại toàn bộ suite local sau khi gộp file; **bản sau khi gộp chưa chạy lại Colab T4**. Đế xác nhận bản trước khi gộp đã pass bộ test trên Colab. Bảng case bên dưới vẫn bao gồm kế hoạch kiểm chứng CPU–GPU và trường hợp cần fixture bổ sung, không tuyên bố toàn bộ test plan đã nghiệm thu.
 
 Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **690 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/near-collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4.
 
-Module `homography_sampling`: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
+Phần sampling/adaptive termination: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
 
-Module `homography_scoring`: **12 checks local đạt** trong `tests/test_homography_scoring.cpp`, gồm loss cắt ngưỡng, equality là outlier, projection invalid có penalty, invalid parameters và score/count/ID model selection. Hai model thật cùng count nhưng residual khác nhau được kiểm tra ranking theo MSAC. Đây là kiểm tra công thức/ranking, không chứng minh chất lượng panorama.
+Phần MSAC scoring: **12 checks local đạt** trong `tests/test_homography_scoring.cpp`, gồm loss cắt ngưỡng, equality là outlier, projection invalid có penalty, invalid parameters và score/count/ID model selection. Hai model thật cùng count nhưng residual khác nhau được kiểm tra ranking theo MSAC. Đây là kiểm tra công thức/ranking, không chứng minh chất lượng panorama.
 
 Stage `tests/test_v0_homography.cpp`: **174 checks local đạt**, gồm 4-point/many-point estimation, ground-truth noise/outlier labels, repeatability, second refit khi mask đổi, threshold scaling giữa resolutions, validation/cap và tích hợp S4 → S5 → S6 với features cho sẵn. Đây không phải pipeline S1–S6 từ ảnh thật. Allocation fault injection được tách thành binary riêng để không xung đột allocator operators của Windows ASan.
 
@@ -392,3 +394,4 @@ Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_
 | 13/10/2026 | Đề xuất RANSAC/DLT/refit, contract B → A, synthetic ảnh và metric sai số phép chiếu | Chuẩn bị P0-T11 để Đế lựa chọn; chưa chốt tham số S5 |
 | 13/10/2026 | Đế chốt uniform 4-point RANSAC + normalized DLT double + MSAC + adaptive stop cap 2000 + all-inlier refit; seed 16; tau scale từ 3 px tại 1080p | Giữ method/cấu hình từ V0 đến Final, bổ sung determinism, degeneracy và test plan; chờ xác nhận tích hợp/tolerance chung |
 | 13/10/2026 | Cài V0 S5 cùng module math/DLT/SVD, sampler, MSAC, report và test runner; 7 suites local đạt | Không đổi method/tham số; chờ Colab T4, generator synthetic ảnh và tích hợp pipeline thật |
+| 13/10/2026 | Gộp toàn bộ implementation S5 vào v0_homography.cpp, giữ một header helper cho unit tests | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |

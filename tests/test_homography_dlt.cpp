@@ -1,8 +1,7 @@
 // Authors: Le Thuong De (23120232)
 // External source: none
 
-#include "homography_dlt.h"
-#include "homography_svd.h"
+#include "v0_homography_internal.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>

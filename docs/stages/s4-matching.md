@@ -4,7 +4,7 @@ Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
 
 Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: đã cài V0 và kiểm thử local ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Build C++11 warnings-as-errors bằng clang 23.1.3 trên Windows đạt; 66 checks của test S4 đạt. Chưa build/test Colab T4 hoặc benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
+**Trạng thái: đã cài V0 và gộp file ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Đế xác nhận bộ test bản trước khi gộp đã pass trên Colab. Bản sau khi gộp đạt 66 checks S4 local bằng clang 23.1.3 trên Windows, chưa chạy lại Colab T4. Chưa benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -156,7 +156,7 @@ Mapping thread/warp/block cùng ý tưởng tối ưu sẽ chốt ở P3 sau khi
 
 ## 7. Kiểm thử
 
-`tests/test_v0_match.cpp`: **66 checks đạt trên Windows/clang 23.1.3, chưa chạy Colab T4**. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; đã kiểm tra từ 1–3 match hợp lệ cũng trả `InsufficientMatches` và không publish output một phần. Allocation failure được kiểm tra riêng cùng S5 trong `tests/test_v0_feature_allocation.cpp`. Không dùng output local làm số liệu chính thức.
+`tests/test_v0_match.cpp`: **66 checks đạt trên Windows/clang 23.1.3 sau khi gộp file; bản này chưa chạy lại Colab T4**. Đế xác nhận bản trước khi gộp đã pass bộ test trên Colab. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; đã kiểm tra từ 1–3 match hợp lệ cũng trả `InsufficientMatches` và không publish output một phần. Allocation failure được kiểm tra riêng cùng S5 trong `tests/test_v0_feature_allocation.cpp`. Không dùng output local làm số liệu chính thức.
 
 | Trường hợp | Kết quả mong đợi |
 |---|---|
@@ -213,3 +213,4 @@ Nguồn OpenCV cung cấp mô tả để đối chiếu, không phải phụ thu
 | 13/10/2026 | Soạn đề xuất exact Hamming + ratio 0.80 + cross-check, thuật toán và trường hợp biên | Chuẩn bị P0-T11/P1-T11 để Đế lựa chọn; chưa có tham số đã chốt |
 | 13/10/2026 | Đế chốt exact 2-NN Hamming 256 bit, ratio 0.80, cross-check=false, output tăng theo indexA | Giữ cùng method/cấu hình từ V0 đến Final; cập nhật mã giả, chi phí và test plan |
 | 13/10/2026 | Cài V0 S4, view/config helpers và test; 59 checks local đạt | Không đổi method/tham số; chờ kiểm chứng nvcc trên Colab T4 |
+| 13/10/2026 | Gộp view/config vào feature_support.h/.cpp, giữ implementation S4 riêng | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |

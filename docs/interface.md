@@ -103,7 +103,7 @@ Ma trận khởi tạo mặc định toàn 0, không phải H=I; chỉ dùng sau
 
 Storage dùng **float32 theo yêu cầu P0-T14**. S5/S6 có thể dùng double cho giải hệ, inversion hoặc kiểm tra số học nội bộ; vẫn trả/nhận float[9] và kiểm chứng ảnh hưởng khi chuyển kiểu. Không mặc định float đủ ổn định cho mọi H. `homography_epsilon` là tolerance tương đối dương sau chuẩn hóa: ngưỡng projective denominator so với tổng độ lớn các hạng tạo denominator; inversion dùng scaled-pivot kiểm tra tương đối, không chỉ `abs(det) < epsilon`. Các chi tiết solver được Đế/Chương xác nhận ở P1.
 
-`Panorama` chứa `Image image` RGB 3 kênh cùng `int32_t offset_x`, `offset_y`. Đây là translation đưa hệ A vào hệ canvas. S6 tính khung trước, bên gọi cấp phát output đã kiểm tra giới hạn, S6 điền pixels. Default panorama chưa có buffer hợp lệ.
+`Panorama` chứa `Image image` RGB 3 kênh cùng `int32_t offset_x`, `offset_y`. Đây là translation đưa hệ A vào hệ canvas. Theo yêu cầu coding S6 ngày 13/10, `v0_warp_blend` nhận output rỗng, kiểm tra canvas rồi cấp phát bằng `new uint8_t[]`; chỉ chuyển pointer cho caller khi thành công. Caller sở hữu output, phải `delete[] output.image.data` và reset Panorama sau khi dùng. Thất bại giữ output rỗng, tự dọn buffer tạm; output đã có pointer bị từ chối, không tự free bộ nhớ không rõ ownership. Quy ước này thay thế đề xuất P0 caller cấp phát trước; chữ ký stage nằm trong `src/v0_warp_blend.h`.
 
 Theo miền tâm pixel đã chọn, S6 hợp bốn góc A với bốn góc B biến đổi qua H. Nếu denominator đổi dấu/đi qua 0 trong miền B, từ chối phép chiếu trước khi lấy bbox. Sau khi có xmin/xmax/ymin/ymax hữu hạn:
 

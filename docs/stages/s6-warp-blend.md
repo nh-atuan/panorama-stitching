@@ -2,7 +2,7 @@
 
 Người phụ trách: Chương (23120195). Cập nhật lần cuối: 13/10/2026.
 
-Task hiện tại: **P1-T16 — chốt tham số, viết thuật toán chi tiết và trường hợp biên cho S6** (đã hoàn thành mục 3, 4 và 8). Phương pháp chọn là **inverse warping trên mặt phẳng ảnh A, bilinear interpolation tự tính và feather blending theo khoảng cách đến biên ảnh nguồn**. Giữ phương pháp này cho V0–V3 nếu đạt kiểm chứng chất lượng ở P1. Chưa có code, ảnh kết quả hoặc số đo S6; tài liệu này chưa chứng nhận task P1-T17 đã hoàn thành.
+Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark; chưa có kết quả Colab T4 hoặc chất lượng trên dataset để nghiệm thu task.
 
 Các quy ước dữ liệu bên dưới là đề xuất ban đầu của S6. P0-T14 đã có [`docs/interface.md`](../interface.md) và `common.h` theo yêu cầu của Chương, gồm Homography float32 và stride byte; bản interface còn cần cả Nhóm góp ý và thống nhất trước khi cài pipeline thật. Dataset đã chụp và chuẩn bị đầy đủ theo xác nhận của Chương; chưa chạy S6 trên dataset đó.
 
@@ -30,8 +30,8 @@ Cơ sở về hệ quy chiếu và resampling: [R1, mục 6.1]. Mục tiêu là 
 
 | Phương án | Chất lượng và giới hạn | Chi phí / khả năng lên GPU | Quyết định |
 |---|---|---|---|
-| Overwrite hoặc average 50/50 | Overwrite có thể lộ đường nối; average dễ tạo ảnh kép khi lệch | O(1) mỗi pixel, ít trạng thái | Chỉ làm đối chứng chất lượng |
-| **Feather theo khoảng cách đến biên nguồn** | Chuyển tiếp trọng số theo vị trí; không sửa parallax, vật chuyển động hoặc chênh phơi sáng lớn | O(1) mỗi pixel với công thức biên chữ nhật; không cần graph/pyramid | **Chọn sơ bộ** |
+| **Average 50/50** | Giữ một nguồn ở vùng chỉ có nguồn đó; overlap có thể tạo ảnh kép khi lệch | O(1) mỗi pixel, ít trạng thái | **Bản cài hiện tại theo yêu cầu coding 13/10** |
+| Feather theo khoảng cách đến biên nguồn | Chuyển tiếp trọng số theo vị trí; không sửa parallax, vật chuyển động hoặc chênh phơi sáng lớn | O(1) mỗi pixel với công thức biên chữ nhật; không cần graph/pyramid | Phương án trước đó; chưa cài trong bản hiện tại |
 | Seam finding + multi-band | Có thể giảm artifact trong một số tình huống; cần solver, mask và nhiều tầng ảnh; vẫn có giới hạn khi lệch lớn | Nhiều bước, buffer và dependency; phải tự cài cả V0 lẫn GPU | Chưa đưa vào phương pháp chính |
 | Adaptive blending rút gọn từ SC-AOF | Có căn cứ để khảo sát; cần định nghĩa đầy đủ trọng số và ablation | Thêm đánh giá màu và hàm phi tuyến; hiệu quả trên dataset chưa biết | Phương án cân nhắc nếu feather không đạt |
 | Semantic/optical-flow/neural stitching | Can thiệp sâu vào căn chỉnh hoặc biểu diễn ảnh, vượt phần S6 hiện tại | Cần thêm mô hình, solver hoặc hạ tầng ngoài giới hạn hiện hành | Related work và giới hạn, không cam kết cài |
@@ -73,7 +73,7 @@ Jia dùng local mapping trên superpixels, cost màu/cấu trúc/entropy/ngữ n
 
 ### 1.6. Quyết định sau phản biện
 
-Chọn pipeline nhỏ đủ để kiểm chứng: **canvas/offset → inverse sampling và validity → feather composite**. Không có seam finder, gain compensation, optical flow, adaptive color weight hoặc pyramid trong phương pháp chính hiện tại.
+Pipeline hiện tại sau yêu cầu coding 13/10: **canvas/offset → copy A → inverse sampling B và validity → average composite**. Không có seam finder, gain compensation, optical flow, adaptive color weight hoặc pyramid trong phương pháp chính hiện tại.
 
 ```mermaid
 flowchart LR
@@ -81,11 +81,11 @@ flowchart LR
     H["H từ S5: B sang A"] --> G
     G --> W["Inverse warp và bilinear"]
     W --> V["Xác định nguồn hợp lệ"]
-    V --> B["Feather composite"]
+    V --> B["Average composite"]
     B --> P["Panorama RGB"]
 ```
 
-Đây là lựa chọn kỹ thuật sơ bộ theo phạm vi P0-T13, không phải kết luận feather tốt nhất trên mọi dataset. Nếu kiểm chứng P1 cho thấy không đạt chất lượng, Chương phối hợp với Đế phân biệt lỗi H và lỗi blend. Khi đổi phương pháp, phải cập nhật baseline và các phiên bản cùng phương pháp, chạy lại benchmark; không chỉ thêm thuật toán vào V3.
+Phần phản biện ở mục 1.4–1.5 ghi nhận lựa chọn feather của P0; yêu cầu coding mới chọn average cho bản đang cài. Chưa kết luận average đạt chất lượng trên mọi dataset. Nếu kiểm chứng P1 không đạt, Chương phối hợp với Đế phân biệt lỗi H và lỗi blend. Khi đổi phương pháp, phải cập nhật baseline và mọi phiên bản, chạy lại benchmark.
 
 ## 2. Đầu vào và đầu ra
 
@@ -135,7 +135,7 @@ Ví dụ kiểm tra bằng đại số, chưa phải kết quả chạy code: A 
 
 Kiểm tra tràn số, giới hạn width/height, tích số pixel/byte và ngân sách bộ nhớ trước cấp phát. Công thức bbox cần quy tắc xử lý sai số sát số nguyên để V0 và GPU không khác canvas; quy tắc cụ thể thuộc P1-T16.
 
-### 2.3. Sampling, validity và feather weight đề xuất
+### 2.3. Sampling, validity và average blending
 
 Nguồn i hợp lệ nếu tọa độ hữu hạn và nằm trong miền tâm pixel [0,Wi-1] × [0,Hi-1]. Kiểm tra miền trước khi clamp; không kéo dài ảnh ngoài nguồn bằng cách clamp mọi tọa độ truy vấn. Validity được biểu diễn bằng cờ/mask riêng, không suy ra từ RGB bằng 0.
 
@@ -148,19 +148,13 @@ C(x,y)=(1-a)(1-b)C_{i,j}+a(1-b)C_{i+1,j}
 
 Chỉ số neighbor ở mép phải/dưới được clamp vào pixel cuối **sau khi xác nhận tọa độ hợp lệ**. Vì vậy pixel cuối và ảnh 1×1 vẫn có định nghĩa. Kiểu trung gian và cách round/clamp RGB đầu ra cần chốt ở P1-T16 rồi giữ chung giữa các phiên bản.
 
-Đề xuất trọng số của S6 tại tọa độ nguồn hợp lệ:
-
-\[
-d_i=\min(x_i+0.5,\ W_i-0.5-x_i,\ y_i+0.5,\ H_i-0.5-y_i).
-\]
-
-Đây là khoảng cách đến biên vật lý hình chữ nhật của nguồn, tính trong **pixel nguồn**, không phải distance transform của mask trên canvas. Cộng 0.5 giúp dương cả tại tâm pixel biên, tránh trường hợp cả hai trọng số bằng 0. Đây là lựa chọn thiết kế đề xuất của Nhóm, không sao chép nguyên hàm trọng số Brown–Lowe. Biến dạng projective có thể làm ý nghĩa khoảng cách khác với đo trong canvas; cần đánh giá artifact ở P1.
+Trong bản cài hiện tại, vùng overlap dùng trọng số bằng nhau; không tính distance weight. Không round màu bilinear về byte trước khi blend.
 
 | Tình huống | Giá trị composite trước chuyển về `uint8_t` |
 |---|---|
 | Chỉ A hợp lệ | CA |
 | Chỉ B hợp lệ | CB |
-| Cả A và B hợp lệ | (dA * CA + dB * CB) / (dA + dB), theo từng kênh |
+| Cả A và B hợp lệ | (CA + CB) / 2, theo từng kênh |
 | Không nguồn hợp lệ | Màu nền quy định trong cấu hình; đề xuất RGB (0,0,0) |
 
 Các cờ hợp lệ có thể tính tại chỗ; không bắt buộc lưu hai mask full-canvas. Ảnh panorama nền đen không có nghĩa mọi pixel đen đều không hợp lệ. Khi debug cần mask phân biệt hai trường hợp.
@@ -169,7 +163,9 @@ Các cờ hợp lệ có thể tính tại chỗ; không bắt buộc lưu hai m
 
 ### 2.4. Ownership và phối hợp
 
-Đề xuất ảnh đầu vào thuộc bên gọi; S6 tạo metadata canvas trước, bên gọi cấp phát/ sở hữu output theo kích thước đã kiểm tra. S6 sở hữu buffer tạm nếu có và giải phóng theo quy ước chung. Cách biểu diễn bằng con trỏ, vector hay view chưa chốt; P0-T13 không áp đặt signature cho `common.h`.
+Theo yêu cầu coding mới, ảnh đầu vào được mượn; S6 cấp phát output bằng `new uint8_t[]` sau khi kiểm tra canvas. `Panorama.image.data` phải null khi gọi. Thành công chuyển ownership sang bên gọi, bên gọi phải `delete[]` rồi reset Panorama; thất bại giữ output rỗng và tự giải phóng buffer tạm. Output không rỗng bị từ chối bằng `InvalidImage`, không tự free con trỏ chưa rõ ownership. Đây là contract của header stage hiện tại; chưa thay đổi `common.h` hoặc các stub khác.
+
+Signature trong [`src/v0_warp_blend.h`](../../src/v0_warp_blend.h): `ErrorCode v0_warp_blend(const Image&, const Image&, const Homography&, Panorama&, const Config&, bool debug_mode=false)`. Thứ tự tham số cùng dạng stub P1-T18, trả thêm trạng thái để bên gọi xử lý lỗi. Caller dùng `panorama::v0_warp_blend` khi thay stub và tắt debug trong vùng đo.
 
 Đế và Chương cần thống nhất chiều/layout H, pixel center, normalization, error contract và chất lượng H. Chương cùng cả Nhóm chốt ảnh/stride, cấu hình, output ownership và timing trong P0-T14/P0-T04.
 
@@ -406,28 +402,16 @@ Chỉ clamp **chỉ số neighbor** sau khi tọa độ được xác nhận h�
 
 Nếu H⁻¹ không chiếu được một pixel canvas, pixel đó không có nguồn B hợp lệ. Đây không tự động là lỗi toàn S6: điểm canvas có thể nằm ngoài footprint của B; nguồn A vẫn được sử dụng nếu hợp lệ.
 
-### Khối 3: Feather Blending Composite
+### Khối 3: Average Blending Composite
 
-Với tâm pixel nguyên, biên vật lý của nguồn nằm tại `-0.5` và `W-0.5`, `H-0.5`:
+Bản cài copy A vào canvas nền đen trước khi gather B. Xác định A hợp lệ bằng tọa độ và kích thước, không dùng giá trị pixel hiện có làm mask.
 
 ```cpp
-double distance_weight(Point p, int W, int H) {
-    // Precondition: p is a valid source coordinate.
-    return min(
-        min(p.x + 0.5, W - 0.5 - p.x),
-        min(p.y + 0.5, H - 0.5 - p.y)
-    );
-}
-
 RGB composite = {0.0, 0.0, 0.0};
 
 if (validA && validB) {
-    double da = distance_weight(pA, A.width, A.height);
-    double db = distance_weight(pB, B.width, B.height);
-    double denominator = da + db; // Strictly positive for valid coordinates.
-
     for (int c = 0; c < 3; ++c)
-        composite[c] = (da * Ca[c] + db * Cb[c]) / denominator;
+        composite[c] = 0.5 * (Ca[c] + Cb[c]);
 
 } else if (validA) {
     composite = Ca;
@@ -446,15 +430,15 @@ for (int c = 0; c < 3; ++c)
         uint8_t(floor(clamp(composite[c], 0.0, 255.0) + 0.5));
 ```
 
-Trọng số được đo trong **pixel nguồn**, không phải khoảng cách trên canvas. Với tọa độ hợp lệ, mỗi trọng số ít nhất `0.5`, nên không cần cộng epsilon tùy ý vào mẫu số blending. Pixel RGB đen vẫn là dữ liệu hợp lệ; validity không suy ra từ màu.
+Pixel RGB đen vẫn là dữ liệu hợp lệ và phải tham gia average. Nếu không có B hợp lệ, bản cài giữ màu A hoặc nền đã có. Giữ bilinear ở double và chỉ round/clamp một lần khi ghi output.
 
 Với `P = Wc × Hc`, render có thời gian `O(P)`, bộ nhớ output `O(P)` và không cần lưu hai ảnh đã warp đầy đủ. Đây là phân tích thuật toán, chưa phải kết quả profiling.
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có. P1-T17 phải bổ sung ảnh output, mask/debug phù hợp, kết quả tests, môi trường và số đo thật. Tách lỗi sampling/blend của S6 với sai số H do pipeline S2–S5 bằng thử H biết trước.
+Đã kiểm tra đáp án pixel/canvas với H biết trước trong `tests/test_v0_warp_blend.cpp`: 194 assertions đạt trên WSL Ubuntu 24.04 với g++ C++11. Cùng bộ test đạt khi bật AddressSanitizer và UndefinedBehaviorSanitizer, không có báo cáo lỗi bộ nhớ/undefined behavior. Đây là kiểm chứng độc lập S6, không phải số đo performance hoặc chứng minh pipeline S2–S5 đúng. Chưa có panorama dataset hoặc kết quả Colab T4.
 
-Chất lượng dataset cần xem cả panorama và crop overlap ở độ phân giải đủ thấy cạnh/ảnh kép. Nếu feather không đạt trên site chuẩn, ghi thất bại và xử lý trước benchmark cuối; không coi độ đơn giản là bằng chứng chất lượng.
+Chất lượng dataset cần xem cả panorama và crop overlap ở độ phân giải đủ thấy cạnh/ảnh kép. Nếu average không đạt trên site chuẩn, ghi thất bại và xử lý trước benchmark cuối; không coi độ đơn giản là bằng chứng chất lượng.
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
@@ -474,7 +458,22 @@ Hardware texture bilinear chỉ là ứng viên có điều kiện: NVIDIA nêu 
 
 ## 7. Kiểm thử
 
-Kế hoạch đề xuất cho P1-T17; toàn bộ kết quả thực tế trên Colab T4 hiện là **chưa chạy**.
+Kết quả local ngày 13/10: 194 assertions đạt, gồm geometry/pixel và lỗi/OOM giả lập. Toàn bộ kết quả thực tế trên Colab T4 hiện là **chưa chạy**. Tests đọc header stage và link module thật; đáp án pixel được tính riêng, không gọi helper đang kiểm thử để tạo đáp án.
+
+```bash
+g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror -O2 -I src \
+    src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o build/test_v0_warp_blend
+./build/test_v0_warp_blend
+```
+
+Lệnh cần chạy thêm trên Colab T4 từ gốc repo, in `nvidia-smi` trước; output test kỳ vọng `PASS: 194 assertions ...`:
+
+```bash
+nvcc -arch=sm_75 -I src src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o test_s6
+./test_s6
+```
+
+Trước khi gọi, đặt `config.homography_epsilon=1e-6f` và `config.max_canvas_pixels=100000000`. Các tham số S1–S5 không được S6 sử dụng. Giới hạn diện tích có thể đặt thấp hơn để kiểm thử budget; không đổi giới hạn giữa các phiên bản benchmark.
 
 | Test | Đầu vào | Kết quả mong đợi |
 |---|---|---|
@@ -505,18 +504,18 @@ S6 trả `ErrorCode` cho bên gọi; không tự gọi `exit()` trong thuật to
 | Mẫu số âm tại toàn bộ bốn góc B | Không coi là lỗi chỉ vì âm; H và −H biểu diễn cùng phép chiếu | Tiếp tục nếu các kiểm tra khác đạt |
 | Corner projection không hữu hạn | Không chuyển NaN/Inf thành chỉ số nguyên | `NumericalFailure` |
 | Canvas quá lớn hoặc phép tính kích thước tràn | Kiểm tra trước cấp phát; từ chối khi một chiều >10,000 hoặc diện tích >100,000,000 pixel | `InvalidCanvas` |
-| Allocation thất bại dù canvas trong giới hạn | Bắt `std::bad_alloc` từ `new uint8_t[]`; giải phóng tài nguyên đã cấp phát | `AllocationFailed` |
+| Allocation thất bại dù canvas trong giới hạn | Bắt `std::bad_alloc` từ `new uint8_t[]`; guard giải phóng buffer tạm nếu lỗi sau allocation; chỉ bàn giao output khi thành công | `AllocationFailed` |
 | Allocation Device thất bại ở V1 | `cudaErrorMemoryAllocation` ánh xạ sang lỗi bộ nhớ; lỗi CUDA khác giữ mã riêng | `AllocationFailed` hoặc `CudaFailure` |
 | Một pixel không chiếu được về B | Đánh dấu `validB=false`; dùng A nếu hợp lệ, nếu không dùng nền | Không lỗi toàn stage |
 | Pixel nằm ngoài cả hai nguồn | Ghi nền RGB `(0,0,0)` | Không lỗi toàn stage |
 | Không có overlap | Không chia trọng số cho vùng không có hai nguồn; giữ từng nguồn hợp lệ | `Success` ở S6; báo riêng giới hạn chất lượng |
-| Parallax, vật chuyển động hoặc chênh phơi sáng | Feather có thể tạo ghosting hoặc đường chuyển tiếp; không sửa được H sai | Có thể `Success` về thực thi nhưng không đạt kiểm chứng chất lượng |
+| Parallax, vật chuyển động hoặc chênh phơi sáng | Average có thể tạo ghosting hoặc đường chuyển tiếp; không sửa được H sai | Có thể `Success` về thực thi nhưng không đạt kiểm chứng chất lượng |
 
 **Determinant gần 0:** không dùng riêng điều kiện `abs(det(H)) < 1e-6` để kết luận suy biến. Homography thay đổi theo hệ số scale, và determinant nhỏ chưa đủ xác định độ ổn định. S6 dùng kiểm tra pivot có scale và reciprocal condition estimate như mục 4.
 
 **Horizon:** `w <= 0` không phải tiêu chí lỗi tổng quát. Nguy hiểm là `w` đi qua 0 trong miền B hoặc gần 0 theo tolerance. Mẫu số âm toàn miền vẫn biểu diễn một phép chiếu hợp lệ.
 
-**OOM:** giới hạn kích thước chỉ là bước phòng ngừa; canvas trong giới hạn vẫn có thể thiếu RAM/VRAM do các buffer khác. RGB packed `10,000×10,000` cần khoảng 300 MB riêng cho output. Ownership thuộc bên gọi; nếu bên gọi cấp phát sau bước chuẩn bị canvas, bên gọi bắt allocation failure và không tiếp tục render.
+**OOM:** giới hạn kích thước chỉ là bước phòng ngừa; canvas trong giới hạn vẫn có thể thiếu RAM/VRAM do các buffer khác. RGB packed `10,000×10,000` cần khoảng 300 MB riêng cho output. Bản cài S6 hiện cấp phát, bắt allocation failure và chuyển ownership sang caller chỉ khi thành công; test OOM dùng allocator lỗi có chủ đích, không cố chiếm hết bộ nhớ máy.
 
 Khi lỗi, output phải được đánh dấu không hợp lệ và không được ghi thành panorama thành công. Các giới hạn số học cần kiểm thử với identity, tịnh tiến âm/phân số, H và −H, horizon xuyên ảnh, H suy biến, pixel biên và canvas vượt ngân sách trước khi nghiệm thu V0/V1.
 
@@ -545,11 +544,12 @@ Nhận xét chất lượng/hiệu năng từ paper được giữ trong bối c
 
 Bản A nêu Davis (1998), *Mosaics of scenes with moving objects*. Trong lượt này chưa đọc/xác minh trực tiếp toàn văn paper gốc, nên không dùng nó để gán thuật toán graph-cut cụ thể hoặc chứng minh loại bỏ ghosting. Phần so sánh seam/blend dựa vào nguồn đã có locator ở trên. Khi cần cài seam finder, phải đọc paper/solver phù hợp trước.
 
-Nguồn tham khảo dùng trong code sau này cần ghi ở đầu file code và chuyển vào References của notebook theo quy định Nhóm. Tài liệu này chỉ tạo đầu ra P0-T13; không tự sửa report chung hay bảng task.
+Nguồn tham khảo dùng trong code sau này cần ghi ở đầu file code và chuyển vào References của notebook theo quy định Nhóm. Code S6 hiện được viết từ contract và mã giả của Nhóm, không chép code ngoài; các paper ở trên cung cấp bối cảnh so sánh phương pháp.
 
 ## 10. Lịch sử thay đổi tham số
 
-Chưa có tham số triển khai được chốt hoặc thay đổi. Lượt 12/10/2026 chọn phương pháp sơ bộ và đề xuất contract dữ liệu sau phản biện A/B; không có số đo để kết luận cải thiện chất lượng hoặc speedup.
+Lượt 12/10 chọn phương pháp sơ bộ; 13/10 chốt tham số và cài bản average theo yêu cầu coding mới. Chưa có số đo để kết luận cải thiện chất lượng hoặc speedup.
 
 | Ngày | Thay đổi | Lý do |
 |---|---|---|
+| 13/10/2026 | Bản cài chuyển feather sang average 50/50; S6 cấp phát output và caller nhận ownership khi thành công | Yêu cầu coding mới của Chương; các phiên bản so sánh sau này phải cùng phương pháp |

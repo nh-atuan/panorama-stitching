@@ -120,7 +120,7 @@ Với T đưa A → canvas, inverse sampling dùng `pA=T^-1*pCanvas`, `pB=H^-1*T
 
 ## 6. Config và tham số chưa hiệu chỉnh
 
-`Config` chỉ chứa số nguyên/float; không string, vector hoặc pointer. Giá trị 0 của các tham số thuật toán là **chưa cấu hình**, không phải giá trị khuyến nghị benchmark. Pipeline thật phải validate trước khi chạy; CLI stub hiện chưa sử dụng Config.
+`Config` chỉ chứa số nguyên/float; không string, vector hoặc pointer. Giá trị 0 của các tham số thuật toán là **chưa cấu hình**, không phải giá trị khuyến nghị benchmark. Pipeline thật phải validate trước khi chạy; khung P1-T18 truyền Config đến các stub nhưng stub chưa sử dụng tham số thuật toán. Seed chỉ in khi bật debug để stdout giữ định dạng CSV; notebook benchmark chính thức phải in đầy đủ cấu hình và hardware riêng.
 
 | Trường | Đơn vị / điều kiện | Người chốt |
 |---|---|---|
@@ -156,13 +156,19 @@ Default bằng 0 chỉ là trạng thái khởi tạo. Không dùng 0 để tuy�
 
 End-to-end đo riêng, không ép bằng tổng stage_ms. Nếu xử lý đồng thời A/B, stage elapsed là khoảng wall-clock bao phủ cả hai nhánh sau synchronization, không cộng elapsed chồng lấp rồi gọi đó là elapsed thực tế. Tổng kernel busy time có thể khác stage elapsed và end-to-end; khi có overlap phải ghi rõ cách lấy `total_kernel_ms`. Log/debug và I/O ảnh không nằm trong khoảng timing.
 
-Định dạng CSV đề xuất cho P1-T18, một dòng mỗi lần có đo; metadata hardware/config in riêng. `run` đánh số từ 1, warm-up không có dòng dữ liệu:
+Định dạng CSV hiện tại theo yêu cầu triển khai P1-T18, một dòng mỗi lần có đo. `Run_Index` đánh số từ 1, warm-up không có dòng dữ liệu:
 
 ```csv
-version,run,width_a,height_a,width_b,height_b,seed,s1_ms,s2_ms,s3_ms,s4_ms,s5_ms,s6_ms,total_kernel_ms,h2d_ms,d2h_ms,end_to_end_ms
+Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,Total_ms
 ```
 
-CSV hiện là contract cho khung timing sắp cài, chưa phải output của `main.cu` đang chạy stub. Kích thước tính bằng pixel; timing dùng dấu chấm thập phân. Khi có canvas output, báo kích thước canvas trong kết quả chất lượng/metadata để phân tích S6.
+Sau N dòng dữ liệu, stdout có hai dòng `Average,<7 giá trị>` và `Minimum,<7 giá trị>` cùng schema 8 cột. Average là trung bình của N lần có đo; Minimum tính độc lập cho mỗi cột, không nhất thiết cùng một lần chạy. `Total_ms` là `end_to_end_ms`, được đo riêng. Thời gian dùng dấu chấm thập phân, 9 chữ số sau dấu chấm; loader CSV cần lọc Run_Index dạng số để tách dữ liệu chạy khỏi summary. Định dạng 17 cột dự thảo P0 đã được thay bằng 8 cột theo yêu cầu mới; các trường GPU trong TimingStats vẫn bằng 0 ở V0.
+
+Warm-up chạy đúng một lần và không gọi clock. Trong các lần đo, mọi stub nhận debug=false; log debug chỉ phát trong warm-up hoặc trước/sau vùng đo và đi ra stderr. Đọc hai ảnh bằng stb diễn ra trước warm-up; ghi ảnh sau tất cả lần đo. Xuất CSV và cập nhật summary cũng nằm ngoài vùng đo.
+
+Khung hiện tại chỉ đo overhead gọi stub/timer, không phải thời gian thuật toán V0 để xác định hot stage hay tính speedup. S1–S3 gọi mỗi stub hai lần cho A/B; S4–S6 gọi một lần. S6 stub mượn view ảnh A làm output preview để kiểm thử writer, không tính H, không ghép ảnh và không xác nhận chất lượng panorama. Output hỗ trợ `.png`, `.jpg`, `.jpeg` (không phân biệt chữ hoa); JPEG quality=95 chỉ là cấu hình writer, không phải tham số pipeline.
+
+Các buffer input được quản lý bằng RAII với `stbi_image_free`; output preview không sở hữu và không được free lần hai. Sau này S6 thật phải tuân thủ ownership đã chốt ở mục 5. Khi làm benchmark chính thức, notebook in GPU/CPU, cấu hình và kích thước input/canvas riêng, ngoài CSV và ngoài vùng đo.
 
 ## 8. ErrorCode và xử lý lỗi
 
@@ -189,7 +195,7 @@ ErrorCode là enum uint32 cho trạng thái nội bộ; không dùng số enum t
 
 Thông báo CLI định dạng `Error: <message>` gửi stderr; có usage khi lỗi tham số. Khi tích hợp trạng thái stage, dùng `Error: [<Enum>] <message>` để truy nguyên. Process thành công trả EXIT_SUCCESS; lỗi fatal trả EXIT_FAILURE sau khi giải phóng tài nguyên. Muốn phân biệt file không tồn tại với không có quyền phải kiểm tra thực tế, không gán mọi lỗi open cho InputNotFound.
 
-`main.cu` hiện vẫn là parser/stub của P0-T12: nó chưa trả ErrorCode, chưa decode ảnh, chưa dispatch version thật và chưa đo CSV. Bảng này định nghĩa contract P0-T14; không khẳng định việc tích hợp error handling P1-T18 đã xong. Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 lỗi.
+`main.cu` P1-T18 đã decode ảnh về RGB, kiểm tra CLI và chỉ chấp nhận version=0. Lỗi parse/I/O dùng ErrorCode trong exception nội bộ; main bắt sau khi RAII giải phóng buffer, in stderr và gọi `exit(EXIT_FAILURE)`. Chưa có stage thuật toán thật để báo các lỗi keypoint/match/homography; không gán output preview của stub là kết quả stitch. Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 thật lỗi.
 
 ## 9. Trạng thái bàn giao
 

@@ -293,15 +293,15 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T04, P0-T13</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 3, 4 và 8</td>
       <td>Xong</td>
-      <td>Đã hoàn thành mục 3, 4 và 8 trong docs/stages/s6-warp-blend.md: bảng tham số và tolerances, thuật toán chi tiết 3 khối (bbox/offset, inverse bilinear, feather blend) và bảng 13 trường hợp biên/mã lỗi.</td>
+      <td>Đã hoàn thành mục 3, 4 và 8 trong docs/stages/s6-warp-blend.md: bảng tham số/tolerances, thuật toán bbox/offset và inverse bilinear, bảng trường hợp biên/mã lỗi. Phần composite và ownership đã cập nhật sang average 50/50, S6 cấp phát output theo yêu cầu coding mới 13/10.</td>
     </tr>
     <tr>
       <td>P1-T17</td>
       <td>Cài đặt và kiểm thử <code>v0_warp_blend.cpp</code></td>
       <td>P0-T12, P1-T16</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S6 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài v0_warp_blend.cpp và header stage trên chuong/p1: inverse/bbox/bilinear, average 50/50 theo yêu cầu coding mới, stride byte, cleanup và ErrorCode. 194 assertions synthetic trên WSL đạt; AddressSanitizer/UndefinedBehaviorSanitizer đạt. Đã cập nhật tài liệu S6; chưa chạy Colab T4/dataset và chưa commit/merge nên chưa nghiệm thu Xong. main.cu chưa nối S6 thật.</td>
     </tr>
     <tr>
       <td>P1-T18</td>

@@ -86,6 +86,11 @@ void test_failures_and_full_basis() {
     require(out==Matrix3(),"failure clears H");
     points=fixture(h); points[1].a=points[0].a;
     require(normalized_dlt(points,true,1e-6,out)==ErrorCode::DegenerateHomography,"duplicate A");
+    points=fixture(h);points[1].b=points[0].b;points[1].b.x+=1e-7;
+    require(normalized_dlt(points,true,1e-6,out)==ErrorCode::DegenerateHomography,"near-duplicate B");
+    const Point2 near_line[4]={Point2(0,0),Point2(1,0),Point2(2,1e-8),Point2(0,1)};
+    for(int i=0;i<4;++i) {points[i].a=near_line[i];points[i].b=near_line[i];}
+    require(normalized_dlt(points,true,1e-6,out)==ErrorCode::DegenerateHomography,"near-collinear triple");
     for(int i=0;i<4;++i) {points[i].a=Point2(i,0);points[i].b=Point2(i,0);}
     require(normalized_dlt(points,true,1e-6,out)==ErrorCode::DegenerateHomography,"collinearity");
     points.resize(3);
@@ -100,6 +105,9 @@ void test_failures_and_full_basis() {
     require(smallest_right_vector(matrix,8,vector,singular)==ErrorCode::Success,"8x9 full SVD");
     require(std::abs(vector[8])==1.0 && singular[8]==0.0,"ninth nullspace vector");
     require(singular[0]==8.0 && singular[7]==1.0,"descending singular values");
+    matrix[0]=std::numeric_limits<double>::infinity();
+    require(smallest_right_vector(matrix,8,vector,singular)==ErrorCode::NumericalFailure,"non-finite SVD input");
+    require(vector==Matrix3() && singular==Matrix3(),"failed SVD clears outputs");
     const Matrix3 horizon={{1,0,0,0,1,0,1,0,-10}};
     Point2 projected;
     require(!project(horizon,Point2(10,2),1e-6,projected),"horizon denominator");

@@ -4,7 +4,7 @@ Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
 
 Task: P0-T11 (method, input/output, synthetic/metric) và phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: Đế đã chốt method S5 ngày 13/10/2026, dùng nhất quán từ V0 đến Final.** Cấu hình tích hợp và tolerance chung cần cả Nhóm xác nhận ở P0-T04/P1-T01. Chưa cài `v0_homography.cpp` hoặc công cụ synthetic, chưa chạy test/benchmark; P1-T14/P1-T15 chưa hoàn thành.
+**Trạng thái: đã cài V0 S5 và kiểm thử local ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. C++11 warnings-as-errors, ASan/UBSan và các fixture điểm/features đã đạt trên Windows/clang 23.1.3. Chưa build/test Colab T4, chưa cài generator cặp ảnh P1-T15 hoặc chạy panorama/benchmark dataset; P1-T14 chưa được nghiệm thu chính thức. Cấu hình tích hợp và tolerance chung cần cả Nhóm xác nhận ở P0-T04/P1-T01.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -59,7 +59,9 @@ Theo [`docs/interface.md`](../interface.md), mục 3–6 và 8, cùng [`src/comm
 
 Với vector cột `[xB, yB, 1]`, đặt `u = h00*xB + h01*yB + h02`, `v = h10*xB + h11*yB + h12`, `w = h20*xB + h21*yB + h22`, rồi `pA = (u/w, v/w)`.
 
-Input được mượn chỉ đọc. Sau lỗi, H không được bàn giao như mô hình hợp lệ; không âm thầm thay bằng identity. Chữ ký stage, output phụ và ownership sẽ được thiết kế trong phạm vi P1 của Đế, phối hợp với Chương khi cần cập nhật file chung.
+API đã cài trong `src/v0_homography.h`: `v0_homography(FeatureView<Keypoint> left, FeatureView<Keypoint> right, FeatureView<Match> matches, Homography& output, const Config& config, HomographyReport* report=nullptr)`. Views mượn pointer/count/capacity theo `src/feature_views.h`; caller khai báo allocation thật. Output H là value của caller, bị reset zero khi gọi và chỉ publish khi thành công. `HomographyReport` là đối tượng Host, chứa counters/loss/sample hash và vector inlier mask; không chuyển nguyên report sang Device.
+
+Stage không làm I/O. `write_homography_report(stream, report)` in seed/cấu hình/diagnostics khi caller gọi **ngoài vùng timing**. Sau lỗi report có thể giữ progress counters, nhưng `success=false`, H zero và inlier mask rỗng; không âm thầm trả identity. Validation theo thứ tự: reset output/report → S5 config → view metadata/alignment → mọi tọa độ x/y A/B hữu hạn → Match indices/distance và indexA tăng chặt → tối thiểu 4 Match. Không kiểm tra score/angle keypoint vì S5 không sử dụng chúng.
 
 Giữ `common.h` và `docs/interface.md` hiện tại. Tên logic `ransac_max_iters` tại S5 là alias của `Config.ransac_iters`, không phải field mới. Threshold được tính một lần khi chuẩn bị Config từ kích thước A đã biết, bằng cùng rule ở mọi version; S5 không cần thêm ảnh/dimensions vào input chỉ để tính tau. Confidence, sampler/scorer/solver và tolerance nội bộ là hằng số thiết kế có tên, dùng chung các implementation. Khi cài, không thêm field hoặc đổi default trong file dùng chung mà không phối hợp với Chương.
 
@@ -84,6 +86,8 @@ Các mục cần cả Nhóm xác nhận ở P0-T04: chiều B → A, index sau c
 | Duplicate/area/rank tolerances | `EPS_DUP=1e-6`, `EPS_AREA=1e-4`, `EPS_RANK=1e-10` | Hằng double trong tọa độ đã normalized/hệ DLT; cần kiểm thử gần suy biến và cả Nhóm xác nhận trước benchmark |
 
 Các method/giá trị chính seed, cap, sampler/scorer/solver/refit đã được Đế chốt. Confidence và numeric tolerances là cấu hình làm việc ghi rõ để cả Nhóm xác nhận khi tích hợp. Chúng không phải kết quả tuning hoặc số đo chất lượng.
+
+`configure_v0_features(config,W_A,H_A)` chuẩn bị baseline seed=16/cap=2000 và threshold rule, giữ tham số của stage khác, chỉ đặt epsilon về 1e-6f nếu caller chưa cấu hình (zero). API S5 validate `0 < cap <= 2000`, threshold/epsilon hữu hạn dương; nó đọc seed/tau/epsilon thực tế từ Config để hỗ trợ fixture/debug. Benchmark V0–Final luôn dùng cùng baseline Config đã chốt, không đổi giá trị riêng một version.
 
 ### 3.2. Threshold scale theo độ phân giải
 
@@ -299,13 +303,42 @@ Các hypotheses có thể fit/chấm điểm độc lập; MSAC score/count cầ
 
 ## 7. Kiểm thử
 
-Kế hoạch cho P1-T14/P1-T15; **chưa chạy**.
+Đã chạy các suite local dưới đây; **chưa chạy Colab T4**. Bảng case bên dưới vẫn bao gồm kế hoạch kiểm chứng CPU–GPU và trường hợp cần fixture bổ sung, không tuyên bố toàn bộ test plan đã nghiệm thu.
 
-Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **686 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4 hoặc pipeline RANSAC.
+Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **690 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/near-collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4.
 
 Module `homography_sampling`: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
 
-Module `homography_scoring`: **9 checks local đạt** trong `tests/test_homography_scoring.cpp`, gồm loss cắt ngưỡng, equality là outlier, projection invalid có penalty, invalid parameters và score/count/ID model selection. Đây là kiểm tra công thức/ranking, không chứng minh chất lượng panorama.
+Module `homography_scoring`: **12 checks local đạt** trong `tests/test_homography_scoring.cpp`, gồm loss cắt ngưỡng, equality là outlier, projection invalid có penalty, invalid parameters và score/count/ID model selection. Hai model thật cùng count nhưng residual khác nhau được kiểm tra ranking theo MSAC. Đây là kiểm tra công thức/ranking, không chứng minh chất lượng panorama.
+
+Stage `tests/test_v0_homography.cpp`: **174 checks local đạt**, gồm 4-point/many-point estimation, ground-truth noise/outlier labels, repeatability, second refit khi mask đổi, threshold scaling giữa resolutions, validation/cap và tích hợp S4 → S5 → S6 với features cho sẵn. Đây không phải pipeline S1–S6 từ ảnh thật. Allocation fault injection được tách thành binary riêng để không xung đột allocator operators của Windows ASan.
+
+| Suite | Checks/assertions local đạt | Sanitizers đã chạy |
+|---|---:|---|
+| `test_v0_match.cpp` | 66 | ASan + UBSan |
+| `test_homography_dlt.cpp` | 690 | ASan + UBSan |
+| `test_homography_sampling.cpp` | 4412 | ASan + UBSan |
+| `test_homography_scoring.cpp` | 12 | ASan + UBSan |
+| `test_v0_homography.cpp` | 174 | ASan + UBSan |
+| `test_v0_feature_allocation.cpp` | 125 | UBSan; riêng allocator fault injection |
+| `test_v0_warp_blend.cpp` có sẵn | 194 | UBSan; code S6 còn được gọi trong integration ASan |
+
+Tổng 7 suites: **5673 checks/assertions**, là số lần assertion, không phải 5673 trường hợp độc lập. Không có timing hoặc quality result trên dataset. Các ca còn cần môi trường/fixture: CUDA schedule/batch parity, các numerical boundaries của CPU–GPU, trường hợp refit tăng loss/rank failure ở stage, cặp synthetic ảnh và panorama thật.
+
+Lệnh local (compiler portable đã được cho phép, nằm trong build/ bị Git ignore):
+
+```powershell
+python tests/run_v0_features.py --compiler build/llvm-mingw-20261006-ucrt-x86_64/bin/clang++.exe
+python tests/run_v0_features.py --compiler build/llvm-mingw-20261006-ucrt-x86_64/bin/clang++.exe --sanitizers
+```
+
+Lệnh kiểm chứng chính thức trên Colab, sau khi repo/source/test đã có trong phiên T4:
+
+```bash
+python tests/run_v0_features.py --compiler nvcc --require-t4
+```
+
+Runner in tên GPU/CPU/compiler, yêu cầu T4 khi bật `--require-t4`, build bằng `nvcc -arch=sm_75 -std=c++11 -O2` và host flags không FMA contraction/vectorization. Output mong đợi là từng dòng PASS của suite và `PASS suites: 7, total checks: 5673`; output này đã có ở local, chưa xác minh bằng nvcc/T4. Tests chạy executable ngoài notebook; không chép code vào cell. Dùng `--suite matching`, `--suite dlt` hoặc suite khác để khoanh vùng lỗi.
 
 | Case | Kết quả mong đợi |
 |---|---|
@@ -358,3 +391,4 @@ Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_
 |---|---|---|
 | 13/10/2026 | Đề xuất RANSAC/DLT/refit, contract B → A, synthetic ảnh và metric sai số phép chiếu | Chuẩn bị P0-T11 để Đế lựa chọn; chưa chốt tham số S5 |
 | 13/10/2026 | Đế chốt uniform 4-point RANSAC + normalized DLT double + MSAC + adaptive stop cap 2000 + all-inlier refit; seed 16; tau scale từ 3 px tại 1080p | Giữ method/cấu hình từ V0 đến Final, bổ sung determinism, degeneracy và test plan; chờ xác nhận tích hợp/tolerance chung |
+| 13/10/2026 | Cài V0 S5 cùng module math/DLT/SVD, sampler, MSAC, report và test runner; 7 suites local đạt | Không đổi method/tham số; chờ Colab T4, generator synthetic ảnh và tích hợp pipeline thật |

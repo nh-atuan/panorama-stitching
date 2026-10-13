@@ -49,6 +49,12 @@ void test_unique_and_non_mutual() {
     a[4].data[7] ^= 1u << 31;
     require(v0_match(view(a), view(b), output, settings()) == ErrorCode::Success, "one-bit match");
     require(output[4].distance == 1, "bit 255 Hamming");
+    const Config config=settings();
+    for(int count=1;count<=3;++count) {
+        require(v0_match(FeatureView<Descriptor>(a.data(),count,a.size()),view(b),output,config)==
+                ErrorCode::InsufficientMatches,"one to three valid matches insufficient");
+        require(output.empty(),"partial match output not published");
+    }
 }
 void test_ratio_and_ties() {
     std::vector<Descriptor> a(4), b(2);

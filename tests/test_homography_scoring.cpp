@@ -37,6 +37,17 @@ void test_score() {
     require(better_model(ModelScore(1,5),7,ModelScore(1,4),6),"count tie break");
     require(better_model(ModelScore(1,4),6,ModelScore(1,4),7),"ID tie break");
     require(!better_model(ModelScore(0,3),0,ModelScore(1,4),1),"under four inliers rejected");
+    pairs.resize(4);
+    for(std::size_t i=0;i<pairs.size();++i) {
+        pairs[i].a=Point2(static_cast<double>(i%2),static_cast<double>(i/2));
+        pairs[i].b=pairs[i].a;
+    }
+    const Matrix3 shifted={{1,0,0.25,0,1,0,0,0,1}};
+    const ModelScore exact=evaluate_msac(identity,pairs,3,1e-6,mask);
+    const ModelScore displaced=evaluate_msac(shifted,pairs,3,1e-6,mask);
+    require(exact.inliers==4 && exact.loss==0.0,"exact model with four inliers");
+    require(displaced.inliers==4 && displaced.loss==0.25,"same count with geometric residual");
+    require(better_model(exact,7,displaced,6),"same-count residual ranking overrides lower ID");
 }
 }  // namespace
 int main() {

@@ -113,7 +113,7 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td></td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
       <td>Đang làm</td>
-      <td>Đế đã chốt S4 exact 2-NN Hamming + ratio 0.80, cross-check=false; S5 uniform RANSAC + normalized DLT double + MSAC/adaptive/refit. Đã viết input/output, phương án synthetic/metric và nguồn. Chưa commit tài liệu; interface/cấu hình tích hợp còn cần cả Nhóm xác nhận.</td>
+      <td>Đế đã chốt S4 exact 2-NN Hamming + ratio 0.80, cross-check=false; S5 uniform RANSAC + normalized DLT double + MSAC/adaptive/refit. Đã viết/commit thiết kế input/output, phương án synthetic/metric và nguồn. Interface/cấu hình tích hợp còn cần cả Nhóm xác nhận.</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -260,7 +260,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T12, P1-T11</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
       <td>Đang làm</td>
-      <td>Đã cài sequential matching và view/config helpers trên de/p1; build C++11 warnings-as-errors bằng clang 23.1.3 Windows và 59 checks local đạt. Đã cập nhật API/ownership/validation và lệnh Colab trong tài liệu S4; chờ nvcc Colab T4 và nghiệm thu tích hợp.</td>
+      <td>Đã cài/commit sequential matching và view/config helpers trên de/p1; C++11 warnings-as-errors và 66 checks local clang 23.1.3 Windows đạt; allocation/error cleanup còn được kiểm tra riêng cùng S5. Đã cập nhật API và lệnh Colab trong tài liệu S4; chờ nvcc Colab T4 và nghiệm thu tích hợp.</td>
     </tr>
     <tr>
       <td>P1-T13</td>
@@ -268,7 +268,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s5-homography.md</code> có mục 3, 4 và 8</td>
       <td>Đang làm</td>
-      <td>Đã viết method/thiết kế theo quyết định của Đế: seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, adaptive confidence 0.99, tau 2/3/6 px và tối đa hai all-inlier refits. Đã bổ sung degeneracy/error/test plan. Cần xác nhận tích hợp và numeric tolerances với cả Nhóm; chưa commit/cài/test.</td>
+      <td>Đã viết/commit thiết kế seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, confidence 0.99, tau 2/3/6 px và tối đa hai all-inlier refits. P1-T14 đã có code/test local. Cần cả Nhóm xác nhận tích hợp và numeric tolerances.</td>
     </tr>
     <tr>
       <td>P1-T14</td>
@@ -276,7 +276,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T12, P1-T13</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
       <td>Đang làm</td>
-      <td>Đã cài core normalized DLT double/direct Jacobi SVD và hình học; 686 checks local bằng clang 23.1.3 Windows đạt. Đang bổ sung uniform sampling/MSAC/adaptive/refit stage; chờ kiểm chứng nvcc Colab T4.</td>
+      <td>Đã cài V0 S5 và các module nhỏ trên de/p1; stage có 174 checks local đạt, toàn runner gồm 7 suites/5673 assertions cùng S4/S6 đạt bằng clang 23.1.3 Windows. ASan/UBSan đạt theo phạm vi ghi ở tài liệu S5. API/report in seed ngoài timing đã có; chờ nvcc Colab T4, dataset và nghiệm thu tích hợp.</td>
     </tr>
     <tr>
       <td>P1-T15</td>

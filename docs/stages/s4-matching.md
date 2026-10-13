@@ -4,7 +4,7 @@ Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
 
 Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: đã cài V0 và kiểm thử local ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Build C++11 warnings-as-errors bằng clang 23.1.3 trên Windows đạt; 59 checks của test S4 đạt. Chưa build/test Colab T4 hoặc benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
+**Trạng thái: đã cài V0 và kiểm thử local ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Build C++11 warnings-as-errors bằng clang 23.1.3 trên Windows đạt; 66 checks của test S4 đạt. Chưa build/test Colab T4 hoặc benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -156,7 +156,7 @@ Mapping thread/warp/block cùng ý tưởng tối ưu sẽ chốt ở P3 sau khi
 
 ## 7. Kiểm thử
 
-`tests/test_v0_match.cpp`: **59 checks đạt trên Windows/clang 23.1.3, chưa chạy Colab T4**. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; khi dưới 4 match stage trả đúng `InsufficientMatches`. Không dùng output local làm số liệu chính thức.
+`tests/test_v0_match.cpp`: **66 checks đạt trên Windows/clang 23.1.3, chưa chạy Colab T4**. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; đã kiểm tra từ 1–3 match hợp lệ cũng trả `InsufficientMatches` và không publish output một phần. Allocation failure được kiểm tra riêng cùng S5 trong `tests/test_v0_feature_allocation.cpp`. Không dùng output local làm số liệu chính thức.
 
 | Trường hợp | Kết quả mong đợi |
 |---|---|
@@ -183,7 +183,7 @@ nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=o
 ./build/test_v0_match
 ```
 
-Output mong đợi: `PASS S4: 59 checks; ratio=0.80 cross_check=0 seed=16`. Đây là output đã thấy ở local, chưa xác minh bằng nvcc/T4. Ghi lại GPU và output thực tế trước nghiệm thu.
+Output mong đợi: `PASS S4: 66 checks; ratio=0.80 cross_check=0 seed=16`. Đây là output đã thấy ở local, chưa xác minh bằng nvcc/T4. Có thể chạy cả suite bằng `python tests/run_v0_features.py --compiler nvcc --require-t4`; lệnh này kiểm tra GPU T4 trước build. Ghi lại GPU và output thực tế trước nghiệm thu.
 
 ## 8. Trường hợp biên và rủi ro
 

@@ -305,6 +305,8 @@ Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp
 
 Module `homography_sampling`: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
 
+Module `homography_scoring`: **9 checks local đạt** trong `tests/test_homography_scoring.cpp`, gồm loss cắt ngưỡng, equality là outlier, projection invalid có penalty, invalid parameters và score/count/ID model selection. Đây là kiểm tra công thức/ranking, không chứng minh chất lượng panorama.
+
 | Case | Kết quả mong đợi |
 |---|---|
 | Identity, translation, affine, projective noiseless với 4 và nhiều điểm | H B → A đúng theo metric độc lập, không đảo chiều |

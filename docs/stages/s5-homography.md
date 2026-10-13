@@ -303,6 +303,8 @@ Kế hoạch cho P1-T14/P1-T15; **chưa chạy**.
 
 Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **686 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4 hoặc pipeline RANSAC.
 
+Module `homography_sampling`: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
+
 | Case | Kết quả mong đợi |
 |---|---|
 | Identity, translation, affine, projective noiseless với 4 và nhiều điểm | H B → A đúng theo metric độc lập, không đảo chiều |

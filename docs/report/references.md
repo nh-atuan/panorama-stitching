@@ -2,7 +2,7 @@
 
 ## S4/S5 - Đế
 
-Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới đây: 13/10/2026. Phần này phục vụ P0-T11/P1-T11, thiết kế P1-T13 và việc chuyển nội dung S4/S5 sang notebook sau này. Chưa có implementation hoặc dùng trọng số của các paper; nguồn RNG được tham khảo cho mã giả và phải ghi nguồn khi cài.
+Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới đây: 13/10/2026. Phần này phục vụ thiết kế/cài V0 S4/S5 và việc chuyển nội dung sang notebook. Các file code ghi tác giả, nguồn ý tưởng và phần Nhóm tự cài; SplitMix64 reference được ghi nguồn trong module sampling. Không dùng trọng số hoặc implementation learned matcher, không link OpenCV/Eigen/LAPACK.
 
 | Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
 |---|---|---|

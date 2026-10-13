@@ -121,24 +121,24 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Tự tạo và setup khung <code>src/</code> theo cây thư mục của đề giữa kỳ (<code>common.h</code>, <code>cuda_utils.cuh</code>, <code>versions.h</code>, <code>main.cu</code>, <code>stb_impl.cpp</code>), nhận đúng tham số dòng lệnh của đề cuối kỳ</td>
       <td>P0-T05</td>
       <td>Khung đã merge vào <code>main</code>, build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã có 5 file khung, CLI và stb; lịch sử local có merge PR #2 (4ced17d). Build/test C++ trên WSL đạt; chưa có bằng chứng build Colab T4 để nghiệm thu đầy đủ.</td>
     </tr>
     <tr>
       <td>P0-T13</td>
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S6</td>
       <td></td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Đã viết tài liệu S6, phản biện hai đề xuất có nguồn; chọn sơ bộ inverse warp + bilinear tự tính + feather, xác định input/output và canvas/offset. Chưa cài thuật toán S6.</td>
     </tr>
     <tr>
       <td>P0-T14</td>
       <td>Soạn nháp <code>common.h</code> và <code>docs/interface.md</code> theo mục 7 của kế hoạch</td>
       <td>P0-T07, P0-T08, P0-T11, P0-T12, P0-T13</td>
       <td>Pull request mở để cả nhóm góp ý</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Đã có common.h và docs/interface.md (commit local ac46b96); layout/stride/Hamming/H kiểm tra bằng C++ trên WSL đạt. Cần cả Nhóm xác nhận quy ước và phần dữ liệu S2–S5 ở P0-T04; chưa xác minh review trên GitHub.</td>
     </tr>
   </tbody>
 </table>
@@ -292,24 +292,24 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S6, gồm cách tính kích thước khung ảnh đầu ra và độ lệch gốc tọa độ</td>
       <td>P0-T04, P0-T13</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Đã hoàn thành mục 3, 4 và 8 trong docs/stages/s6-warp-blend.md: bảng tham số/tolerances, thuật toán bbox/offset và inverse bilinear, bảng trường hợp biên/mã lỗi. Phần composite và ownership đã cập nhật sang average 50/50, S6 cấp phát output theo yêu cầu coding mới 13/10.</td>
     </tr>
     <tr>
       <td>P1-T17</td>
       <td>Cài đặt và kiểm thử <code>v0_warp_blend.cpp</code></td>
       <td>P0-T12, P1-T16</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S6 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài v0_warp_blend.cpp và header stage trên chuong/p1: inverse/bbox/bilinear, average 50/50 theo yêu cầu coding mới, stride byte, cleanup và ErrorCode. 194 assertions synthetic trên WSL đạt; AddressSanitizer/UndefinedBehaviorSanitizer đạt. Đã cập nhật tài liệu S6; chưa chạy Colab T4/dataset và chưa commit/merge nên chưa nghiệm thu Xong. main.cu chưa nối S6 thật.</td>
     </tr>
     <tr>
       <td>P1-T18</td>
       <td>Cài đặt khung chạy trong <code>main.cu</code>: đo thời gian từng stage và tổng theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a>, warm-up, <code>--runs</code>, in dòng CSV, cờ <code>--debug</code>, báo lỗi cấp chương trình (thiếu file, ảnh không đọc được, version không tồn tại, <code>--runs</code> không dương)</td>
       <td>P0-T04, P0-T12</td>
       <td>Merge vào <code>main</code> qua pull request file dùng chung; chạy được trên Colab T4 với các stage stub</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã triển khai main.cu: 6 stub, RGB I/O, warm-up, timing từng stage/tổng, CSV 8 cột, average/minimum, debug và lỗi. Build C++11 warnings-as-errors và 34 ca benchmark/CLI/I/O trên WSL đạt; output preview ảnh A được kiểm tra pixel. Nhánh chuong/shared-benchmark; chờ kiểm chứng Colab T4 và merge PR file dùng chung. Timing stub không dùng làm benchmark thuật toán.</td>
     </tr>
   </tbody>
 </table>

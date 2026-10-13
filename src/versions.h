@@ -1,4 +1,4 @@
-// Authors: Group 16
+// Authors: Thanh Chuong (23120195)
 // External source: none
 
 #ifndef GROUP16_VERSIONS_H

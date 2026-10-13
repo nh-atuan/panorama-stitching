@@ -85,7 +85,8 @@ Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0
 |---|---|---|---|---|
 | Tuấn | Ẩn Coffee | an-coffee | Cả hai | Quán cà phê; `standard1` chụp ngoài trời, `standard2` chụp trong nhà |
 | Thành | | | | |
-| Chương | | | | |
+| Chương | Khuôn viên Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM | hcmus-campus | Ngoài trời | `standard1`: bờ tường đá; `standard2`: bia đá khuôn viên |
+| Chương | Khu vực ký túc xá | ky-tuc-xa | Ngoài trời | `challenge1`: cảnh đêm, chênh sáng và đối tượng chuyển động |
 | Đế | Tiệm cà phê Mai An | mai-an-coffee | Cả hai | Quán cà phê; `standard1` chụp trong nhà, `standard2` chụp ngoài trời|
 
 Site slug là tên địa điểm viết thường, không dấu, nối bằng gạch ngang, ví dụ `can-tin-b`.
@@ -102,6 +103,9 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 | tuan-standard2-b1 | Tuấn | an-coffee | chuẩn | | | | |
 | tuan-challenge1 | Tuấn | an-coffee | khó | Ít texture | 07/10 12:35 | nubia Neo 3 GT 5G | 8160×6144 |
 | tuan-challenge1-b1 | Tuấn | an-coffee | khó | | | | |
+| chuong-standard1 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:25:05 | vivo iQOO Neo10 | 4096×2304 |
+| chuong-standard2 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:27:33 | vivo iQOO Neo10 | 4096×2304 |
+| chuong-challenge1 | Chương | ky-tuc-xa | khó | Cảnh đêm (chính); chênh sáng, người/xe chuyển động và motion blur (kèm theo) | 07/10/2026 18:01:27 | vivo iQOO Neo10 | 4096×2304 |
 
 Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương ứng với tên file ở mục 4, ví dụ `tuan-standard1-b1` gồm `tuan/standard1_left_b1.jpg` và `tuan/standard1_right_b1.jpg`.
 
@@ -111,6 +115,9 @@ Thành soạn script kiểm tra các cặp chính của từng thành viên theo
 
 | Mã cặp | Đạt? | Ghi chú |
 |---|---|---|
+| chuong-standard1 | Chờ kiểm tra script/review | Có đủ hai ảnh trong trao đổi; thông số 4096×2304 đáp ứng tỷ lệ/kích thước theo khai báo. Chưa đối chiếu file gốc, EXIF, overlap định lượng và kết quả ghép. |
+| chuong-standard2 | Chờ kiểm tra script/review | Overlap ước lượng 40–50% theo Chương; cảnh có nhiều chi tiết tĩnh. Chưa xác minh zero parallax, homography hoặc panorama. |
+| chuong-challenge1 | Chờ kiểm tra script/review | Phù hợp ứng viên challenge cảnh đêm; có thêm chênh sáng và chuyển động. Cần kiểm tra ảnh gốc và phân tích từng yếu tố sau khi chạy pipeline. |
 
 ## 6. Cách chọn ảnh
 

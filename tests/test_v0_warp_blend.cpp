@@ -1,4 +1,4 @@
-// Authors: Group 16
+// Authors: Thanh Chuong (23120195)
 // External source: none
 
 #include "v0_warp_blend.h"

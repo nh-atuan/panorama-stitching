@@ -1,4 +1,4 @@
-// Authors: Group 16
+// Authors: Thanh Chuong (23120195)
 // External source: none
 
 #ifndef GROUP16_V0_WARP_BLEND_H

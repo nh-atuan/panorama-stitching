@@ -1,8 +1,8 @@
 # S6 - Warping and blending
 
-Người phụ trách: Chương (23120195). Cập nhật lần cuối: 12/10/2026.
+Người phụ trách: Chương (23120195). Cập nhật lần cuối: 13/10/2026.
 
-Task hiện tại: **P0-T13 — chọn sơ bộ phương pháp và xác định đầu vào/đầu ra**. Phương pháp sơ bộ chọn là **inverse warping trên mặt phẳng ảnh A, bilinear interpolation tự tính và feather blending theo khoảng cách đến biên ảnh nguồn**. Giữ phương pháp này cho V0–V3 nếu đạt kiểm chứng chất lượng ở P1. Chưa có code, ảnh kết quả hoặc số đo S6; tài liệu này không chứng nhận các task P1 đã hoàn thành.
+Task hiện tại: **P1-T16 — chốt tham số, viết thuật toán chi tiết và trường hợp biên cho S6** (đã hoàn thành mục 3, 4 và 8). Phương pháp chọn là **inverse warping trên mặt phẳng ảnh A, bilinear interpolation tự tính và feather blending theo khoảng cách đến biên ảnh nguồn**. Giữ phương pháp này cho V0–V3 nếu đạt kiểm chứng chất lượng ở P1. Chưa có code, ảnh kết quả hoặc số đo S6; tài liệu này chưa chứng nhận task P1-T17 đã hoàn thành.
 
 Các quy ước dữ liệu bên dưới là đề xuất ban đầu của S6. P0-T14 đã có [`docs/interface.md`](../interface.md) và `common.h` theo yêu cầu của Chương, gồm Homography float32 và stride byte; bản interface còn cần cả Nhóm góp ý và thống nhất trước khi cài pipeline thật. Dataset đã chụp và chuẩn bị đầy đủ theo xác nhận của Chương; chưa chạy S6 trên dataset đó.
 
@@ -175,24 +175,280 @@ Các cờ hợp lệ có thể tính tại chỗ; không bắt buộc lưu hai m
 
 ## 3. Tham số
 
-Chưa chốt giá trị cho P1-T16. Các công thức mục 2 là contract đề xuất để review interface, chưa chứng minh chất lượng trên dataset.
+Các giá trị dưới đây là cấu hình thiết kế cho S6, dùng thống nhất ở V0 và V1. Chưa có kết quả thực nghiệm để xác nhận chất lượng hoặc hiệu năng.
 
-| Mục cần chốt | Giá trị hiện tại | Lý do cần quyết định |
-|---|---|---|
-| Chuẩn hóa H, kiểm tra nghịch đảo | Chưa chốt | Tolerance phải có ý nghĩa theo scale, không chỉ so det với hằng số tùy ý |
-| Tolerance mẫu số và miền tọa độ | Chưa chốt | Tránh chia gần 0, mất mép hoặc validity khác nhau CPU/GPU |
-| Giới hạn canvas/bộ nhớ | Chưa chốt | H hữu hạn vẫn có thể tạo ảnh quá lớn |
-| Kiểu số cho transform/sampling/weight | Chưa chốt | Ảnh hưởng precision, consistency và chi phí GPU |
-| Round/clamp đầu ra | Chưa chốt | Cùng phép toán trên CPU/GPU cần cùng quy tắc chuyển kiểu |
-| Ngưỡng consistency V0/GPU | Chưa chốt | Kiểm tra geometry, mask, sai số pixel; không chỉ nhìn bằng mắt |
+| Tham số | Giá trị | Đơn vị | Lý do chọn | Ảnh hưởng khi tăng/giảm |
+|---|---|---|---|---|
+| Tâm pixel | Tọa độ nguyên; pixel đầu tiên ở `(0,0)` | Pixel | Thống nhất với keypoint và interface chung | Đổi sang tâm `.5` phải sửa toàn bộ công thức và kiểm thử |
+| Kiểu tính toán trung gian | `double` cho transform, inverse, interpolation và blending; H đầu vào vẫn là `float[9]` | — | Giảm sai số tích lũy trước khi chuyển sang chỉ số nguyên | Đổi sang `float` có thể tăng tốc nhưng phải kiểm chứng lại |
+| Ngưỡng quy về tọa độ nguyên `EPS_COORD` | `1e-6` | Pixel | Nếu tọa độ cách số nguyên gần nhất không quá ngưỡng này, quy về số nguyên đó trước khi tính bbox hoặc sampling | Tăng làm nhiều điểm bị dịch nhẹ; giảm dễ giữ sai số sát biên |
+| Quy tắc bbox | Sau `snap_integer()`: `floor(min)` và `ceil(max)` | Pixel | Bao phủ miền tâm pixel của cả hai ảnh | Dùng cast trực tiếp hoặc `round()` cho bbox có thể cắt mất mép |
+| Quy tắc chỉ số bilinear | `floor(x)`, `floor(y)` sau `snap_integer()` | Pixel | Lấy pixel phía trên/trái và giữ phần lẻ làm trọng số | Dùng `round()` làm thay đổi ô nội suy |
+| Tolerance mẫu số `EPS_W` | `1e-6`, kiểm tra tương đối: `abs(w) <= EPS_W * s`, với `s = abs(m20*x) + abs(m21*y) + abs(m22)` | Không đơn vị | Phát hiện mẫu số gần 0 do cancellation; không phụ thuộc hệ số scale của ma trận | Tăng từ chối nhiều điểm hơn; giảm cho phép phép chiếu gần horizon và tọa độ lớn |
+| Ngưỡng pivot khi nghịch đảo `EPS_PIVOT` | `1e-12`, so với scale hàng | Không đơn vị | Kiểm tra pivot nhỏ trong phép nghịch đảo bằng `double` | Tăng có thể loại ma trận còn dùng được; giảm có thể nhận ma trận mất ổn định |
+| Ngưỡng điều kiện nghịch đảo `EPS_RCOND` | `1e-12`; yêu cầu `1 / (normInf(H) * normInf(H_inv)) > EPS_RCOND` | Không đơn vị | Bổ sung kiểm tra độ ổn định, không chỉ dựa vào determinant | Tăng chặt hơn; giảm chấp nhận nhiều ma trận ill-conditioned hơn |
+| Màu nền | RGB `(0,0,0)` | Giá trị màu `[0,255]` | Có giá trị xác định khi không nguồn nào hợp lệ | Đổi màu chỉ thay vùng nền |
+| Quy tròn màu output | `floor(clamp(C,0,255) + 0.5)` rồi chuyển `uint8_t` | Giá trị màu | Cùng quy tắc làm tròn half-up cho CPU/GPU | Đổi quy tắc có thể làm khác một đơn vị màu |
+| Giới hạn chiều canvas | `Wc <= 10,000`, `Hc <= 10,000` | Pixel | Giới hạn tài nguyên và tránh canvas bất thường | Tăng cho phép output lớn hơn nhưng tăng nguy cơ OOM |
+| Giới hạn diện tích canvas | `max_canvas_pixels = 100,000,000` | Pixel | Phù hợp giới hạn hai chiều; RGB packed tối đa cần 300,000,000 byte riêng cho output | Tăng cần thêm bộ nhớ; giảm từ chối canvas sớm hơn |
 
-Không có tham số pyramid levels, seam scale hoặc hệ số tanh trong phương pháp đã chọn. Không khóa block size hoặc phiên bản tối ưu ở P0.
+Định nghĩa phép quy về số nguyên:
+
+```cpp
+double snap_integer(double t) {
+    // Caller must establish that t is finite.
+    double nearest = floor(t + 0.5);
+    return abs(t - nearest) <= EPS_COORD ? nearest : t;
+}
+```
+
+`EPS_COORD` là tolerance thiết kế, không bảo đảm mọi phép tính CPU/GPU tự động cho cùng kết quả. V0/V1 phải dùng cùng precision, thứ tự phép toán và chính sách FMA; không bật fast math riêng một phiên bản. Phép nhân ma trận bên dưới dùng FMA tường minh với cùng thứ tự. Vẫn phải kiểm tra canvas, offset và validity giữa hai phiên bản trước khi so màu. [NVIDIA: Floating Point and IEEE 754](https://docs.nvidia.com/cuda/floating-point/index.html).
 
 ## 4. Thuật toán chi tiết
 
-Chưa hoàn thành P1-T16. Luồng dự kiến: kiểm tra input/H → tính canvas, T và inverse map → duyệt canvas tuần tự ở V0 → xác định nguồn hợp lệ → lấy mẫu → composite theo bốn trường hợp ở mục 2.3 → chuyển RGB theo quy tắc đã chốt.
+Quy ước: **H đưa ảnh B sang hệ A; H⁻¹ đưa tọa độ trong hệ A về ảnh B để lấy mẫu**. Tọa độ canvas phải trừ offset trước khi áp dụng H⁻¹.
 
-Với P=Wc*Hc, mỗi pixel có số phép toán cố định, nên thời gian dự kiến O(P). Output cần O(P) bộ nhớ; cách duyệt trực tiếp có thể dùng O(1) bộ nhớ phụ ngoài ảnh và output. Nếu lưu warped images/masks trung gian thì bộ nhớ phụ là O(P). Đây là phân tích từ thiết kế, chưa phải profiling; không kết luận S6 là bottleneck hoặc stage nặng nhất.
+Các hàm hỗ trợ trong mã giả:
+
+```cpp
+bool project(Mat3 M, double x, double y, Point& p) {
+    double u = fma(M[0], x, fma(M[1], y, M[2]));
+    double v = fma(M[3], x, fma(M[4], y, M[5]));
+    double w = fma(M[6], x, fma(M[7], y, M[8]));
+
+    double s = (abs(M[6] * x) + abs(M[7] * y)) + abs(M[8]);
+
+    if (!finite(u, v, w, s) || s == 0.0 ||
+        abs(w) <= EPS_W * s)
+        return false;
+
+    p = {u / w, v / w};
+    return finite(p.x, p.y);
+}
+
+bool source_valid(Point& p, int W, int H) {
+    if (!finite(p.x, p.y))
+        return false;
+
+    p.x = snap_integer(p.x);
+    p.y = snap_integer(p.y);
+
+    return 0.0 <= p.x && p.x <= W - 1 &&
+           0.0 <= p.y && p.y <= H - 1;
+}
+```
+
+`Mat3` và `Point` là ký hiệu mã giả, không yêu cầu thư viện ngoài. `read_rgb()` đọc theo stride byte của `Image`.
+
+### Khối 1: Canvas Bounding Box và Offset
+
+```cpp
+ErrorCode prepare_canvas(Image A, Image B, Homography input,
+                         Mat3& H, Mat3& H_inv, CanvasInfo& canvas) {
+    if (!valid_rgb_view(A) || !valid_rgb_view(B))
+        return ErrorCode::InvalidImage;
+
+    H = convert_to_double(input.data);
+
+    if (!all_finite(H))
+        return ErrorCode::NumericalFailure;
+
+    double scale = max_abs_coefficient(H);
+    if (scale == 0.0)
+        return ErrorCode::DegenerateHomography;
+
+    H /= scale;  // Do not assume h22 != 0.
+
+    // Scaled partial pivoting; no OpenCV or Eigen.
+    if (!invert_scaled_pivot(H, EPS_PIVOT, H_inv))
+        return ErrorCode::DegenerateHomography;
+
+    double condition_product = normInf(H) * normInf(H_inv);
+    if (!all_finite(H_inv) || !isfinite(condition_product) ||
+        condition_product == 0.0 ||
+        1.0 / condition_product <= EPS_RCOND)
+        return ErrorCode::DegenerateHomography;
+
+    Point cornersB[4] = {
+        {0, 0}, {B.width - 1, 0},
+        {0, B.height - 1}, {B.width - 1, B.height - 1}
+    };
+
+    Point cornersA[4] = {
+        {0, 0}, {A.width - 1, 0},
+        {0, A.height - 1}, {A.width - 1, A.height - 1}
+    };
+
+    int denominator_sign = 0;
+    Point warpedB[4];
+
+    for (int i = 0; i < 4; ++i) {
+        double x = cornersB[i].x;
+        double y = cornersB[i].y;
+        double w = fma(H[6], x, fma(H[7], y, H[8]));
+        double s = (abs(H[6] * x) + abs(H[7] * y)) + abs(H[8]);
+
+        if (!finite(w, s) || s == 0.0 || abs(w) <= EPS_W * s)
+            return ErrorCode::NumericalFailure;
+
+        int current_sign = w > 0.0 ? +1 : -1;
+        if (i == 0)
+            denominator_sign = current_sign;
+        else if (current_sign != denominator_sign)
+            return ErrorCode::NumericalFailure; // Horizon intersects B.
+
+        if (!project(H, x, y, warpedB[i]))
+            return ErrorCode::NumericalFailure;
+
+        warpedB[i].x = snap_integer(warpedB[i].x);
+        warpedB[i].y = snap_integer(warpedB[i].y);
+    }
+
+    double xmin, xmax, ymin, ymax;
+    bounds_of_eight_points(cornersA, warpedB, xmin, xmax, ymin, ymax);
+
+    // Check finite values and int64 range BEFORE casting.
+    int64_t x0, x1, y0, y1;
+    if (!checked_int64(floor(xmin), x0) ||
+        !checked_int64(ceil(xmax),  x1) ||
+        !checked_int64(floor(ymin), y0) ||
+        !checked_int64(ceil(ymax),  y1))
+        return ErrorCode::InvalidCanvas;
+
+    int64_t Wc, Hc, Offset_X, Offset_Y;
+    if (!checked_subtract_add(x1, x0, 1, Wc) ||
+        !checked_subtract_add(y1, y0, 1, Hc) ||
+        !checked_negate(x0, Offset_X) ||
+        !checked_negate(y0, Offset_Y))
+        return ErrorCode::InvalidCanvas;
+
+    if (Wc <= 0 || Hc <= 0 || Wc > 10000 || Hc > 10000 ||
+        !fits_int32(Offset_X) || !fits_int32(Offset_Y))
+        return ErrorCode::InvalidCanvas;
+
+    size_t pixels, row_bytes, bytes;
+    if (!checked_multiply(Wc, Hc, pixels) ||
+        pixels > 100000000 ||
+        !checked_multiply(Wc, 3, row_bytes) ||
+        !checked_multiply(row_bytes, Hc, bytes))
+        return ErrorCode::InvalidCanvas;
+
+    canvas = {Wc, Hc, Offset_X, Offset_Y, row_bytes, bytes};
+    return ErrorCode::Success;
+}
+```
+
+Công thức khung:
+
+\[
+W_c=\lceil x_{\max}\rceil-\lfloor x_{\min}\rfloor+1,\qquad
+H_c=\lceil y_{\max}\rceil-\lfloor y_{\min}\rfloor+1
+\]
+
+\[
+Offset_X=-\lfloor x_{\min}\rfloor,\qquad
+Offset_Y=-\lfloor y_{\min}\rfloor.
+\]
+
+Các extrema đã được `snap_integer()` theo quy tắc thống nhất. Kiểm tra dấu mẫu số ở bốn góc có ý nghĩa vì mẫu số là hàm affine trên miền chữ nhật: khi cùng dấu và không gần 0 tại các góc, horizon không cắt miền đó.
+
+### Khối 2: Inverse Warping và Bilinear Interpolation
+
+```cpp
+RGB bilinear(Image image, Point p) {
+    // Precondition: source_valid(p, width, height) == true.
+    int x0 = int(floor(p.x));
+    int y0 = int(floor(p.y));
+    int x1 = min(x0 + 1, image.width  - 1);
+    int y1 = min(y0 + 1, image.height - 1);
+
+    double ax = p.x - x0;
+    double ay = p.y - y0;
+
+    RGB C00 = read_rgb(image, x0, y0);
+    RGB C10 = read_rgb(image, x1, y0);
+    RGB C01 = read_rgb(image, x0, y1);
+    RGB C11 = read_rgb(image, x1, y1);
+
+    RGB result;
+    for (int c = 0; c < 3; ++c) {
+        double top    = (1.0 - ax) * C00[c] + ax * C10[c];
+        double bottom = (1.0 - ax) * C01[c] + ax * C11[c];
+        result[c] = (1.0 - ay) * top + ay * bottom;
+    }
+    return result; // Keep double; do not round each sample to uint8.
+}
+
+for (int yc = 0; yc < Hc; ++yc) {
+    for (int xc = 0; xc < Wc; ++xc) {
+        Point pA = {
+            double(xc) - Offset_X,
+            double(yc) - Offset_Y
+        };
+
+        Point pB;
+        bool projectedB = project(H_inv, pA.x, pA.y, pB);
+
+        bool validA = source_valid(pA, A.width, A.height);
+        bool validB = projectedB &&
+                      source_valid(pB, B.width, B.height);
+
+        RGB Ca, Cb;
+        if (validA) Ca = bilinear(A, pA);
+        if (validB) Cb = bilinear(B, pB);
+
+        // Apply Block 3 and store one output pixel.
+    }
+}
+```
+
+Chỉ clamp **chỉ số neighbor** sau khi tọa độ được xác nhận hợp lệ. Không clamp mọi tọa độ ngoài ảnh về mép nguồn. Quy tắc này hỗ trợ cả pixel cuối và ảnh `1×1`.
+
+Nếu H⁻¹ không chiếu được một pixel canvas, pixel đó không có nguồn B hợp lệ. Đây không tự động là lỗi toàn S6: điểm canvas có thể nằm ngoài footprint của B; nguồn A vẫn được sử dụng nếu hợp lệ.
+
+### Khối 3: Feather Blending Composite
+
+Với tâm pixel nguyên, biên vật lý của nguồn nằm tại `-0.5` và `W-0.5`, `H-0.5`:
+
+```cpp
+double distance_weight(Point p, int W, int H) {
+    // Precondition: p is a valid source coordinate.
+    return min(
+        min(p.x + 0.5, W - 0.5 - p.x),
+        min(p.y + 0.5, H - 0.5 - p.y)
+    );
+}
+
+RGB composite = {0.0, 0.0, 0.0};
+
+if (validA && validB) {
+    double da = distance_weight(pA, A.width, A.height);
+    double db = distance_weight(pB, B.width, B.height);
+    double denominator = da + db; // Strictly positive for valid coordinates.
+
+    for (int c = 0; c < 3; ++c)
+        composite[c] = (da * Ca[c] + db * Cb[c]) / denominator;
+
+} else if (validA) {
+    composite = Ca;
+
+} else if (validB) {
+    composite = Cb;
+
+// Otherwise retain RGB (0,0,0).
+}
+
+if (!all_finite(composite))
+    return ErrorCode::NumericalFailure;
+
+for (int c = 0; c < 3; ++c)
+    output(xc, yc, c) =
+        uint8_t(floor(clamp(composite[c], 0.0, 255.0) + 0.5));
+```
+
+Trọng số được đo trong **pixel nguồn**, không phải khoảng cách trên canvas. Với tọa độ hợp lệ, mỗi trọng số ít nhất `0.5`, nên không cần cộng epsilon tùy ý vào mẫu số blending. Pixel RGB đen vẫn là dữ liệu hợp lệ; validity không suy ra từ màu.
+
+Với `P = Wc × Hc`, render có thời gian `O(P)`, bộ nhớ output `O(P)` và không cần lưu hai ảnh đã warp đầy đủ. Đây là phân tích thuật toán, chưa phải kết quả profiling.
 
 ## 5. Bằng chứng chất lượng
 
@@ -238,15 +494,31 @@ Kế hoạch đề xuất cho P1-T17; toàn bộ kết quả thực tế trên C
 
 ## 8. Trường hợp biên và rủi ro
 
-P1-T16 cần hoàn thiện cách xử lý và tham số cho từng trường hợp. Các rủi ro đã xác định:
+S6 trả `ErrorCode` cho bên gọi; không tự gọi `exit()` trong thuật toán. Bên gọi chỉ ghi output khi nhận `Success`, giải phóng tài nguyên và xử lý lỗi cấp chương trình.
 
-- H sai chiều, ill-conditioned hoặc có horizon trong miền B: ảnh sai hoặc canvas không bị chặn; S6 phải kiểm tra trước render.
-- Sai lệch sát biên/số nguyên: bbox hoặc mask CPU/GPU khác nhau; cần cùng quy tắc hình học và tests.
-- Parallax hoặc vật chuyển động: feather có thể tạo ảnh kép; không chỉnh H bằng smoothing màu.
-- Chênh phơi sáng, white balance, vignetting: đường chuyển tiếp vẫn có thể nhìn thấy; gain compensation chưa thuộc phương pháp chính.
-- Thu nhỏ projective mạnh: bilinear có thể aliasing; giới hạn này cần ghi trong kết quả [R1, mục 6.1].
-- Canvas lớn hơn nhiều so với input: thời gian/bộ nhớ phải đánh giá theo canvas thực tế, không chỉ nhãn small/medium/large.
-- Phiên bản GPU khác floating-point/round/addressing: khác màu hoặc validity; phải kiểm chứng bằng metric trước khi chấp nhận.
+| Trường hợp | Phát hiện và xử lý | Trạng thái |
+|---|---|---|
+| Input không hợp lệ | Null buffer, kích thước/channel/stride sai hoặc byte size tràn | `InvalidImage` |
+| H toàn 0 hoặc nghịch đảo thất bại | Kiểm tra scaled pivot, khả nghịch và reciprocal condition estimate | `DegenerateHomography` |
+| H có NaN/Inf | Từ chối trước khi tính bbox | `NumericalFailure` |
+| Horizon cắt hoặc chạm miền ảnh B | Mẫu số tại góc gần 0, hoặc các góc khác dấu; không lấy bbox từ các góc hữu hạn rồi tiếp tục | `NumericalFailure` |
+| Mẫu số âm tại toàn bộ bốn góc B | Không coi là lỗi chỉ vì âm; H và −H biểu diễn cùng phép chiếu | Tiếp tục nếu các kiểm tra khác đạt |
+| Corner projection không hữu hạn | Không chuyển NaN/Inf thành chỉ số nguyên | `NumericalFailure` |
+| Canvas quá lớn hoặc phép tính kích thước tràn | Kiểm tra trước cấp phát; từ chối khi một chiều >10,000 hoặc diện tích >100,000,000 pixel | `InvalidCanvas` |
+| Allocation thất bại dù canvas trong giới hạn | Bắt `std::bad_alloc` từ `new uint8_t[]`; giải phóng tài nguyên đã cấp phát | `AllocationFailed` |
+| Allocation Device thất bại ở V1 | `cudaErrorMemoryAllocation` ánh xạ sang lỗi bộ nhớ; lỗi CUDA khác giữ mã riêng | `AllocationFailed` hoặc `CudaFailure` |
+| Một pixel không chiếu được về B | Đánh dấu `validB=false`; dùng A nếu hợp lệ, nếu không dùng nền | Không lỗi toàn stage |
+| Pixel nằm ngoài cả hai nguồn | Ghi nền RGB `(0,0,0)` | Không lỗi toàn stage |
+| Không có overlap | Không chia trọng số cho vùng không có hai nguồn; giữ từng nguồn hợp lệ | `Success` ở S6; báo riêng giới hạn chất lượng |
+| Parallax, vật chuyển động hoặc chênh phơi sáng | Feather có thể tạo ghosting hoặc đường chuyển tiếp; không sửa được H sai | Có thể `Success` về thực thi nhưng không đạt kiểm chứng chất lượng |
+
+**Determinant gần 0:** không dùng riêng điều kiện `abs(det(H)) < 1e-6` để kết luận suy biến. Homography thay đổi theo hệ số scale, và determinant nhỏ chưa đủ xác định độ ổn định. S6 dùng kiểm tra pivot có scale và reciprocal condition estimate như mục 4.
+
+**Horizon:** `w <= 0` không phải tiêu chí lỗi tổng quát. Nguy hiểm là `w` đi qua 0 trong miền B hoặc gần 0 theo tolerance. Mẫu số âm toàn miền vẫn biểu diễn một phép chiếu hợp lệ.
+
+**OOM:** giới hạn kích thước chỉ là bước phòng ngừa; canvas trong giới hạn vẫn có thể thiếu RAM/VRAM do các buffer khác. RGB packed `10,000×10,000` cần khoảng 300 MB riêng cho output. Ownership thuộc bên gọi; nếu bên gọi cấp phát sau bước chuẩn bị canvas, bên gọi bắt allocation failure và không tiếp tục render.
+
+Khi lỗi, output phải được đánh dấu không hợp lệ và không được ghi thành panorama thành công. Các giới hạn số học cần kiểm thử với identity, tịnh tiến âm/phân số, H và −H, horizon xuyên ảnh, H suy biến, pixel biên và canvas vượt ngân sách trước khi nghiệm thu V0/V1.
 
 ## 9. Nguồn tham khảo
 

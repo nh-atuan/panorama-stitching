@@ -292,8 +292,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S6, gồm cách tính kích thước khung ảnh đầu ra và độ lệch gốc tọa độ</td>
       <td>P0-T04, P0-T13</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Đã hoàn thành mục 3, 4 và 8 trong docs/stages/s6-warp-blend.md: bảng tham số và tolerances, thuật toán chi tiết 3 khối (bbox/offset, inverse bilinear, feather blend) và bảng 13 trường hợp biên/mã lỗi.</td>
     </tr>
     <tr>
       <td>P1-T17</td>

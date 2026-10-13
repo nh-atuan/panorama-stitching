@@ -275,8 +275,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_homography.cpp</code></td>
       <td>P0-T12, P1-T13</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài core normalized DLT double/direct Jacobi SVD và hình học; 686 checks local bằng clang 23.1.3 Windows đạt. Đang bổ sung uniform sampling/MSAC/adaptive/refit stage; chờ kiểm chứng nvcc Colab T4.</td>
     </tr>
     <tr>
       <td>P1-T15</td>

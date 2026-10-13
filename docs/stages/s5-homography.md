@@ -150,6 +150,8 @@ Với điểm normalized B=(x,y), A=(u,v), thêm hai hàng vào L:
 
 Giải homogeneous DLT: right singular vector của L ứng với singular value nhỏ nhất, nội bộ double, rồi reshape thành H_n. Với sample 4, L là 8×9 và cần **full right nullspace**, không chỉ thin SVD thiếu vector thứ 9. Khi n>4 có noise, L có thể rank 9; không yêu cầu exact nullspace bằng 0. Dùng SVD tự cài bằng chuẩn C++/CUDA khi triển khai, không thêm Eigen/OpenCV hoặc thay thành hệ 8 ẩn khóa h22=1. Không thay bằng normal equations không kiểm chứng vì làm xấu conditioning.
 
+Đã cài các module `homography_math`, `homography_svd`, `homography_dlt` và `ordered_reduction`. SVD dùng one-sided Jacobi cyclic, full right basis 9×9, tolerance orthogonality `16*epsilon(double)`, tối đa 128 sweeps và relative null-column floor. Đây là lựa chọn implementation của homogeneous DLT; không phải thay sang thuật toán homography khác. Inversion dùng scaled pivot/rcond tolerance 1e-12 như module S6; epsilon trong Config kiểm tra denominator. Gauge bàn giao max-abs=1 và hệ số max-abs đầu tiên có dấu dương để cố định dấu.
+
 Denormalize `H = inverse(T_A) * H_n * T_B`. Chuẩn hóa tọa độ khi fit khác chuẩn hóa max-abs của H khi bàn giao.
 
 Sample bị bỏ nếu:
@@ -298,6 +300,8 @@ Các hypotheses có thể fit/chấm điểm độc lập; MSAC score/count cầ
 ## 7. Kiểm thử
 
 Kế hoạch cho P1-T14/P1-T15; **chưa chạy**.
+
+Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **686 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4 hoặc pipeline RANSAC.
 
 | Case | Kết quả mong đợi |
 |---|---|

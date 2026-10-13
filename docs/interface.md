@@ -1,6 +1,6 @@
 # Interface chung của pipeline Panorama Stitching
 
-Người soạn: Chương (23120195). Cập nhật: 12/10/2026. Task: P0-T14.
+Người soạn: Chương (23120195). Cập nhật: 13/10/2026. Task: P0-T14.
 
 Tài liệu mô tả contract đã cài trong [`src/common.h`](../src/common.h) theo yêu cầu thiết kế hiện tại. Đây là bản để cả Nhóm góp ý ở P0-T14; chưa có xác nhận cả Nhóm, PR hoặc merge theo P0-T04. Tham số thuật toán còn thuộc P1 của người phụ trách stage. Contract thống nhất cho V0 và các phiên bản CUDA.
 
@@ -34,7 +34,7 @@ row_bytes = reinterpret_cast<unsigned char*>(data) + size_t(y) * stride
 pixel = reinterpret_cast<T*>(row_bytes) + size_t(x) * channels + c
 ```
 
-`stride` **luôn tính bằng byte**, kể cả ảnh `float`; không tính bằng số pixel hay phần tử. Packed RGB: `stride = width * 3`. Packed `GrayImage`: `stride = width * sizeof(float)`. Đây là chuẩn hóa đơn vị so với đề xuất stride theo phần tử trong tài liệu S1; giá trị gray [0,1] vẫn theo S1.
+`stride` **luôn tính bằng byte**, kể cả ảnh `float`; không tính bằng số pixel hay phần tử. Packed RGB: `stride = width * 3`. Packed `GrayImage`: `stride = width * sizeof(float)`, ví dụ ảnh xám rộng 1280 có `stride = 5120`, không phải 1280.
 
 Điều kiện ảnh hợp lệ:
 
@@ -126,7 +126,7 @@ Với T đưa A → canvas, inverse sampling dùng `pA=T^-1*pCanvas`, `pB=H^-1*T
 |---|---|---|
 | `max_keypoints` | Số tối đa mỗi ảnh, >0, đủ cho downstream | Thành |
 | `gaussian_sigma` | Pixel, >0 | Tuấn |
-| `gaussian_radius` | Pixel, >=0; giá trị dùng thật đi cùng sigma | Tuấn |
+| `gaussian_radius` | Pixel, 1 <= r <= 16 và r >= ceil(2 * sigma); chi tiết ở mục 3 của [tài liệu S1](stages/s1-preprocessing.md) | Tuấn |
 | `fast_threshold` | Intensity ảnh gray [0,1], >0 và <1 | Thành |
 | `match_ratio_threshold` | Ratio, 0<r<1 | Đế |
 | `match_cross_check` | 0/1, default 1, cần xác nhận trong S4 | Đế |

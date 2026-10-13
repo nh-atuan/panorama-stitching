@@ -15,10 +15,10 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 MATH = ["src/homography_math.cpp", "src/homography_svd.cpp", "src/homography_dlt.cpp"]
-ESTIMATOR = ["src/feature_config.cpp", "src/v0_match.cpp", *MATH,
+ESTIMATOR = ["src/feature_support.cpp", "src/v0_match.cpp", *MATH,
              "src/homography_sampling.cpp", "src/homography_scoring.cpp", "src/v0_homography.cpp"]
 SUITES = {
-    "matching": ["src/feature_config.cpp", "src/v0_match.cpp", "tests/test_v0_match.cpp"],
+    "matching": ["src/feature_support.cpp", "src/v0_match.cpp", "tests/test_v0_match.cpp"],
     "dlt": [*MATH, "tests/test_homography_dlt.cpp"],
     "sampling": ["src/homography_sampling.cpp", "tests/test_homography_sampling.cpp"],
     "msac": ["src/homography_math.cpp", "src/homography_scoring.cpp", "tests/test_homography_scoring.cpp"],

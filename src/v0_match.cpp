@@ -7,7 +7,7 @@
 // no mutual check, transactional host output and project ErrorCode handling.
 
 #include "v0_match.h"
-#include "feature_config.h"
+#include "feature_support.h"
 #include <cmath>
 #include <new>
 #include <stdexcept>

@@ -6,7 +6,7 @@
 // B-to-A convention, minimal geometry/rank checks and project error handling.
 
 #include "homography_dlt.h"
-#include "feature_config.h"
+#include "feature_support.h"
 #include "homography_svd.h"
 #include "ordered_reduction.h"
 #include <algorithm>

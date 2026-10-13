@@ -4,7 +4,7 @@
 #ifndef GROUP16_V0_MATCH_H
 #define GROUP16_V0_MATCH_H
 
-#include "feature_views.h"
+#include "feature_support.h"
 #include <vector>
 
 namespace panorama {

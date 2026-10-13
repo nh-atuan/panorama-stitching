@@ -1,7 +1,7 @@
 // Authors: Le Thuong De (23120232)
 // External source: none
 
-#include "feature_config.h"
+#include "feature_support.h"
 #include "v0_match.h"
 #include <algorithm>
 #include <cmath>

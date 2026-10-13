@@ -6,7 +6,7 @@
 #ifndef GROUP16_V0_HOMOGRAPHY_H
 #define GROUP16_V0_HOMOGRAPHY_H
 
-#include "feature_views.h"
+#include "feature_support.h"
 #include <iosfwd>
 #include <vector>
 

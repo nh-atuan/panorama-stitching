@@ -7,7 +7,7 @@
 // unique draw order, guarded confidence budget and no external RNG dependency.
 
 #include "homography_sampling.h"
-#include "feature_config.h"
+#include "feature_support.h"
 #include <algorithm>
 #include <cmath>
 

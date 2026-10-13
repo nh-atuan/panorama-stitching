@@ -10,7 +10,7 @@
 // whole sample indices rather than bytes. No external estimator copied.
 
 #include "v0_homography.h"
-#include "feature_config.h"
+#include "feature_support.h"
 #include "homography_dlt.h"
 #include "homography_sampling.h"
 #include "homography_scoring.h"

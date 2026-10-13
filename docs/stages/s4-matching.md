@@ -70,9 +70,9 @@ Theo [`docs/interface.md`](../interface.md), mục 3, 4, 6 và 8, cùng [`src/co
 | Tọa độ | Gốc trái trên, x sang phải, y xuống dưới, tâm pixel nguyên; S4 không đọc hoặc biến đổi tọa độ |
 | Lỗi | Trả `ErrorCode` cho caller; không tự gọi `exit`, không đưa output lỗi sang S5 |
 
-API nằm trong `src/v0_match.h`: `v0_match(FeatureView<Descriptor> left, FeatureView<Descriptor> right, std::vector<Match>& output, const Config& config)`. `FeatureView<T>` trong `src/feature_views.h` chứa pointer/count/capacity, chỉ mượn buffer; caller phải khai báo capacity đúng với allocation thật. Stage kiểm tra metadata và alignment, không thể tự xác minh một pointer tùy ý có allocation thật bao nhiêu byte.
+API nằm trong `src/v0_match.h`: `v0_match(FeatureView<Descriptor> left, FeatureView<Descriptor> right, std::vector<Match>& output, const Config& config)`. `FeatureView<T>` trong `src/feature_support.h` chứa pointer/count/capacity, chỉ mượn buffer; caller phải khai báo capacity đúng với allocation thật. Stage kiểm tra metadata và alignment, không thể tự xác minh một pointer tùy ý có allocation thật bao nhiêu byte.
 
-Output là vector Host do caller sở hữu, chỉ publish khi thành công; lỗi làm output rỗng. Buffer tạm dùng RAII. Không truyền vector qua Device và không có log trong hàm stage. Validation theo thứ tự: clear output → S4 config → view metadata/alignment → số ứng viên tối thiểu → thuật toán/số match. `configure_v0_features` trong `src/feature_config.h` chuẩn bị cấu hình đã chốt và tau theo kích thước A, giữ các trường của stage khác; config lỗi được giữ nguyên.
+Output là vector Host do caller sở hữu, chỉ publish khi thành công; lỗi làm output rỗng. Buffer tạm dùng RAII. Không truyền vector qua Device và không có log trong hàm stage. Validation theo thứ tự: clear output → S4 config → view metadata/alignment → số ứng viên tối thiểu → thuật toán/số match. `configure_v0_features` trong `src/feature_support.h` chuẩn bị cấu hình đã chốt và tau theo kích thước A, giữ các trường của stage khác; config lỗi được giữ nguyên.
 
 ## 3. Tham số
 
@@ -179,7 +179,7 @@ Build/test chính thức cần chạy trên Colab T4 từ repo root:
 ```bash
 nvidia-smi
 mkdir -p build
-nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off -Isrc src/feature_config.cpp src/v0_match.cpp tests/test_v0_match.cpp -o build/test_v0_match
+nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off -Isrc src/feature_support.cpp src/v0_match.cpp tests/test_v0_match.cpp -o build/test_v0_match
 ./build/test_v0_match
 ```
 

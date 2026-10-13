@@ -86,7 +86,7 @@ Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0
 | Tuấn | Ẩn Coffee | an-coffee | Cả hai | Quán cà phê; `standard1` chụp ngoài trời, `standard2` chụp trong nhà |
 | Thành | | | | |
 | Chương | | | | |
-| Đế | | | | |
+| Đế | Tiệm cà phê Mai An | mai-an-coffee | Cả hai | Quán cà phê; `standard1` chụp trong nhà, `standard2` chụp ngoài trời|
 
 Site slug là tên địa điểm viết thường, không dấu, nối bằng gạch ngang, ví dụ `can-tin-b`.
 

@@ -113,11 +113,27 @@ Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương 
 
 Thành soạn script kiểm tra các cặp chính của từng thành viên theo quy trình ở mục 6, rồi ghi kết quả vào bảng dưới. Không xét các cặp backup.
 
+Kết quả dưới đây do Tuấn làm thay Thành (P0-T10), chạy `scripts/check_pairs.py` ngày 16/10 trên toàn bộ thư mục Drive ở mục 4, tải bằng `gdown`. Mỗi tiêu chí nhận một trong ba kết quả: `Đạt`, `Chưa đạt`, `Cần review`. Tiêu chí không kiểm tra tự động được (cảnh tĩnh, ít parallax, đủ texture với cặp chuẩn, không lộ mặt người lạ) luôn là `Cần review`. Chồng lấn là ước lượng bằng cách tìm độ dịch ngang tốt nhất giữa hai ảnh thu nhỏ; khi tương quan thấp hơn 0.3, ước lượng được ghi là không tin cậy. Ngưỡng độ nét là một nửa trung vị của các cặp đã kiểm tra, chỉ dùng để so sánh tương đối. Bảng này là kết quả của script, chưa phải kết luận review.
+
+Chạy lại từ gốc repo, với ảnh gốc đặt trong `raw/<thành viên>/`:
+
+```bash
+python scripts/check_pairs.py --raw raw --out results/check_pairs.md
+```
+
 | Mã cặp | Đạt? | Ghi chú |
 |---|---|---|
-| chuong-standard1 | Chờ kiểm tra script/review | Có đủ hai ảnh trong trao đổi; thông số 4096×2304 đáp ứng tỷ lệ/kích thước theo khai báo. Chưa đối chiếu file gốc, EXIF, overlap định lượng và kết quả ghép. |
-| chuong-standard2 | Chờ kiểm tra script/review | Overlap ước lượng 40–50% theo Chương; cảnh có nhiều chi tiết tĩnh. Chưa xác minh zero parallax, homography hoặc panorama. |
-| chuong-challenge1 | Chờ kiểm tra script/review | Phù hợp ứng viên challenge cảnh đêm; có thêm chênh sáng và chuyển động. Cần kiểm tra ảnh gốc và phân tích từng yếu tố sau khi chạy pipeline. |
+| tuan-standard1 | Cần review | Đạt: tên file, JPEG, ảnh ngang, 8160×6144 cắt 16:9 còn 8160×4590, cùng kích thước, cùng thiết bị, ảnh phải chụp sau 7 s, độ nét. Cần review: EXIF có tọa độ GPS; không có tiêu cự quy đổi 35 mm (tiêu cự thật 3.98 mm); chồng lấn ước lượng 28%, không tin cậy (tương quan 0.25); các tiêu chí thủ công |
+| tuan-standard2 | Cần review | Như `tuan-standard1`, ảnh phải chụp sau 7 s. Cần review thêm: độ nét 631, dưới ngưỡng tương đối 1194; chồng lấn ước lượng 56% (tương quan 0.37), cao hơn khoảng 30-50% |
+| tuan-challenge1 | Cần review | Như `tuan-standard1`, ảnh phải chụp sau 11 s. Cần review thêm: độ nét 288; chồng lấn ước lượng 58%, không tin cậy (tương quan 0.04). Yếu tố khó có chủ đích là ít texture, nên ước lượng chồng lấn không tin cậy là hợp lý |
+| chuong-standard1 | Chưa đạt | Ảnh trên Drive chỉ có 2560×1440, dưới 3840×2160, trong khi bảng 5.2 ghi 4096×2304; file không còn EXIF nên không kiểm tra được tiêu cự, thiết bị, thời gian chụp. Chồng lấn ước lượng 74%, không tin cậy (tương quan 0.19) |
+| chuong-challenge1 | Chưa đạt | Như `chuong-standard1`: 2560×1440, không có EXIF. Chồng lấn ước lượng 80%, không tin cậy (tương quan 0.21) |
+| de-standard1 | Chưa đạt | File định dạng HEIC, stb không đọc được (mục 3.1); tên file không có phần mở rộng `.jpg`. Các tiêu chí còn lại chưa kiểm tra được |
+| de-standard2 | Chưa đạt | Như `de-standard1` |
+| de-challenge (thiếu số) | Chưa đạt | Như `de-standard1`; tên file `challenge_left`, `challenge_right` thiếu số thứ tự của cặp |
+| thanh (13 file) | Chưa đạt | Tên file dạng `standard1_1`, `standard1_2`, `standard1_3`... không có `_left`/`_right` nên script không ghép được cặp; một số nhóm có 3 ảnh. Kiểm tra thêm bằng Pillow: mọi ảnh 1280×960, không có EXIF, dưới 3840×2160 |
+
+Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân lưu file của Thành và Đế với phần mở rộng `.jpg`, `.HEIC`, còn `gdown` 5.2.2 trên Colab lưu không có phần mở rộng; script báo cả hai trường hợp là sai quy ước tên file.
 
 ## 6. Cách chọn ảnh
 
@@ -128,6 +144,16 @@ Thành soạn script kiểm tra các cặp chính của từng thành viên theo
 
 | Loại (chuẩn / khó) | Thứ tự ưu tiên đề xuất | Mã cặp chính | Lý do đề xuất | Kết quả review của từng thành viên |
 |---|---|---|---|---|
+| chuẩn | 1 | tuan-standard1 | Thứ tự do script đề xuất ngày 16/10: không có tiêu chí chưa đạt, 4 tiêu chí cần review; chồng lấn ước lượng 28% | |
+| chuẩn | 2 | tuan-standard2 | Không có tiêu chí chưa đạt, 5 cần review; chồng lấn ước lượng 56% | |
+| chuẩn | 3 | chuong-standard1 | 1 chưa đạt (độ phân giải), 5 cần review | |
+| chuẩn | 4 | de-standard1 | 2 chưa đạt (HEIC, tên file), 9 tiêu chí chưa kiểm tra được | |
+| chuẩn | 5 | de-standard2 | Như `de-standard1` | |
+| khó | 1 | tuan-challenge1 | Không có tiêu chí chưa đạt, 5 cần review; ít texture có chủ đích | |
+| khó | 2 | chuong-challenge1 | 1 chưa đạt (độ phân giải), 5 cần review | |
+| khó | 3 | de-challenge (thiếu số) | 2 chưa đạt (HEIC, tên file), 9 tiêu chí chưa kiểm tra được | |
+
+Thứ tự trên do script xếp: cặp có tiêu chí chưa đạt xếp cuối, sau đó ít tiêu chí chưa đạt hoặc chưa kiểm tra được hơn, chồng lấn ước lượng gần 40% hơn, độ nét cao hơn. Ảnh của Thành chưa ghép được cặp nên chưa có trong bảng. Cột review để trống cho từng thành viên điền.
 
 ## 7. Chuẩn bị dataset
 
@@ -137,6 +163,15 @@ Với mỗi cặp được chọn, script chuẩn bị dataset phải bảo đ�
 2. Ảnh trái và ảnh phải của một cặp được cắt về 16:9 bằng cùng một khung cắt.
 3. Ba kích thước 1280×720, 1920×1080, 3840×2160 được tạo từ cùng một ảnh đã cắt.
 4. File đầu ra không còn EXIF và được đặt tên theo dạng `dataset/site1/small_left.jpg`, `dataset/site1/medium_right.jpg`, `dataset/challenge/large_left.jpg`.
+
+Script: `scripts/prepare_dataset.py` (P0-T09). Script kiểm tra mọi cặp trước khi ghi file; nếu một cặp không đạt (thiếu file, không phải JPEG, hai ảnh khác kích thước sau khi xoay, ảnh dọc, khung cắt 16:9 nhỏ hơn 3840×2160) thì báo lỗi và không ghi gì. Resize bằng Lanczos, lưu JPEG quality 95, ghi thêm `dataset/manifest.csv` gồm file nguồn, khung cắt và SHA-256 của từng file đầu ra. Cần Python 3 với Pillow và numpy (có sẵn trên Colab).
+
+```bash
+python scripts/prepare_dataset.py --raw raw --out dataset \
+    --pair site1=<mã cặp> --pair site2=<mã cặp> --pair site3=<mã cặp> --pair challenge=<mã cặp>
+```
+
+Ngày 16/10 script chạy được trên Colab với các cặp `tuan-standard1`, `tuan-standard2`, `tuan-challenge1` làm ảnh mẫu (khung cắt `0 777 8160 5367`, 18 ảnh đúng kích thước, không còn EXIF), và báo lỗi đúng với `chuong-standard1` (khung cắt 2560×1440). Đây chỉ là lần chạy thử, chưa phải lựa chọn cặp của P1-T05.
 
 ## 8. Kết quả cuối cùng
 

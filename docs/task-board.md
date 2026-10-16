@@ -95,16 +95,16 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Viết script chuẩn bị dataset theo <a href="dataset.md">dataset</a> mục 7</td>
       <td></td>
       <td>Chạy được trên Colab với ảnh mẫu</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành, nhánh tuan/shared-dataset-tools. Đã viết scripts/prepare_dataset.py (xoay theo EXIF, cắt 16:9 chung, 3 kích thước, bỏ EXIF, manifest SHA-256) và test tests/test_dataset_scripts.py. Colab 16/10: 9 test đạt; chạy thử với 3 cặp của Tuấn ra 18 ảnh đúng kích thước. Chưa merge.</td>
     </tr>
     <tr>
       <td>P0-T10</td>
       <td>Kiểm tra mọi cặp ảnh ứng viên có đạt yêu cầu hay không, ghi kết quả</td>
       <td>P0-T03</td>
       <td><a href="dataset.md">dataset</a> mục 5.3 đã điền đầy đủ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành. scripts/check_pairs.py chạy trên toàn bộ Drive ngày 16/10, kết quả ở dataset mục 5.3 và thứ tự đề xuất ở mục 6. Chỉ 3 cặp của Tuấn không có tiêu chí chưa đạt; ảnh của Chương 2560×1440, của Đế là HEIC, của Thành sai tên file và 1280×960. Từng thành viên còn phải review.</td>
     </tr>
     <tr>
       <td>Đế</td>

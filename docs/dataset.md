@@ -167,7 +167,8 @@ Với mỗi cặp được chọn, script chuẩn bị dataset phải bảo đ�
 Script: `scripts/prepare_dataset.py` (P0-T09). Script kiểm tra mọi cặp trước khi ghi file; nếu một cặp không đạt (thiếu file, không phải JPEG, hai ảnh khác kích thước sau khi xoay, ảnh dọc, khung cắt 16:9 nhỏ hơn 3840×2160) thì báo lỗi và không ghi gì. Resize bằng Lanczos, lưu JPEG quality 95, ghi thêm `dataset/manifest.csv` gồm file nguồn, khung cắt và SHA-256 của từng file đầu ra. Cần Python 3 với Pillow và numpy (có sẵn trên Colab).
 
 ```bash
-python scripts/prepare_dataset.py --raw raw --out dataset     --pair site1=<mã cặp> --pair site2=<mã cặp> --pair site3=<mã cặp> --pair challenge=<mã cặp>
+python scripts/prepare_dataset.py --raw raw --out dataset \
+    --pair site1=<mã cặp> --pair site2=<mã cặp> --pair site3=<mã cặp> --pair challenge=<mã cặp>
 ```
 
 Ngày 16/10 script chạy được trên Colab với các cặp `tuan-standard1`, `tuan-standard2`, `tuan-challenge1` làm ảnh mẫu (khung cắt `0 777 8160 5367`, 18 ảnh đúng kích thước, không còn EXIF), và báo lỗi đúng với `chuong-standard1` (khung cắt 2560×1440). Đây chỉ là lần chạy thử, chưa phải lựa chọn cặp của P1-T05.

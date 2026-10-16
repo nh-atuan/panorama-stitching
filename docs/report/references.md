@@ -29,3 +29,16 @@ Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới �
 | [Ivashechkin, M., Barath, D., Matas, J. (2021). VSAC: Efficient and Accurate Estimator for H and F](https://openaccess.thecvf.com/content/ICCV2021/html/Ivashechkin_VSAC_Efficient_and_Accurate_Estimator_for_H_and_F_ICCV_2021_paper.html), ICCV | S5: alternative RANSAC-type không chọn | Metadata/abstract và đoạn mô tả verification/failure từ CVF được tìm kiếm trả về; không chuyển số đo paper sang Nhóm |
 
 Tra cứu có mục tiêu, không phải khảo sát đầy đủ mọi công bố đến năm 2026. Các đánh giá về mức phù hợp với C++/CUDA của đồ án là suy luận từ yêu cầu và contract hiện có. Mọi kết luận chất lượng/hiệu năng trên dataset Nhóm cần kết quả chạy thực tế.
+
+## S2/S3 - Tuấn soạn thay Thành
+
+Người tổng hợp: Tuấn (23120185), làm thay Thành ở P1. Ngày truy cập: 16/10/2026. Không dùng code hay bảng pattern của OpenCV; pattern BRIEF do Nhóm tự sinh bằng `tests/tool_gen_brief_pattern.py`.
+
+| Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
+|---|---|---|
+| [Rosten, E., Drummond, T. (2006). Machine learning for high-speed corner detection](https://www.edwardrosten.com/work/rosten_2006_machine.pdf), ECCV | S2: segment test, vòng tròn 16 điểm, score V | Mục segment test và score V; không dùng cây quyết định học máy |
+| [Rosten, E., Porter, R., Drummond, T. (2010). Faster and better: a machine learning approach to corner detection](https://arxiv.org/abs/0810.2434), IEEE TPAMI | S2: so sánh độ lặp lại theo số điểm liên tiếp n | Trang arXiv và phần đánh giá độ lặp lại |
+| [Calonder, M., Lepetit, V., Strecha, C., Fua, P. (2010). BRIEF: Binary Robust Independent Elementary Features](https://www.cs.ubc.ca/~lowe/525/papers/calonder_eccv10.pdf), ECCV | S3: test nhị phân, làm mượt σ = 2 trên cửa sổ 9×9, cách lấy mẫu G II | Đọc mục 3.1-3.3 |
+| [Rublee, E., Rabaud, V., Konolige, K., Bradski, G. (2011). ORB: an efficient alternative to SIFT or SURF](https://doi.org/10.1109/ICCV.2011.6126544), ICCV | S2/S3: phương án xếp hạng Harris và rotated BRIEF, patch 31×31 | Dùng cho phần phương án đã cân nhắc |
+| [OpenCV 4.x, `features2d.hpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/include/opencv2/features2d.hpp) và [`orb.cpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/src/orb.cpp) | S2: ngưỡng FAST mặc định 10 (FAST) và 20 (ORB); S3: ORB làm mượt Gaussian 7×7, σ = 2 | Đọc khai báo `create` và dòng `GaussianBlur`; không thêm OpenCV vào chương trình |
+| [Vigna, S. SplitMix64 reference](https://prng.di.unimi.it/splitmix64.c) | S3: bộ sinh số ngẫu nhiên cho pattern | Chuyển sang Python trong công cụ sinh pattern |

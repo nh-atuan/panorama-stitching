@@ -87,8 +87,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S2, S3</td>
       <td></td>
       <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành. Đã viết mục 1, 2 của tài liệu S2 (FAST-9, score V, NMS 3×3, top-N) và S3 (BRIEF 256 bit không xoay, patch 31×31, pattern G II seed 16). Phương pháp là đề xuất, chờ Thành xác nhận; việc làm thay chờ cả Nhóm đồng ý.</td>
     </tr>
     <tr>
       <td>P0-T09</td>
@@ -218,32 +218,32 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S2</td>
       <td>P0-T04, P0-T08</td>
       <td><code>docs/stages/s2-detection.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S2: t = 0.05, max_keypoints = 2000, border 15, tie-break raster. Tham số chờ Thành xác nhận, hiệu chỉnh trên ảnh thật ở P2.</td>
     </tr>
     <tr>
       <td>P1-T08</td>
       <td>Cài đặt và kiểm thử <code>v0_detect.cpp</code></td>
       <td>P0-T12, P1-T07</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S2 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_detect.cpp, fast_corner.cpp và test so với bản tham chiếu vét cạn. Colab T4 (CUDA 13.0) 16/10: 19524 assertions đạt bằng nvcc, đạt cả với ASan/UBSan; test tích hợp S1-S5 trên cặp dịch đạt. Chưa có bằng chứng trên ảnh thật (mục 5); chưa merge.</td>
     </tr>
     <tr>
       <td>P1-T09</td>
       <td>Chốt tham số và viết thuật toán chi tiết cho S3</td>
       <td>P0-T04, P0-T08</td>
       <td><code>docs/stages/s3-description.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S3: làm mượt Gaussian σ = 2, r = 4, pattern sinh bằng tests/tool_gen_brief_pattern.py, compact keypoint ở mép. Chờ Thành xác nhận.</td>
     </tr>
     <tr>
       <td>P1-T10</td>
       <td>Cài đặt và kiểm thử <code>v0_describe.cpp</code></td>
       <td>P0-T12, P1-T09</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S3 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_describe.cpp, bảng pattern và test; tách blur, kiểm tra layout của S1 thành gaussian_blur.cpp, image_layout.cpp để dùng chung (test S1 vẫn đạt). Colab T4 16/10: 2300 assertions đạt bằng nvcc, đạt cả với ASan/UBSan. Chưa merge.</td>
     </tr>
     <tr>
       <td rowspan="5">Đế</td>

@@ -1,6 +1,6 @@
 # S1 - Preprocessing
 
-Người phụ trách: Tuấn. Cập nhật lần cuối: 13/10.
+Người phụ trách: Tuấn. Cập nhật lần cuối: 16/10.
 
 S1 nhận ảnh màu đã đọc bằng stb, chuyển sang ảnh xám rồi làm mượt để giảm nhiễu trước khi S2 tìm keypoint, theo mô tả của [đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md) mục 2.1. S1 chạy độc lập trên từng ảnh của cặp.
 
@@ -129,7 +129,7 @@ v0_preprocess(input, output, config):
 
 Độ phức tạp: `O(W·H·(2(2r+1) + 1))` phép tính; bộ nhớ thêm `W·H·4` byte.
 
-Mã nguồn: `src/v0_preprocess.cpp` (ba lượt, kiểm tra đầu vào) và `src/gaussian_kernel.cpp` (kiểm tra tham số, sinh trọng số).
+Mã nguồn: `src/v0_preprocess.cpp` (kiểm tra đầu vào, chuyển ảnh xám), `src/gaussian_blur.cpp` (hai lượt blur, dùng chung với S3), `src/gaussian_kernel.cpp` (kiểm tra tham số, sinh trọng số) và `src/image_layout.cpp` (kiểm tra layout ảnh theo stride byte, dùng chung với S2, S3). Ngày 16/10 phần blur và kiểm tra layout được tách khỏi `v0_preprocess.cpp` để S3 dùng lại; thuật toán và thứ tự cộng không đổi.
 
 ## 5. Bằng chứng chất lượng
 
@@ -147,14 +147,16 @@ Lệnh build và chạy ở máy cá nhân (g++):
 
 ```bash
 g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror -O2 -I src \
-    src/v0_preprocess.cpp src/gaussian_kernel.cpp tests/test_v0_preprocess.cpp -o build/test_v0_preprocess
+    src/v0_preprocess.cpp src/gaussian_kernel.cpp src/gaussian_blur.cpp src/image_layout.cpp \
+    tests/test_v0_preprocess.cpp -o build/test_v0_preprocess
 ./build/test_v0_preprocess
 ```
 
 Lệnh chạy trên Colab T4 từ gốc repo, in `nvidia-smi` trước:
 
 ```bash
-nvcc -arch=sm_75 -I src src/v0_preprocess.cpp src/gaussian_kernel.cpp tests/test_v0_preprocess.cpp -o test_s1
+nvcc -arch=sm_75 -I src src/v0_preprocess.cpp src/gaussian_kernel.cpp src/gaussian_blur.cpp \
+    src/image_layout.cpp tests/test_v0_preprocess.cpp -o test_s1
 ./test_s1
 ```
 
@@ -165,6 +167,7 @@ Kết quả ngày 13/10:
 | Máy cá nhân, g++ `-std=c++11 -Wall -Wextra -Wpedantic -Werror -O2` | Như trên | `PASS: 1758 assertions for S1 grayscale, blur, errors and OOM` |
 | Colab Tesla T4, CUDA 13.0 (V13.0.88) | `nvcc -arch=sm_75 ...` | Build không lỗi; `PASS: 1758 assertions for S1 grayscale, blur, errors and OOM` |
 | Colab Tesla T4 | `g++ -fsanitize=address,undefined -fno-sanitize-recover=all` | Build không lỗi; `PASS: 1758 assertions ...`, không có báo lỗi sanitizer |
+| Colab Tesla T4, ngày 16/10, sau khi tách `gaussian_blur.cpp` và `image_layout.cpp` | `nvcc -arch=sm_75 ...` và g++ với sanitizer như trên | `PASS: 1758 assertions ...` ở cả hai, không có báo lỗi sanitizer |
 
 | Test | Đầu vào | Kết quả mong đợi |
 |---|---|---|

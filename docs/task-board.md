@@ -112,8 +112,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; tự chuẩn bị phương án cặp synthetic và metric sai số homography</td>
       <td></td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đế đã chốt S4 exact 2-NN Hamming + ratio 0.80, cross-check=false; S5 uniform RANSAC + normalized DLT double + MSAC/adaptive/refit. Đã viết/commit thiết kế input/output, phương án synthetic/metric và nguồn. Interface/cấu hình tích hợp còn cần cả Nhóm xác nhận.</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -251,32 +251,32 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S4</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s4-matching.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã chốt và cập nhật mục 1, 3, 4, 8: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, deterministic indexA. P1-T12 đã có code/test local; P0-T04 còn cần xác nhận cả Nhóm.</td>
     </tr>
     <tr>
       <td>P1-T12</td>
       <td>Cài đặt và kiểm thử <code>v0_match.cpp</code></td>
       <td>P0-T12, P1-T11</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài/commit sequential matching và view/config helpers trên de/p1; C++11 warnings-as-errors và 66 checks local clang 23.1.3 Windows đạt; allocation/error cleanup còn được kiểm tra riêng cùng S5. Đã cập nhật API và lệnh Colab trong tài liệu S4; chờ nvcc Colab T4 và nghiệm thu tích hợp.</td>
     </tr>
     <tr>
       <td>P1-T13</td>
       <td>Chốt tham số và viết thuật toán chi tiết cho S5, gồm seed RANSAC và cách xử lý khi không đủ match hoặc homography suy biến</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s5-homography.md</code> có mục 3, 4 và 8</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã viết/commit thiết kế seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, confidence 0.99, tau 2/3/6 px và tối đa hai all-inlier refits. P1-T14 đã có code/test local. Cần cả Nhóm xác nhận tích hợp và numeric tolerances.</td>
     </tr>
     <tr>
       <td>P1-T14</td>
       <td>Cài đặt và kiểm thử <code>v0_homography.cpp</code></td>
       <td>P0-T12, P1-T13</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã cài V0 S5 và các module nhỏ trên de/p1; stage có 174 checks local đạt, toàn runner gồm 7 suites/5673 assertions cùng S4/S6 đạt bằng clang 23.1.3 Windows. ASan/UBSan đạt theo phạm vi ghi ở tài liệu S5. API/report in seed ngoài timing đã có; chờ nvcc Colab T4, dataset và nghiệm thu tích hợp.</td>
     </tr>
     <tr>
       <td>P1-T15</td>

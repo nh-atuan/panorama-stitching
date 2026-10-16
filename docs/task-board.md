@@ -227,7 +227,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T12, P1-T07</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S2 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
       <td>Chờ review</td>
-      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_detect.cpp, fast_corner.cpp và test so với bản tham chiếu vét cạn. Colab T4 (CUDA 13.0) 16/10: 19524 assertions đạt bằng nvcc, đạt cả với ASan/UBSan; test tích hợp S1-S5 trên cặp dịch đạt. Chưa có bằng chứng trên ảnh thật (mục 5); chưa merge.</td>
+      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_detect.cpp, fast_corner.cpp và test so với bản tham chiếu vét cạn. Colab T4 (CUDA 13.0) 16/10: 19524 assertions đạt bằng nvcc, đạt cả với ASan/UBSan; test tích hợp S1-S5 trên cặp dịch đạt. Mục 5 có số match/inlier trên 3 cặp của Tuấn ở 3 kích thước: tuan-standard2 đạt 62-186 inlier, tuan-standard1 chỉ 8-9 (cần xem lại ở P2). Chưa merge.</td>
     </tr>
     <tr>
       <td>P1-T09</td>

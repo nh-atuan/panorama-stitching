@@ -126,7 +126,9 @@ Mã nguồn:
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có kết quả trên Colab. Bằng chứng của S3 gộp với S2 (mục 5 của `docs/stages/s2-detection.md`): số match S4 và số inlier S5 trên cặp ảnh thật.
+Bằng chứng của S3 gộp với S2, vì chất lượng descriptor chỉ đo được qua số match S4 và số inlier S5 (mục 5 của `docs/stages/s2-detection.md`). Trên Colab T4 ngày 16/10, cặp `tuan-standard2` có 186, 153 và 62 inlier ở ba kích thước; cặp `tuan-standard1` chỉ có 8-9 inlier. Với `tuan-standard1`, nguyên nhân quan sát được nằm ở phân bố keypoint và cảnh có vật gần máy; hai ảnh không nghiêng nhau rõ rệt nên chưa có dấu hiệu cần orientation.
+
+Test tích hợp trên cặp tổng hợp dịch (37, -11) pixel: 1090 trên 1113 match đúng phép dịch (98%), H đưa bốn góc ảnh B về A với sai số dưới 0.1 px (mục 7 của tài liệu S2).
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 

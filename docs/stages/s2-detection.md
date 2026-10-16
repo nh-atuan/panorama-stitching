@@ -118,7 +118,49 @@ Mã nguồn:
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có kết quả trên Colab. Công cụ `tests/tool_export_keypoints.cpp` chạy S1 → S3 trên một cặp ảnh, sau đó chạy S4, S5 của Đế, vẽ keypoint lên ảnh xám và in số keypoint, số match, số inlier.
+Công cụ `tests/tool_export_keypoints.cpp` chạy S1 → S3 trên một cặp ảnh, sau đó chạy S4, S5 của Đế với cấu hình `configure_v0_features`, vẽ keypoint lên ảnh xám và in số keypoint, số match, số inlier. Ngày 16/10 công cụ chạy trên Colab T4 với ba cặp của Tuấn, chuẩn bị bằng `scripts/prepare_dataset.py`. Đây là lần chạy thử để có bằng chứng ban đầu; việc chọn cặp cho dataset thuộc P1-T05 và chưa làm.
+
+Cấu hình đề xuất (t = 0.05, N = 2000):
+
+| Cặp | Kích thước | Keypoint trái / phải | Match S4 | Inlier S5 | Trạng thái S5 |
+|---|---|---|---:|---:|---|
+| tuan-standard1 | 1280×720 | 2000 / 2000 | 196 | 8 | Success |
+| tuan-standard1 | 1920×1080 | 2000 / 2000 | 163 | 9 | Success |
+| tuan-standard1 | 3840×2160 | 2000 / 2000 | 134 | 0 | `DegenerateHomography` |
+| tuan-standard2 | 1280×720 | 2000 / 2000 | 420 | 186 | Success |
+| tuan-standard2 | 1920×1080 | 2000 / 2000 | 383 | 153 | Success |
+| tuan-standard2 | 3840×2160 | 2000 / 2000 | 246 | 62 | Success |
+| tuan-challenge1 | 1280×720 | 2000 / 1621 | 75 | 5 | Success |
+| tuan-challenge1 | 1920×1080 | 2000 / 2000 | 88 | 6 | Success |
+| tuan-challenge1 | 3840×2160 | 2000 / 2000 | 90 | 6 | Success |
+
+Nhận xét:
+
+- `tuan-standard2` cho nhiều inlier ở cả ba kích thước, nên S2, S3 tìm được correspondence đúng trên ảnh thật.
+- `tuan-standard1` chỉ có 8-9 inlier, ở 3840×2160 S5 không tìm được mô hình. Trên ảnh vẽ keypoint, phần lớn keypoint nằm ở tán cây và bụi cây, ít nằm ở tòa nhà trong vùng chồng lấn. Cảnh còn có lan can và giàn che rất gần máy, dễ gây parallax (mục 3.3 của `docs/dataset.md`). Chồng lấn ước lượng của cặp này chỉ khoảng 28% (mục 5.3 của `docs/dataset.md`).
+- `tuan-challenge1` (ít texture có chủ đích) có 5-6 inlier, đúng là một cặp khó.
+- Số inlier giảm khi ảnh lớn hơn: N cố định 2000 nên ở 3840×2160 keypoint chỉ còn ở các góc tương phản mạnh nhất.
+
+Thử thêm vài cấu hình chỉ để chẩn đoán, không đổi tham số đề xuất:
+
+| Cặp | Kích thước | t = 0.03, N = 2000 | t = 0.08, N = 2000 | t = 0.05, N = 5000 |
+|---|---|---:|---:|---:|
+| tuan-standard1 | 1280×720 | 14 inlier | 12 inlier | 34 inlier |
+| tuan-standard1 | 3840×2160 | 8 inlier | 7 inlier | 11 inlier |
+| tuan-standard2 | 1280×720 | 173 inlier | 213 inlier | 357 inlier |
+| tuan-standard2 | 3840×2160 | 58 inlier | 72 inlier | 201 inlier |
+
+Đổi ngưỡng t không cứu được `tuan-standard1`; tăng N giúp nhiều hơn. Việc chọn lại N, chia lưới để keypoint phân bố đều, hay thay cặp ảnh cần Thành và cả Nhóm quyết định ở P2. Số inlier chưa đủ để kết luận về chất lượng panorama; P2 mới ghép đủ S1-S6 và xem ảnh kết quả.
+
+Lệnh trên Colab, từ gốc repo, sau khi có `dataset/`:
+
+```bash
+nvcc -arch=sm_75 -std=c++11 -O2 -I src src/v0_preprocess.cpp src/gaussian_kernel.cpp \
+    src/gaussian_blur.cpp src/image_layout.cpp src/v0_detect.cpp src/fast_corner.cpp \
+    src/v0_describe.cpp src/brief_pattern.cpp src/feature_support.cpp src/v0_match.cpp \
+    src/v0_homography.cpp src/stb_impl.cpp tests/tool_export_keypoints.cpp -o build/tool_export_keypoints
+./build/tool_export_keypoints dataset/site1/small_left.jpg dataset/site1/small_right.jpg results/site1_small
+```
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 

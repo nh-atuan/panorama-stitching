@@ -29,8 +29,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Thống nhất cách chọn ảnh (có bình chọn hay không)</td>
       <td></td>
       <td>Kết quả ghi vào <a href="dataset.md">dataset</a> mục 6</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Cách chọn ghi ở dataset mục 6: script kiểm tra và xếp thứ tự, từng thành viên review, cả Nhóm chốt. Bộ cặp được chốt theo cách này ngày 18/10.</td>
     </tr>
     <tr>
       <td>P0-T02</td>
@@ -38,7 +38,7 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td></td>
       <td>Đủ 4 dòng</td>
       <td>Đang làm</td>
-      <td></td>
+      <td>Đã có dòng của Tuấn, Chương, Đế. Còn thiếu tên địa điểm của Thành.</td>
     </tr>
     <tr>
       <td>P0-T03</td>
@@ -46,15 +46,15 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>P0-T06</td>
       <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
       <td>Đang làm</td>
-      <td></td>
+      <td>Cả 4 người đã upload ảnh gốc. Nhóm miễn cặp chuẩn thứ hai cho Chương (Quyết định đã chốt 18/10). Bảng 5.2 đã có dòng của Thành, Đế (lấy từ EXIF); còn thiếu site slug của Thành và Tuấn đổi tên ảnh của Đế trên Drive sang <code>.jpg</code>, cặp khó thành <code>challenge1</code>.</td>
     </tr>
     <tr>
       <td>P0-T04</td>
       <td>Góp ý interface, xác nhận phần dữ liệu của stage mình, cùng thống nhất và merge</td>
       <td>P0-T14</td>
       <td>Interface đã merge vào <code>main</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td><code>common.h</code> và <code>docs/interface.md</code> đã merge vào <code>main</code> qua PR #2. Sáu stage V0 và pipeline (PR #10) cài theo các quy ước này; mục 10 của interface bổ sung API pipeline.</td>
     </tr>
     <tr>
       <td rowspan="3">Tuấn</td>
@@ -87,24 +87,24 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S2, S3</td>
       <td></td>
       <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành. Đã viết mục 1, 2 của tài liệu S2 (FAST-9, score V, NMS 3×3, top-N) và S3 (BRIEF 256 bit không xoay, patch 31×31, pattern G II seed 16). Phương pháp là đề xuất, chờ Thành xác nhận; việc làm thay chờ cả Nhóm đồng ý.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành. Mục 1, 2 của tài liệu S2 (FAST-9, score V, NMS 3×3, top-N) và S3 (BRIEF 256 bit không xoay, patch 31×31, pattern G II seed 16). Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>P0-T09</td>
       <td>Viết script chuẩn bị dataset theo <a href="dataset.md">dataset</a> mục 7</td>
       <td></td>
       <td>Chạy được trên Colab với ảnh mẫu</td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành, nhánh tuan/shared-dataset-tools. Đã viết scripts/prepare_dataset.py (xoay theo EXIF, cắt 16:9 chung, 3 kích thước, bỏ EXIF, manifest SHA-256) và test tests/test_dataset_scripts.py. Colab 16/10: 9 test đạt; chạy thử với 3 cặp của Tuấn ra 18 ảnh đúng kích thước. Chưa merge.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành. scripts/prepare_dataset.py và test tests/test_dataset_scripts.py, merge PR #9. Colab T4 18/10: 9 test đạt. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>P0-T10</td>
       <td>Kiểm tra mọi cặp ảnh ứng viên có đạt yêu cầu hay không, ghi kết quả</td>
       <td>P0-T03</td>
       <td><a href="dataset.md">dataset</a> mục 5.3 đã điền đầy đủ</td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành. scripts/check_pairs.py chạy lại trên toàn bộ Drive ngày 18/10 sau khi các thành viên cập nhật ảnh, kết quả ở dataset mục 5.3, thứ tự đề xuất và kết quả chạy thử pipeline V0 ở mục 6. Mọi cặp của Tuấn, Thành, Chương không có tiêu chí chưa đạt; ảnh của Đế chỉ còn sai tên file (.jpeg, cặp khó thiếu số). Từng thành viên còn phải review.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành. scripts/check_pairs.py chạy trên toàn bộ Drive ngày 18/10, kết quả ở dataset mục 5.3, thứ tự đề xuất và kết quả chạy thử V0 ở mục 6. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -112,8 +112,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chọn sơ bộ phương pháp, đầu vào/đầu ra cho S4, S5; tự chuẩn bị phương án cặp synthetic và metric sai số homography</td>
       <td></td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> đều có mục 1 và 2 theo <a href="midterm-plan.md#6-mẫu-tài-liệu-thiết-kế-stage">mẫu ở mục 6 của kế hoạch giữa kỳ</a></td>
-      <td>Đang làm</td>
-      <td>Đế đã chốt S4 exact 2-NN Hamming + ratio 0.80, cross-check=false; S5 uniform RANSAC + normalized DLT double + MSAC/adaptive/refit. Đã viết/commit thiết kế input/output, phương án synthetic/metric và nguồn. Interface/cấu hình tích hợp còn cần cả Nhóm xác nhận.</td>
+      <td>Xong</td>
+      <td>Mục 1, 2 của tài liệu S4, S5 đã có. S4: exact 2-NN Hamming, ratio 0.80, cross-check=false. S5: uniform RANSAC, normalized DLT double, MSAC, adaptive termination, refit. Phương án cặp synthetic và metric ở mục 5.2, 5.3 tài liệu S5.</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -121,8 +121,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Tự tạo và setup khung <code>src/</code> theo cây thư mục của đề giữa kỳ (<code>common.h</code>, <code>cuda_utils.cuh</code>, <code>versions.h</code>, <code>main.cu</code>, <code>stb_impl.cpp</code>), nhận đúng tham số dòng lệnh của đề cuối kỳ</td>
       <td>P0-T05</td>
       <td>Khung đã merge vào <code>main</code>, build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4</td>
-      <td>Đang làm</td>
-      <td>Đã có 5 file khung, CLI và stb; lịch sử local có merge PR #2 (4ced17d). Build/test C++ trên WSL đạt; chưa có bằng chứng build Colab T4 để nghiệm thu đầy đủ.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #2. Ngày 18/10 <code>main</code> build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4 (CUDA 13.0) khi nối pipeline V0 (PR #10).</td>
     </tr>
     <tr>
       <td>P0-T13</td>
@@ -137,8 +137,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Soạn nháp <code>common.h</code> và <code>docs/interface.md</code> theo mục 7 của kế hoạch</td>
       <td>P0-T07, P0-T08, P0-T11, P0-T12, P0-T13</td>
       <td>Pull request mở để cả nhóm góp ý</td>
-      <td>Chờ review</td>
-      <td>Đã có common.h và docs/interface.md (commit local ac46b96); layout/stride/Hamming/H kiểm tra bằng C++ trên WSL đạt. Cần cả Nhóm xác nhận quy ước và phần dữ liệu S2–S5 ở P0-T04; chưa xác minh review trên GitHub.</td>
+      <td>Xong</td>
+      <td>Đã merge vào <code>main</code> cùng PR #2 (commit ac46b96). Sáu stage V0 và pipeline đã cài theo bản này. Ngày 18/10 Tuấn cập nhật phần mở đầu, mục 6 và mục 9 cho khớp code, nhánh tuan/shared-interface-sync.</td>
     </tr>
   </tbody>
 </table>
@@ -169,15 +169,15 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T11</td>
       <td>Ngưỡng ghi vào mục "Quyết định đã chốt"</td>
       <td>Chưa làm</td>
-      <td></td>
+      <td>Sai số V0 trên 6 cặp synthetic (mục 5.5 tài liệu S5, Colab T4 18/10): RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px. Chờ cả Nhóm chốt ngưỡng.</td>
     </tr>
     <tr>
       <td>P1-T02</td>
       <td>Mỗi người mở pull request nhánh <code>&lt;tên&gt;/p1</code> và merge vào <code>main</code></td>
       <td>Các task code của mình trong P1</td>
       <td><code>main</code> build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4 và có đủ 6 file <code>v0_*.cpp</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Đã merge chuong/p1 (PR #4), de/p1 (PR #7), phần của Tuấn (PR #6) và S2, S3 (PR #8). <code>main</code> có đủ 6 file <code>v0_*.cpp</code>, build bằng <code>nvcc -arch=sm_75</code> trên Colab T4 ngày 18/10.</td>
     </tr>
     <tr>
       <td rowspan="4">Tuấn</td>
@@ -193,8 +193,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_preprocess.cpp</code></td>
       <td>P0-T12, P1-T03</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S1 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Bị chặn</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Mục 5 tài liệu S1 có số liệu ảnh xám trước và sau blur trên 4 cặp dataset ở 3 kích thước (Colab T4 18/10); mục 7 có kết quả T4 ngày 13/10, 16/10, 18/10 (1758 assertions, cả bản sanitizer).</td>
     </tr>
     <tr>
       <td>P1-T05</td>
@@ -202,15 +202,15 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T01, P0-T09, P0-T10</td>
       <td><a href="dataset.md">dataset</a> mục 8 đã điền; <code>dataset/</code> trên Drive có đủ 3 site và cặp khó, mỗi cặp đủ 3 kích thước</td>
       <td>Đang làm</td>
-      <td>Cả Nhóm chốt bộ cặp ngày 18/10, đã ghi vào dataset mục 8. Đã tạo <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) và upload lên Drive chung, link ở dataset mục 8. Còn chờ: Thành điền địa điểm site 1, Đế đổi tên ảnh trên Drive sang <code>.jpg</code>.</td>
+      <td>Cả Nhóm chốt bộ cặp ngày 18/10 (dataset mục 8). <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) đã upload lên Drive chung. Còn thiếu tên địa điểm site 1 ở mục 8 và việc đổi tên ảnh của Đế trên Drive.</td>
     </tr>
     <tr>
       <td>P1-T06</td>
       <td>Viết nháp mục 3.2 và 3.6 của báo cáo giữa kỳ</td>
       <td>P1-T05</td>
       <td><code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nháp ở <code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code>. Tên địa điểm site 1 trong 3.6 chờ bổ sung cùng P0-T02.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -218,32 +218,32 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S2</td>
       <td>P0-T04, P0-T08</td>
       <td><code>docs/stages/s2-detection.md</code> có mục 3, 4 và 8</td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S2: t = 0.05, max_keypoints = 2000, border 15, tie-break raster. Tham số chờ Thành xác nhận, hiệu chỉnh trên ảnh thật ở P2.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S2: t = 0.05, max_keypoints = 2000, border 15, tie-break raster. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>P1-T08</td>
       <td>Cài đặt và kiểm thử <code>v0_detect.cpp</code></td>
       <td>P0-T12, P1-T07</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S2 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_detect.cpp, fast_corner.cpp và test so với bản tham chiếu vét cạn. Colab T4 (CUDA 13.0) 16/10: 19524 assertions đạt bằng nvcc, đạt cả với ASan/UBSan; test tích hợp S1-S5 trên cặp dịch đạt. Mục 5 có số match/inlier trên 3 cặp của Tuấn ở 3 kích thước: tuan-standard2 đạt 62-186 inlier, tuan-standard1 chỉ 8-9 (cần xem lại ở P2). Chưa merge.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành, merge PR #8. Colab T4 18/10: <code>PASS: 19524 assertions</code>, đạt cả với ASan/UBSan; S2 chạy trong pipeline V0 trên cả 4 cặp dataset. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>P1-T09</td>
       <td>Chốt tham số và viết thuật toán chi tiết cho S3</td>
       <td>P0-T04, P0-T08</td>
       <td><code>docs/stages/s3-description.md</code> có mục 3, 4 và 8</td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S3: làm mượt Gaussian σ = 2, r = 4, pattern sinh bằng tests/tool_gen_brief_pattern.py, compact keypoint ở mép. Chờ Thành xác nhận.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành. Mục 3, 4, 8 của tài liệu S3: làm mượt Gaussian σ = 2, r = 4, pattern sinh bằng tests/tool_gen_brief_pattern.py, compact keypoint ở mép. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td>P1-T10</td>
       <td>Cài đặt và kiểm thử <code>v0_describe.cpp</code></td>
       <td>P0-T12, P1-T09</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S3 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Thành, nhánh tuan/shared-s2-s3. Đã cài v0_describe.cpp, bảng pattern và test; tách blur, kiểm tra layout của S1 thành gaussian_blur.cpp, image_layout.cpp để dùng chung (test S1 vẫn đạt). Colab T4 16/10: 2300 assertions đạt bằng nvcc, đạt cả với ASan/UBSan. Chưa merge.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Thành, merge PR #8. Colab T4 18/10: <code>PASS: 2300 assertions</code>, đạt cả với ASan/UBSan. Nhóm đồng ý việc làm thay và Thành xác nhận phương pháp, tham số S2, S3 ngày 18/10.</td>
     </tr>
     <tr>
       <td rowspan="5">Đế</td>
@@ -251,40 +251,40 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt tham số và viết thuật toán chi tiết cho S4</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s4-matching.md</code> có mục 3, 4 và 8</td>
-      <td>Đang làm</td>
-      <td>Đã chốt và cập nhật mục 1, 3, 4, 8: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, deterministic indexA. P1-T12 đã có code/test local; P0-T04 còn cần xác nhận cả Nhóm.</td>
+      <td>Xong</td>
+      <td>Mục 1, 3, 4, 8 tài liệu S4 đã có: exact 2-NN Hamming 256-bit, ratio 0.80, cross-check=false, so sánh ratio nguyên 4/5, thứ tự tất định theo indexA.</td>
     </tr>
     <tr>
       <td>P1-T12</td>
       <td>Cài đặt và kiểm thử <code>v0_match.cpp</code></td>
       <td>P0-T12, P1-T11</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Đang làm</td>
-      <td>Đã cài/commit sequential matching và view/config helpers trên de/p1; C++11 warnings-as-errors và 66 checks local clang 23.1.3 Windows đạt; allocation/error cleanup còn được kiểm tra riêng cùng S5. Đã cập nhật API và lệnh Colab trong tài liệu S4; chờ nvcc Colab T4 và nghiệm thu tích hợp.</td>
+      <td>Chờ review</td>
+      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (66 checks, cả bản sanitizer) và số match trên 4 cặp dataset vào mục 5, 7 tài liệu S4, nhánh tuan/shared-s4-s5-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
     </tr>
     <tr>
       <td>P1-T13</td>
       <td>Chốt tham số và viết thuật toán chi tiết cho S5, gồm seed RANSAC và cách xử lý khi không đủ match hoặc homography suy biến</td>
       <td>P0-T04, P0-T11</td>
       <td><code>docs/stages/s5-homography.md</code> có mục 3, 4 và 8</td>
-      <td>Đang làm</td>
-      <td>Đã viết/commit thiết kế seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, confidence 0.99, tau 2/3/6 px và tối đa hai all-inlier refits. P1-T14 đã có code/test local. Cần cả Nhóm xác nhận tích hợp và numeric tolerances.</td>
+      <td>Xong</td>
+      <td>Mục 3, 4, 8 tài liệu S5 đã có: seed 16, cap 2000, uniform deterministic sampling, normalized DLT double, MSAC, confidence 0.99, tau 2/3/6 px, tối đa hai all-inlier refit. Tolerance chung chốt cùng P1-T01.</td>
     </tr>
     <tr>
       <td>P1-T14</td>
       <td>Cài đặt và kiểm thử <code>v0_homography.cpp</code></td>
       <td>P0-T12, P1-T13</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Đang làm</td>
-      <td>Đã cài V0 S5 và các module nhỏ trên de/p1; stage có 174 checks local đạt, toàn runner gồm 7 suites/5673 assertions cùng S4/S6 đạt bằng clang 23.1.3 Windows. ASan/UBSan đạt theo phạm vi ghi ở tài liệu S5. API/report in seed ngoài timing đã có; chờ nvcc Colab T4, dataset và nghiệm thu tích hợp.</td>
+      <td>Chờ review</td>
+      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (7 suites, 5673 checks, cả bản sanitizer) và sai số synthetic vào mục 5, 7 tài liệu S5, nhánh tuan/shared-s4-s5-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
     </tr>
     <tr>
       <td>P1-T15</td>
       <td>Tạo cặp synthetic từ một homography biết trước và công cụ tính sai số homography so với ground truth</td>
       <td>P0-T11</td>
       <td>Tạo được cặp synthetic và in được sai số; cách tạo cặp và metric ghi trong mục 5 của tài liệu S5</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Tuấn làm thay Đế. <code>scripts/make_synthetic_pair.py</code>, <code>scripts/homography_error.py</code>, <code>scripts/homography_common.py</code>, test 18 case. Colab T4 18/10: V0 cho RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px trên 6 cặp (mục 5.5 tài liệu S5). Nhánh tuan/shared-s4-s5-closeout, chuyển <code>Xong</code> khi PR được merge.</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -300,27 +300,167 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_warp_blend.cpp</code></td>
       <td>P0-T12, P1-T16</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S6 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Đang làm</td>
-      <td>Đã cài v0_warp_blend.cpp và header stage trên chuong/p1: inverse/bbox/bilinear, average 50/50 theo yêu cầu coding mới, stride byte, cleanup và ErrorCode. 194 assertions synthetic trên WSL đạt; AddressSanitizer/UndefinedBehaviorSanitizer đạt. Đã cập nhật tài liệu S6; chưa chạy Colab T4/dataset và chưa commit/merge nên chưa nghiệm thu Xong. main.cu chưa nối S6 thật.</td>
+      <td>Chờ review</td>
+      <td>Đã merge PR #4. Tuấn ghi kết quả Colab T4 18/10 (194 assertions, cả bản sanitizer) và canvas của 12 panorama trên dataset vào mục 5, 7 tài liệu S6, nhánh tuan/shared-s6-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
     </tr>
     <tr>
       <td>P1-T18</td>
       <td>Cài đặt khung chạy trong <code>main.cu</code>: đo thời gian từng stage và tổng theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a>, warm-up, <code>--runs</code>, in dòng CSV, cờ <code>--debug</code>, báo lỗi cấp chương trình (thiếu file, ảnh không đọc được, version không tồn tại, <code>--runs</code> không dương)</td>
       <td>P0-T04, P0-T12</td>
       <td>Merge vào <code>main</code> qua pull request file dùng chung; chạy được trên Colab T4 với các stage stub</td>
-      <td>Đang làm</td>
-      <td>Đã triển khai main.cu: 6 stub, RGB I/O, warm-up, timing từng stage/tổng, CSV 8 cột, average/minimum, debug và lỗi. Build C++11 warnings-as-errors và 34 ca benchmark/CLI/I/O trên WSL đạt; output preview ảnh A được kiểm tra pixel. Nhánh chuong/shared-benchmark; chờ kiểm chứng Colab T4 và merge PR file dùng chung. Timing stub không dùng làm benchmark thuật toán.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #3. Ngày 18/10 <code>main.cu</code> được nối 6 stage thật (PR #10) và chạy được trên Colab T4: warm-up, <code>--runs</code>, CSV 8 cột, average/minimum, báo lỗi cấp chương trình.</td>
     </tr>
   </tbody>
 </table>
 
 ## P2 - Ghép và kiểm chứng V0
 
-Lập chi tiết khi P1 hoàn thành.
+Hạn của giai đoạn: **18/10 (Chủ nhật)**.
+
+Tuấn làm toàn bộ P2. Bảng dưới ghi lại các task đã làm.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2">Tuấn</td>
+      <td>P2-T01</td>
+      <td>Nối 6 stage V0 thành pipeline: <code>v0_config</code>, <code>v0_pipeline</code>, <code>main.cu</code> gọi stage thật, <code>versions.h</code>, công cụ xem kết quả từng stage</td>
+      <td>P1-T02</td>
+      <td><code>stitch</code> chạy đủ 6 stage trên Colab T4, ra panorama và CSV; test đạt trên Colab T4; mục 10 của <a href="interface.md">interface</a> mô tả API pipeline</td>
+      <td>Xong</td>
+      <td>Nhánh tuan/shared-v0-pipeline, merge PR #10. Colab T4 (CUDA 13.0) ngày 18/10: build bằng <code>nvcc -arch=sm_75</code>, mọi test đạt, <code>stitch</code> chạy được 3 kích thước của <code>tuan-standard2</code>. Thêm <code>tests/test_v0_config.cpp</code>, <code>tests/test_v0_pipeline.cpp</code>, <code>tests/tool_pipeline_trace.cpp</code>.</td>
+    </tr>
+    <tr>
+      <td>P2-T02</td>
+      <td>Chạy thử V0 trên mọi cặp chính ở 3 kích thước để hỗ trợ chọn dataset</td>
+      <td>P2-T01, P0-T10</td>
+      <td>Kết quả ghi vào <a href="dataset.md">dataset</a> mục 6</td>
+      <td>Xong</td>
+      <td>Chạy 13 cặp chính ngày 18/10, số inlier và lỗi của từng kích thước ở dataset mục 6. Cả Nhóm dựa vào kết quả này để chốt dataset.</td>
+    </tr>
+  </tbody>
+</table>
 
 ## P3 - Đo và phân tích
 
-Lập chi tiết khi P2 hoàn thành.
+Hạn của giai đoạn: **21/10 (Thứ 4)**.
+
+P3 chỉ gồm task mới. Phần còn lại của P0, P1 được làm xong trước khi P3 bắt đầu; các task đang chờ merge pull request vẫn giữ ghi chú ở bảng P1. Khi kết thúc P3, mọi task từ P0 đến P3 đều ở trạng thái `Xong`; P4 chỉ còn ghép bản nháp vào notebook, chạy lại và nộp.
+
+Mục 6 của tài liệu thiết kế stage và các phần phân tích cần số đo của P3-T05. Trong lúc chờ, phần mapping không phụ thuộc số đo có thể viết trước.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cả nhóm</td>
+      <td>P3-T01</td>
+      <td>Chốt các stage đưa lên GPU và phân công V1-V3 dựa trên số đo</td>
+      <td>P3-T05</td>
+      <td>Quyết định ghi vào mục "Quyết định đã chốt"; bảng phân công ở mục 2 của <a href="midterm-plan.md">kế hoạch</a> được cập nhật nếu có thay đổi</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Tuấn</td>
+      <td>P3-T02</td>
+      <td>Viết mục 6 của tài liệu S1; nháp mục 3.1 và phần S1 của mục 3.3; thêm nguồn của S1 vào <code>docs/report/references.md</code></td>
+      <td>P3-T05</td>
+      <td><code>docs/stages/s1-preprocessing.md</code> có mục 6; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; <code>references.md</code> có phần S1</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P3-T03</td>
+      <td>Tổng hợp nháp mục 3.7 (kế hoạch GPU) từ mục 6 của 6 tài liệu stage</td>
+      <td>P3-T01, P3-T02, P3-T06, P3-T08, P3-T10</td>
+      <td><code>docs/report/3.7-gpu-plan.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="4">Thành</td>
+      <td>P3-T04</td>
+      <td>Viết script benchmark V0 <code>scripts/run_benchmark.py</code> và test</td>
+      <td>P2-T01</td>
+      <td>Script chạy <code>stitch</code> cho 3 site × 3 kích thước theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a> (warm-up, <code>--runs 5</code>), in tên GPU và CPU, gom CSV, xuất bảng trung bình và nhỏ nhất của từng stage; test đạt trên Colab</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P3-T05</td>
+      <td>Chạy benchmark chính thức, xác định hot stage và tính giới hạn Amdahl</td>
+      <td>P3-T04</td>
+      <td>Bảng timing ở 3 kích thước và biểu đồ theo stage sinh từ CSV, đo trong cùng một phiên Colab T4; nêu hot stage và cách nó thay đổi theo độ phân giải; <code>p</code> và <code>1/(1-p)</code> tính bằng code</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P3-T06</td>
+      <td>Viết mục 6 của tài liệu S2, S3; nháp phần S2, S3 của mục 3.3</td>
+      <td>P3-T05</td>
+      <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> có mục 6; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P3-T07</td>
+      <td>Nháp phần timing, hot stage và Amdahl của mục 3.5</td>
+      <td>P3-T05</td>
+      <td><code>docs/report/3.5-timing.md</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đế</td>
+      <td>P3-T08</td>
+      <td>Viết mục 6 của tài liệu S4, S5; nháp phần S4, S5 của mục 3.3 và phần correctness của mục 3.5</td>
+      <td>P3-T05</td>
+      <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> có mục 6; <code>docs/report/3.3-s4-matching.md</code>, <code>docs/report/3.3-s5-homography.md</code>, <code>docs/report/3.5-correctness.md</code></td>
+      <td>Chưa làm</td>
+      <td>Sai số trên cặp synthetic đã có ở mục 5.5 tài liệu S5.</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Chương</td>
+      <td>P3-T09</td>
+      <td>Dựng khung code của <code>Group16_Midterm.ipynb</code> theo <a href="midterm-plan.md#13-quy-định-notebook-báo-cáo">mục 13 của kế hoạch</a>: <code>nvidia-smi</code>, lấy <code>src/</code> từ Drive, build, chạy test, cặp synthetic, benchmark, panorama</td>
+      <td>P3-T04</td>
+      <td>Run all thành công trên một phiên Colab T4 mới; không dùng <code>%%writefile</code>; notebook commit không kèm output</td>
+      <td>Chưa làm</td>
+      <td>Lệnh build, test và cặp synthetic có sẵn ở mục 7 các tài liệu stage và mục 5.5 tài liệu S5.</td>
+    </tr>
+    <tr>
+      <td>P3-T10</td>
+      <td>Tạo panorama thu nhỏ của 3 site và cặp khó, phân tích chất lượng và trường hợp thất bại của cặp khó; viết mục 6 của tài liệu S6; nháp phần S6 của mục 3.3 và mục 3.4; thêm nguồn của S6 vào <code>docs/report/references.md</code></td>
+      <td>P3-T05</td>
+      <td><code>docs/stages/s6-warp-blend.md</code> có mục 6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; <code>references.md</code> có phần S6</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
 ## P4 - Hoàn thiện và nộp
 
@@ -333,3 +473,5 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | Ngày | Quyết định |
 |---|---|
 | 18/10 | Chốt dataset: site1 `thanh-standard1`, site2 `tuan-standard2`, site3 `de-standard2`, challenge `chuong-challenge1` (chi tiết ở dataset mục 8) |
+| 18/10 | Nhóm đồng ý Tuấn làm thay toàn bộ task của Thành ở P0, P1 và phần còn lại của Đế, Chương trước P3; dòng `Authors:` ghi người thực sự viết. Thành xác nhận phương pháp và tham số S2, S3 như tài liệu stage |
+| 18/10 | Chương được miễn cặp chuẩn thứ hai theo dataset mục 2, vì bộ dataset đã chốt |

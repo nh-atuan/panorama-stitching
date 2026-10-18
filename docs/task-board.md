@@ -138,7 +138,7 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>P0-T07, P0-T08, P0-T11, P0-T12, P0-T13</td>
       <td>Pull request mở để cả nhóm góp ý</td>
       <td>Xong</td>
-      <td>Đã merge vào <code>main</code> cùng PR #2 (commit ac46b96). Sáu stage V0 và pipeline đã cài theo bản này. Ngày 18/10 Tuấn cập nhật phần mở đầu, mục 6 và mục 9 cho khớp code, nhánh tuan/shared-interface-sync.</td>
+      <td>Đã merge vào <code>main</code> cùng PR #2 (commit ac46b96). Sáu stage V0 và pipeline đã cài theo bản này. Ngày 18/10 Tuấn cập nhật phần mở đầu, mục 6 và mục 9 cho khớp code, merge PR #12.</td>
     </tr>
   </tbody>
 </table>
@@ -168,8 +168,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chốt ngưỡng sai số homography trên cặp synthetic</td>
       <td>P0-T11</td>
       <td>Ngưỡng ghi vào mục "Quyết định đã chốt"</td>
-      <td>Chưa làm</td>
-      <td>Sai số V0 trên 6 cặp synthetic (mục 5.5 tài liệu S5, Colab T4 18/10): RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px. Chờ cả Nhóm chốt ngưỡng.</td>
+      <td>Xong</td>
+      <td>Cả Nhóm chốt ngưỡng ngày 18/10 (mục "Quyết định đã chốt"). Sai số V0 trên 6 cặp synthetic (mục 5.5 tài liệu S5, Colab T4 18/10): RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px, đều đạt ngưỡng.</td>
     </tr>
     <tr>
       <td>P1-T02</td>
@@ -259,8 +259,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_match.cpp</code></td>
       <td>P0-T12, P1-T11</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S4 có kết quả chạy trên Colab T4; báo lỗi khi không đủ match theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chờ review</td>
-      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (66 checks, cả bản sanitizer) và số match trên 4 cặp dataset vào mục 5, 7 tài liệu S4, nhánh tuan/shared-s4-s5-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (66 checks, cả bản sanitizer) và số match trên 4 cặp dataset vào mục 5, 7 tài liệu S4, merge PR #11.</td>
     </tr>
     <tr>
       <td>P1-T13</td>
@@ -275,16 +275,16 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_homography.cpp</code></td>
       <td>P0-T12, P1-T13</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S5 có kết quả chạy trên Colab T4; seed RANSAC lấy từ cấu hình và được in ra; báo lỗi khi homography suy biến theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chờ review</td>
-      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (7 suites, 5673 checks, cả bản sanitizer) và sai số synthetic vào mục 5, 7 tài liệu S5, nhánh tuan/shared-s4-s5-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #7. Tuấn ghi kết quả Colab T4 18/10 (7 suites, 5673 checks, cả bản sanitizer) và sai số synthetic vào mục 5, 7 tài liệu S5, merge PR #11.</td>
     </tr>
     <tr>
       <td>P1-T15</td>
       <td>Tạo cặp synthetic từ một homography biết trước và công cụ tính sai số homography so với ground truth</td>
       <td>P0-T11</td>
       <td>Tạo được cặp synthetic và in được sai số; cách tạo cặp và metric ghi trong mục 5 của tài liệu S5</td>
-      <td>Chờ review</td>
-      <td>Tuấn làm thay Đế. <code>scripts/make_synthetic_pair.py</code>, <code>scripts/homography_error.py</code>, <code>scripts/homography_common.py</code>, test 18 case. Colab T4 18/10: V0 cho RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px trên 6 cặp (mục 5.5 tài liệu S5). Nhánh tuan/shared-s4-s5-closeout, chuyển <code>Xong</code> khi PR được merge.</td>
+      <td>Xong</td>
+      <td>Tuấn làm thay Đế, merge PR #11. <code>scripts/make_synthetic_pair.py</code>, <code>scripts/homography_error.py</code>, <code>scripts/homography_common.py</code>, test 18 case. Colab T4 18/10: V0 cho RMSE lớn nhất 0.100 px, Max lớn nhất 0.209 px trên 6 cặp (mục 5.5 tài liệu S5).</td>
     </tr>
     <tr>
       <td rowspan="3">Chương</td>
@@ -300,8 +300,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Cài đặt và kiểm thử <code>v0_warp_blend.cpp</code></td>
       <td>P0-T12, P1-T16</td>
       <td>Đạt <a href="midterm-plan.md#14-tiêu-chí-hoàn-thành-một-task">mục 14 của kế hoạch</a>; mục 5 và 7 của tài liệu S6 có kết quả chạy trên Colab T4; báo lỗi khi đầu vào không hợp lệ theo quy ước trong <code>docs/interface.md</code></td>
-      <td>Chờ review</td>
-      <td>Đã merge PR #4. Tuấn ghi kết quả Colab T4 18/10 (194 assertions, cả bản sanitizer) và canvas của 12 panorama trên dataset vào mục 5, 7 tài liệu S6, nhánh tuan/shared-s6-closeout. Chuyển <code>Xong</code> khi PR được merge.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #4. Tuấn ghi kết quả Colab T4 18/10 (194 assertions, cả bản sanitizer) và canvas của 12 panorama trên dataset vào mục 5, 7 tài liệu S6, merge PR #13.</td>
     </tr>
     <tr>
       <td>P1-T18</td>
@@ -475,3 +475,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 18/10 | Chốt dataset: site1 `thanh-standard1`, site2 `tuan-standard2`, site3 `de-standard2`, challenge `chuong-challenge1` (chi tiết ở dataset mục 8) |
 | 18/10 | Nhóm đồng ý Tuấn làm thay toàn bộ task của Thành ở P0, P1 và phần còn lại của Đế, Chương trước P3; dòng `Authors:` ghi người thực sự viết. Thành xác nhận phương pháp và tham số S2, S3 như tài liệu stage |
 | 18/10 | Chương được miễn cặp chuẩn thứ hai theo dataset mục 2, vì bộ dataset đã chốt |
+| 18/10 | Ngưỡng sai số homography so với ground truth (P1-T01): RMSE ≤ 0.5 px và Max ≤ 1 px trên cả 6 cặp synthetic ở mục 5.5 tài liệu S5 |

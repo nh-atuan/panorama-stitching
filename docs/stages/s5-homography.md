@@ -1,10 +1,10 @@
 # S5 - Homography estimation
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 18/10/2026; Tuấn (23120185) cài công cụ synthetic (mục 5.5) và ghi kết quả Colab T4 ở mục 7.
 
 Task: P0-T11 (method, input/output, synthetic/metric) và phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: đã cài V0 S5 và gộp file ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. Đế xác nhận bộ test bản trước khi gộp đã pass trên Colab. Bản sau khi gộp đạt C++11 warnings-as-errors và ASan/UBSan theo phạm vi mục 7 trên Windows/clang 23.1.3; cần chạy lại Colab T4. Chưa cài generator cặp ảnh P1-T15 hoặc chạy panorama/benchmark dataset. Cấu hình tích hợp và tolerance chung cần cả Nhóm xác nhận ở P0-T04/P1-T01.
+**Trạng thái: đã cài V0 S5 và gộp file ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. Ngày 18/10/2026 bản trên `main` đạt toàn bộ 7 suites trên Colab T4 bằng nvcc, chạy trong pipeline V0 trên cả 4 cặp của dataset, và có sai số trên cặp synthetic ở mục 5.5. Ngưỡng sai số chung chốt ở P1-T01.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -241,7 +241,7 @@ Với K attempts thực sự xét, scoring là `O(K*m)`; minimal fit có kích t
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có kết quả. Phần này là **phương án synthetic và metric của P0-T11**; công cụ tạo ảnh/tính sai số sẽ cài ở P1-T15.
+Mục 5.1–5.4 là phương án synthetic và metric của P0-T11. Công cụ đã cài ở P1-T15, kết quả ở mục 5.5. Số match và inlier trên dataset ở mục 5 của `docs/stages/s4-matching.md`.
 
 ### 5.1. Hai lớp kiểm chứng
 
@@ -299,15 +299,54 @@ Lưu/in H_gt, H_est, seed, kích thước, tau_ref/scale/tau thực tế, confid
 
 So cùng scene ở ba resolutions bằng H_gt đã đổi hệ đúng; báo cả error pixel và normalized error. Rule tau scale là cấu hình đã chọn để kiểm thử, không là quality result. Khi đánh giá lựa chọn MSAC, có thể dùng fixture tĩnh so ranking loss/count; không đổi scorer của một version benchmark thành plain RANSAC để tạo bảng speedup.
 
+### 5.5. Kết quả trên cặp synthetic (P1-T15)
+
+Tuấn cài công cụ thay Đế ngày 18/10/2026, theo đúng mục 5.2 và 5.3:
+
+- `scripts/make_synthetic_pair.py` tạo cặp và ghi `<size>_truth.json` gồm H_gt, kích thước, vùng cắt trên ảnh nguồn và tỷ lệ chồng lấn;
+- `scripts/homography_error.py` đọc H_gt và dòng `[debug] H(B->A)=` của `stitch --debug`, in RMSE, Max và NRMSE;
+- `scripts/homography_common.py` chứa phép chiếu dùng chung, test ở `tests/test_synthetic_scripts.py`.
+
+Ảnh nguồn C là ảnh gốc `raw/tuan/standard1_left.jpg` (8160×6144, SHA-256 `e9fbe7ecfed6344a36610fe50f2c6019bcd1525f4e217c033ed8ded4f90bf1e8`), được cắt và thu nhỏ bằng Lanczos theo từng kích thước, không phóng to. A là một vùng cắt của C. B lấy mẫu C qua H_gt bằng bilinear tự cài. Ảnh lưu dạng PNG trong `results/` (đã ignore). Lần chạy thử đầu dùng ảnh site2 (`tuan-standard2`) làm nguồn, nhưng vùng chồng lấn khi đó rơi vào mảng tường trơn ở giữa ảnh: cặp dịch ngang chỉ có 65–76 inlier, còn cặp phép chiếu cỡ medium thất bại vì S5 chọn H sai với 31 inlier. Vì mục 5.2 yêu cầu C có texture trải đều, ảnh `tuan-standard1` được dùng thay.
+
+| Case | H_gt (B → A) | Tỷ lệ B rơi vào A | Điểm kiểm tra giữ lại |
+|---|---|---|---|
+| `translation` | Dịch ngang `t = round(0.55 * (W - 1))`: 703, 1055, 2111 px | 45,3% / 45,2% / 45,1% | 180/400 |
+| `projective` | Trong tọa độ chia cho `W - 1`: xoay 3° quanh tâm B, thành phần chiếu (0.10, 0.05), dịch (0.55, 0.02) | 43,7% / 43,7% / 43,6% | 165/400 |
+
+Kết quả trên Colab Tesla T4 (CUDA 13.0) ngày 18/10/2026, `stitch --version 0 --runs 1 --debug`, cấu hình V0 như các stage:
+
+| Case | Kích thước | Match S4 | Inlier S5 | RMSE (px) | Max (px) | NRMSE |
+|---|---|---:|---:|---:|---:|---:|
+| translation | small | 773 | 706 | 0.000008 | 0.000008 | 5.615e-09 |
+| translation | medium | 957 | 883 | 0.004717 | 0.016463 | 2.141e-06 |
+| translation | large | 1132 | 1065 | 0.000025 | 0.000025 | 5.650e-09 |
+| projective | small | 699 | 622 | 0.055234 | 0.143112 | 3.761e-05 |
+| projective | medium | 876 | 800 | 0.062535 | 0.208768 | 2.839e-05 |
+| projective | large | 1114 | 1069 | 0.100222 | 0.209020 | 2.275e-05 |
+
+Sai số lớn nhất trên cả 6 cặp là 0.209 px. Với case dịch ngang, vùng chồng lấn của A và B trùng nhau từng pixel nên sai số gần như bằng 0. Cả 6 lần chạy đều ra panorama. Cùng bộ cặp cho kết quả giống hệt khi build bằng g++ 13.3 trên WSL. Ngưỡng đạt do cả Nhóm chốt ở P1-T01.
+
+Lệnh tái lập từ gốc repo, sau khi có ảnh gốc ở `raw/` và đã build `stitch`:
+
+```bash
+python3 scripts/make_synthetic_pair.py --source raw/tuan/standard1_left.jpg --out results/synthetic
+for case in translation projective; do for size in small medium large; do
+  d=results/synthetic/$case/$size
+  ./stitch ${d}_left.png ${d}_right.png ${d}_pano.png --version 0 --runs 1 --debug > $d.csv 2> $d.log
+  python3 scripts/homography_error.py --truth ${d}_truth.json --log $d.log
+done; done
+```
+
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
 Các hypotheses có thể fit/chấm điểm độc lập; MSAC score/count cần reduction deterministic. Adaptive stopping cần commit theo prefix ID, không phụ thuộc lịch thread; chi phí coordination/speculative work phải được đo. Refit là tối đa hai all-inlier fits với cùng rule. Mapping thread/warp/block và ý tưởng tối ưu sẽ viết ở P3 sau số đo; chưa tuyên bố speedup hoặc double throughput đủ cao trên T4.
 
 ## 7. Kiểm thử
 
-Đã chạy lại toàn bộ suite local sau khi gộp file; **bản sau khi gộp chưa chạy lại Colab T4**. Đế xác nhận bản trước khi gộp đã pass bộ test trên Colab. Bảng case bên dưới vẫn bao gồm kế hoạch kiểm chứng CPU–GPU và trường hợp cần fixture bổ sung, không tuyên bố toàn bộ test plan đã nghiệm thu.
+Đã chạy lại toàn bộ suite local sau khi gộp file, và chạy trên Colab T4 ngày 18/10/2026 (bảng kết quả sau lệnh kiểm chứng chính thức). Bảng case bên dưới vẫn bao gồm kế hoạch kiểm chứng CPU–GPU và trường hợp cần fixture bổ sung, không tuyên bố toàn bộ test plan đã nghiệm thu.
 
-Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **690 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/near-collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Chưa có kết quả nvcc/Colab T4.
+Module DLT đã được kiểm tra riêng bằng `tests/test_homography_dlt.cpp`: **690 checks local đạt** trên Windows/clang 23.1.3, C++11 warnings-as-errors, không FMA contraction hoặc compiler vectorization. Bao gồm minimal/full-basis, all-point noiseless/noisy, held-out analytic projection, rank/duplicate/near-collinearity, H và -H, h22=0, tọa độ lớn và denominator horizon. Trên Colab T4: `PASS DLT: 690 checks`.
 
 Phần sampling/adaptive termination: **4412 checks local đạt** trong `tests/test_homography_sampling.cpp`, gồm golden tuples độc lập cho seed 16, đảo lịch gọi hypothesis ID, range/uniqueness với m=4 và m không là power-of-two, cùng guarded adaptive budget. Chưa kiểm chứng CPU–GPU thực tế.
 
@@ -325,7 +364,7 @@ Stage `tests/test_v0_homography.cpp`: **174 checks local đạt**, gồm 4-point
 | `test_v0_feature_allocation.cpp` | 125 | UBSan; riêng allocator fault injection |
 | `test_v0_warp_blend.cpp` có sẵn | 194 | UBSan; code S6 còn được gọi trong integration ASan |
 
-Tổng 7 suites: **5673 checks/assertions**, là số lần assertion, không phải 5673 trường hợp độc lập. Không có timing hoặc quality result trên dataset. Các ca còn cần môi trường/fixture: CUDA schedule/batch parity, các numerical boundaries của CPU–GPU, trường hợp refit tăng loss/rank failure ở stage, cặp synthetic ảnh và panorama thật.
+Tổng 7 suites: **5673 checks/assertions**, là số lần assertion, không phải 5673 trường hợp độc lập. Cặp synthetic ảnh và panorama thật đã có ở mục 5.5 và ở mục 5 tài liệu S4. Các ca còn cần môi trường/fixture: CUDA schedule/batch parity, các numerical boundaries của CPU–GPU, trường hợp refit tăng loss/rank failure ở stage.
 
 Lệnh local (compiler portable đã được cho phép, nằm trong build/ bị Git ignore):
 
@@ -340,7 +379,13 @@ Lệnh kiểm chứng chính thức trên Colab, sau khi repo/source/test đã c
 python tests/run_v0_features.py --compiler nvcc --require-t4
 ```
 
-Runner in tên GPU/CPU/compiler, yêu cầu T4 khi bật `--require-t4`, build bằng `nvcc -arch=sm_75 -std=c++11 -O2` và host flags không FMA contraction/vectorization. Output mong đợi là từng dòng PASS của suite và `PASS suites: 7, total checks: 5673`; output này đã có ở local, chưa xác minh bằng nvcc/T4. Tests chạy executable ngoài notebook; không chép code vào cell. Dùng `--suite matching`, `--suite dlt` hoặc suite khác để khoanh vùng lỗi.
+Runner in tên GPU/CPU/compiler, yêu cầu T4 khi bật `--require-t4`, build bằng `nvcc -arch=sm_75 -std=c++11 -O2` và host flags không FMA contraction/vectorization. Output mong đợi là từng dòng PASS của suite và `PASS suites: 7, total checks: 5673`. Tests chạy executable ngoài notebook; không chép code vào cell. Dùng `--suite matching`, `--suite dlt` hoặc suite khác để khoanh vùng lỗi.
+
+| Ngày | Môi trường | Lệnh | Kết quả |
+|---|---|---|---|
+| 18/10/2026 | Colab Tesla T4, CUDA 13.0 (V13.0.88), CPU Intel Xeon @ 2.00GHz | `python3 tests/run_v0_features.py --compiler nvcc --require-t4` | `PASS S4: 66`, `PASS DLT: 690`, `PASS sampling: 4412`, `PASS MSAC: 12`, `PASS S5: 174`, `PASS allocation: 125`, `PASS: 194 assertions for S6 ...`; `PASS suites: 7, total checks: 5673` |
+| 18/10/2026 | Cùng phiên, g++ 13.3.0 | `python3 tests/run_v0_features.py --compiler g++ --sanitizers` | `PASS suites: 7, total checks: 5673`; ASan + UBSan cho 5 suite đầu, UBSan cho allocation và warp như bảng trên, không có báo lỗi |
+| 18/10/2026 | Cùng phiên, Python 3.13 | `python3 tests/test_synthetic_scripts.py` | `Ran 18 tests ... OK` |
 
 | Case | Kết quả mong đợi |
 |---|---|
@@ -385,7 +430,7 @@ Epsilon chung được phối hợp với Chương. Không dùng H identity như
 
 Ngày truy cập: 13/10/2026. [Brown và Lowe (2007), mục 3.1](https://www.cs.ubc.ca/~lowe/papers/07brown.pdf): RANSAC 4-point DLT trong stitching. [Chum và Matas (2005)](https://cmp.felk.cvut.cz/~matas/papers/chum-prosac-cvpr05.pdf): đọc abstract và thuật toán PROSAC. [Barath et al. (2020)](https://openaccess.thecvf.com/content_CVPR_2020/html/Barath_MAGSAC_a_Fast_Reliable_and_Accurate_Robust_Estimator_CVPR_2020_paper.html): abstract và đoạn phương pháp/thí nghiệm được CVF lập chỉ mục về MAGSAC++.
 
-Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_usac.html) cho các thành phần robust estimation; [Harker và O'Leary, mục 2.3](https://www.robots.ox.ac.uk/~phst/BMVC2005/papers/190/paper190.pdf) cho RMS normalization và DLT; [SplitMix64](https://prng.di.unimi.it/splitmix64.c) cho các phép RNG. Stream mapping, prefix commit, threshold scale, tie-break, reduction và số lượt refit là policy cụ thể của Nhóm, không gán cho implementation OpenCV. Synthetic/metric vẫn là kế hoạch chưa cài. Danh mục nguồn ở [`docs/report/references.md`](../report/references.md).
+Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_usac.html) cho các thành phần robust estimation; [Harker và O'Leary, mục 2.3](https://www.robots.ox.ac.uk/~phst/BMVC2005/papers/190/paper190.pdf) cho RMS normalization và DLT; [SplitMix64](https://prng.di.unimi.it/splitmix64.c) cho các phép RNG. Stream mapping, prefix commit, threshold scale, tie-break, reduction và số lượt refit là policy cụ thể của Nhóm, không gán cho implementation OpenCV. Synthetic/metric đã cài ở P1-T15 (mục 5.5). Danh mục nguồn ở [`docs/report/references.md`](../report/references.md).
 
 ## 10. Lịch sử thay đổi tham số
 
@@ -395,3 +440,4 @@ Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_
 | 13/10/2026 | Đế chốt uniform 4-point RANSAC + normalized DLT double + MSAC + adaptive stop cap 2000 + all-inlier refit; seed 16; tau scale từ 3 px tại 1080p | Giữ method/cấu hình từ V0 đến Final, bổ sung determinism, degeneracy và test plan; chờ xác nhận tích hợp/tolerance chung |
 | 13/10/2026 | Cài V0 S5 cùng module math/DLT/SVD, sampler, MSAC, report và test runner; 7 suites local đạt | Không đổi method/tham số; chờ Colab T4, generator synthetic ảnh và tích hợp pipeline thật |
 | 13/10/2026 | Gộp toàn bộ implementation S5 vào v0_homography.cpp, giữ một header helper cho unit tests | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |
+| 18/10/2026 | Không đổi tham số. Tuấn cài công cụ synthetic, ghi sai số và kết quả Colab T4 | Nghiệm thu P1-T14, P1-T15 |

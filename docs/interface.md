@@ -1,6 +1,6 @@
 # Interface chung của pipeline Panorama Stitching
 
-Người soạn: Chương (23120195). Cập nhật: 13/10/2026. Task: P0-T14.
+Người soạn: Chương (23120195). Cập nhật: 13/10/2026. Task: P0-T14. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026.
 
 Tài liệu mô tả contract đã cài trong [`src/common.h`](../src/common.h) theo yêu cầu thiết kế hiện tại. Đây là bản để cả Nhóm góp ý ở P0-T14; chưa có xác nhận cả Nhóm, PR hoặc merge theo P0-T04. Tham số thuật toán còn thuộc P1 của người phụ trách stage. Contract thống nhất cho V0 và các phiên bản CUDA.
 
@@ -120,7 +120,7 @@ Với T đưa A → canvas, inverse sampling dùng `pA=T^-1*pCanvas`, `pB=H^-1*T
 
 ## 6. Config và tham số chưa hiệu chỉnh
 
-`Config` chỉ chứa số nguyên/float; không string, vector hoặc pointer. Giá trị 0 của các tham số thuật toán là **chưa cấu hình**, không phải giá trị khuyến nghị benchmark. Pipeline thật phải validate trước khi chạy; khung P1-T18 truyền Config đến các stub nhưng stub chưa sử dụng tham số thuật toán. Seed chỉ in khi bật debug để stdout giữ định dạng CSV; notebook benchmark chính thức phải in đầy đủ cấu hình và hardware riêng.
+`Config` chỉ chứa số nguyên/float; không string, vector hoặc pointer. Giá trị 0 của các tham số thuật toán là **chưa cấu hình**, không phải giá trị khuyến nghị benchmark. Pipeline thật phải validate trước khi chạy. Giá trị dùng cho mọi version được điền bởi `make_v0_config()` trong `src/v0_config.h`, lấy từ mục 3 của tài liệu từng stage; `main.cu` gọi hàm này theo kích thước ảnh A. Seed chỉ in khi bật debug để stdout giữ định dạng CSV; notebook benchmark chính thức phải in đầy đủ cấu hình và hardware riêng.
 
 | Trường | Đơn vị / điều kiện | Người chốt |
 |---|---|---|
@@ -164,11 +164,11 @@ Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,Total_ms
 
 Sau N dòng dữ liệu, stdout có hai dòng `Average,<7 giá trị>` và `Minimum,<7 giá trị>` cùng schema 8 cột. Average là trung bình của N lần có đo; Minimum tính độc lập cho mỗi cột, không nhất thiết cùng một lần chạy. `Total_ms` là `end_to_end_ms`, được đo riêng. Thời gian dùng dấu chấm thập phân, 9 chữ số sau dấu chấm; loader CSV cần lọc Run_Index dạng số để tách dữ liệu chạy khỏi summary. Định dạng 17 cột dự thảo P0 đã được thay bằng 8 cột theo yêu cầu mới; các trường GPU trong TimingStats vẫn bằng 0 ở V0.
 
-Warm-up chạy đúng một lần và không gọi clock. Trong các lần đo, mọi stub nhận debug=false; log debug chỉ phát trong warm-up hoặc trước/sau vùng đo và đi ra stderr. Đọc hai ảnh bằng stb diễn ra trước warm-up; ghi ảnh sau tất cả lần đo. Xuất CSV và cập nhật summary cũng nằm ngoài vùng đo.
+Warm-up chạy đúng một lần và không gọi clock. Trong các lần đo, mọi stage nhận debug=false; log debug chỉ phát trong warm-up hoặc trước/sau vùng đo và đi ra stderr. Đọc hai ảnh bằng stb diễn ra trước warm-up; ghi ảnh sau tất cả lần đo. Xuất CSV và cập nhật summary cũng nằm ngoài vùng đo.
 
-Khung hiện tại chỉ đo overhead gọi stub/timer, không phải thời gian thuật toán V0 để xác định hot stage hay tính speedup. S1–S3 gọi mỗi stub hai lần cho A/B; S4–S6 gọi một lần. S6 stub mượn view ảnh A làm output preview để kiểm thử writer, không tính H, không ghép ảnh và không xác nhận chất lượng panorama. Output hỗ trợ `.png`, `.jpg`, `.jpeg` (không phân biệt chữ hoa); JPEG quality=95 chỉ là cấu hình writer, không phải tham số pipeline.
+Từ 18/10, `main.cu` gọi 6 stage V0 thật qua `v0_run()` (mục 10), nên CSV là thời gian thuật toán V0. S1–S3 gọi mỗi stage hai lần cho A/B; S4–S6 gọi một lần. Output là panorama của S6. Output hỗ trợ `.png`, `.jpg`, `.jpeg` (không phân biệt chữ hoa); JPEG quality=95 chỉ là cấu hình writer, không phải tham số pipeline.
 
-Các buffer input được quản lý bằng RAII với `stbi_image_free`; output preview không sở hữu và không được free lần hai. Sau này S6 thật phải tuân thủ ownership đã chốt ở mục 5. Khi làm benchmark chính thức, notebook in GPU/CPU, cấu hình và kích thước input/canvas riêng, ngoài CSV và ngoài vùng đo.
+Các buffer input được quản lý bằng RAII với `stbi_image_free`. Panorama của S6 thuộc `V0Workspace` và được giải phóng theo mục 10. Khi làm benchmark chính thức, notebook in GPU/CPU, cấu hình và kích thước input/canvas riêng, ngoài CSV và ngoài vùng đo.
 
 ## 8. ErrorCode và xử lý lỗi
 
@@ -195,10 +195,38 @@ ErrorCode là enum uint32 cho trạng thái nội bộ; không dùng số enum t
 
 Thông báo CLI định dạng `Error: <message>` gửi stderr; có usage khi lỗi tham số. Khi tích hợp trạng thái stage, dùng `Error: [<Enum>] <message>` để truy nguyên. Process thành công trả EXIT_SUCCESS; lỗi fatal trả EXIT_FAILURE sau khi giải phóng tài nguyên. Muốn phân biệt file không tồn tại với không có quyền phải kiểm tra thực tế, không gán mọi lỗi open cho InputNotFound.
 
-`main.cu` P1-T18 đã decode ảnh về RGB, kiểm tra CLI và chỉ chấp nhận version=0. Lỗi parse/I/O dùng ErrorCode trong exception nội bộ; main bắt sau khi RAII giải phóng buffer, in stderr và gọi `exit(EXIT_FAILURE)`. Chưa có stage thuật toán thật để báo các lỗi keypoint/match/homography; không gán output preview của stub là kết quả stitch. Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 thật lỗi.
+`main.cu` decode ảnh về RGB, kiểm tra CLI và chỉ chấp nhận các version mà `is_supported_version()` trong `versions.h` cho phép (hiện là 0). Lỗi parse/I/O và lỗi stage dùng ErrorCode trong exception nội bộ; main bắt sau khi RAII giải phóng buffer, in stderr và gọi `exit(EXIT_FAILURE)`. Lỗi stage có dạng `Error: [<Enum>] <tên stage> failed.`, ví dụ `Error: [InsufficientKeypoints] S4 match failed.` Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 thật lỗi.
 
 ## 9. Trạng thái bàn giao
 
 Đã có các kiểu và quy ước để Nhóm review: ảnh/pitch byte, gray float, pixel center nguyên, descriptor bit order, index pairing, H float B→A, panorama offset, config, timing và lỗi. Chưa có function signatures chung cho stage vì P0-T14 hiện tập trung dữ liệu; count/capacity/ownership phải theo contract này khi bổ sung signatures.
 
 Các mục cần xác nhận trước cài pipeline thật: phương pháp S2/S3 và orientation, parameters/tolerance P1, source sampling pattern, error propagation và cách đo khi nhiều stream. Task P0-T04 vẫn cần cả Nhóm thống nhất và merge. Build/test trên Colab T4 còn phải thực hiện trước PR theo [kế hoạch nhóm](midterm-plan.md).
+
+## 10. Pipeline V0
+
+`src/v0_pipeline.h` nối 6 stage cho V0. Các phiên bản CUDA sẽ có pipeline riêng nhưng giữ cùng cách đo và cùng Config.
+
+```cpp
+ErrorCode v0_prepare(const Image& left, const Image& right, const Config& config,
+                     V0Workspace& workspace);
+ErrorCode v0_run(const Image& left, const Image& right, const Config& config,
+                 V0Workspace& workspace, TimingStats* timing, Stage* failed_stage,
+                 HomographyReport* report = nullptr);
+void v0_release_output(V0Workspace& workspace);
+```
+
+| Hàm | Vai trò | Có nằm trong vùng đo |
+|---|---|---|
+| `v0_prepare` | Cấp phát hai ảnh xám (hàng liền khít, stride `width * 4` byte) cho S1 và đặt trước dung lượng `max_keypoints` cho các vector keypoint, descriptor, match | Không |
+| `v0_run` | Chạy S1 → S6 một lần. Khi `timing` khác null, đo từng stage và end-to-end của 6 stage bằng `std::chrono::high_resolution_clock`; khi null thì không gọi clock | Có (6 stage) |
+| `v0_release_output` | `delete[]` panorama cũ và reset `Panorama` | Không |
+
+Quy tắc:
+
+- `V0Workspace` giữ buffer của mọi stage và được dùng lại cho warm-up và các lần đo. Destructor giải phóng panorama, workspace không copy được.
+- `v0_run` giải phóng panorama cũ trước khi bắt đầu đo. `main.cu` vẫn gọi `v0_release_output` trước mỗi lần đo để việc giải phóng nằm rõ ngoài vùng đo.
+- Khi một stage lỗi, `v0_run` dừng, trả mã lỗi của stage đó và ghi stage vào `*failed_stage`; panorama để trống.
+- S4 và S5 nhận `FeatureView` tạo từ vector của workspace, capacity là dung lượng thật của vector.
+- Báo cáo S5 (`HomographyReport`, kèm inlier mask) chỉ lấy ở lần warm-up không đo. V0 tất định nên các lần đo cho cùng match, H và panorama.
+- Với `--debug`, sau khi in CSV, `main.cu` in ra stderr: kích thước ảnh, Config, số keypoint sau S2 và sau S3, số match, báo cáo S5, H và canvas. Dòng `[debug] H(B->A)=h0 ... h8` có định dạng cố định để script so sánh H với ground truth đọc được.

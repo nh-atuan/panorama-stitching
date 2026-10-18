@@ -1,10 +1,10 @@
 # S4 - Matching
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 13/10/2026.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 18/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và kết quả trên dataset ở mục 5, 7.
 
 Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
 
-**Trạng thái: đã cài V0 và gộp file ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Đế xác nhận bộ test bản trước khi gộp đã pass trên Colab. Bản sau khi gộp đạt 66 checks S4 local bằng clang 23.1.3 trên Windows, chưa chạy lại Colab T4. Chưa benchmark dataset; interface/cấu hình tích hợp cần cả Nhóm xác nhận ở P0-T04.
+**Trạng thái: đã cài V0 và gộp file ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Ngày 18/10/2026 bản trên `main` đạt 66 checks S4 trên Colab T4 bằng nvcc và chạy trong pipeline V0 trên cả 4 cặp của dataset (mục 5, 7). Interface đã chốt ở P0-T04.
 
 ## 1. Phương pháp đã chọn và các phương án đã cân nhắc
 
@@ -144,7 +144,18 @@ Với nA, nB descriptor, mỗi cặp cần XOR và popcount 8 word. Thời gian 
 
 ## 5. Bằng chứng chất lượng
 
-Đã kiểm tra local bằng descriptor có đáp án biết trước: hoán vị B, descriptor giống nhau/khác bit cuối, nhiều A cùng chọn B và ratio biên. Chưa có precision/recall hoặc panorama trên dataset. Khi nối pipeline, ghi số descriptor A/B, số ứng viên qua ratio, số match bàn giao, số inlier và MSAC score S5, sai số synthetic; ghi cross-check=false cùng cấu hình.
+Đã kiểm tra bằng descriptor có đáp án biết trước: hoán vị B, descriptor giống nhau/khác bit cuối, nhiều A cùng chọn B và ratio biên. Chưa đo precision/recall.
+
+Ngày 18/10/2026, `stitch --version 0 --runs 1 --debug` trên Colab T4 với 4 cặp của dataset, cấu hình ratio 0.80, cross-check=false. Số descriptor là số keypoint còn lại sau S3 (A/B), số inlier lấy từ báo cáo S5 (`final_inliers`):
+
+| Cặp | Kích thước | Descriptor A/B | Match S4 | Inlier S5 |
+|---|---|---|---:|---:|
+| site1 | small / medium / large | 2000/2000 ở cả 3 | 749 / 635 / 390 | 310 / 274 / 109 |
+| site2 | small / medium / large | 2000/2000 ở cả 3 | 420 / 383 / 246 | 186 / 153 / 62 |
+| site3 | small / medium / large | 1461/1440, 1684/1780, 1458/1779 | 504 / 471 / 297 | 167 / 160 / 85 |
+| challenge | small / medium / large | 2000/2000 ở cả 3 | 697 / 614 / 409 | 440 / 391 / 289 |
+
+Cả 12 lần chạy đều ra panorama. Số match giảm khi ảnh lớn hơn vì `max_keypoints` cố định 2000 trải trên diện tích lớn hơn, còn ratio test giữ nguyên. Trên cặp synthetic (mục 5.5 của `docs/stages/s5-homography.md`), S4 cho 699–1132 match, trong đó 622–1069 là inlier của S5.
 
 Để đo precision/recall trên synthetic, nhãn đúng phải lấy từ correspondence hoặc H ground truth với tolerance hình học đã khai báo. Không dùng chính inlier mask của H ước lượng làm ground truth. Log chi tiết/ảnh debug nằm ngoài vùng timing.
 
@@ -156,7 +167,7 @@ Mapping thread/warp/block cùng ý tưởng tối ưu sẽ chốt ở P3 sau khi
 
 ## 7. Kiểm thử
 
-`tests/test_v0_match.cpp`: **66 checks đạt trên Windows/clang 23.1.3 sau khi gộp file; bản này chưa chạy lại Colab T4**. Đế xác nhận bản trước khi gộp đã pass bộ test trên Colab. Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; đã kiểm tra từ 1–3 match hợp lệ cũng trả `InsufficientMatches` và không publish output một phần. Allocation failure được kiểm tra riêng cùng S5 trong `tests/test_v0_feature_allocation.cpp`. Không dùng output local làm số liệu chính thức.
+`tests/test_v0_match.cpp`: 66 checks đạt trên Windows/clang 23.1.3 sau khi gộp file và đạt trên Colab T4 ngày 18/10/2026 (kết quả ở cuối mục). Các fixture filter lặp 4 descriptor A để kiểm tra stage thật; đã kiểm tra từ 1–3 match hợp lệ cũng trả `InsufficientMatches` và không publish output một phần. Allocation failure được kiểm tra riêng cùng S5 trong `tests/test_v0_feature_allocation.cpp`. Không dùng output local làm số liệu chính thức.
 
 | Trường hợp | Kết quả mong đợi |
 |---|---|
@@ -183,7 +194,12 @@ nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=o
 ./build/test_v0_match
 ```
 
-Output mong đợi: `PASS S4: 66 checks; ratio=0.80 cross_check=0 seed=16`. Đây là output đã thấy ở local, chưa xác minh bằng nvcc/T4. Có thể chạy cả suite bằng `python tests/run_v0_features.py --compiler nvcc --require-t4`; lệnh này kiểm tra GPU T4 trước build. Ghi lại GPU và output thực tế trước nghiệm thu.
+Output mong đợi: `PASS S4: 66 checks; ratio=0.80 cross_check=0 seed=16`. Có thể chạy cả suite bằng `python tests/run_v0_features.py --compiler nvcc --require-t4`; lệnh này kiểm tra GPU T4 trước build.
+
+| Ngày | Môi trường | Lệnh | Kết quả |
+|---|---|---|---|
+| 18/10/2026 | Colab Tesla T4, CUDA 13.0 (V13.0.88), CPU Intel Xeon @ 2.00GHz | `python3 tests/run_v0_features.py --compiler nvcc --require-t4` | `PASS S4: 66 checks; ratio=0.80 cross_check=0 seed=16`; cả runner `PASS suites: 7, total checks: 5673` |
+| 18/10/2026 | Cùng phiên, g++ 13.3.0 | `python3 tests/run_v0_features.py --compiler g++ --sanitizers` | `PASS S4: 66 checks ...` với AddressSanitizer và UndefinedBehaviorSanitizer, không có báo lỗi |
 
 ## 8. Trường hợp biên và rủi ro
 
@@ -214,3 +230,4 @@ Nguồn OpenCV cung cấp mô tả để đối chiếu, không phải phụ thu
 | 13/10/2026 | Đế chốt exact 2-NN Hamming 256 bit, ratio 0.80, cross-check=false, output tăng theo indexA | Giữ cùng method/cấu hình từ V0 đến Final; cập nhật mã giả, chi phí và test plan |
 | 13/10/2026 | Cài V0 S4, view/config helpers và test; 59 checks local đạt | Không đổi method/tham số; chờ kiểm chứng nvcc trên Colab T4 |
 | 13/10/2026 | Gộp view/config vào feature_support.h/.cpp, giữ implementation S4 riêng | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |
+| 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và kết quả trên dataset | Nghiệm thu P1-T12 |

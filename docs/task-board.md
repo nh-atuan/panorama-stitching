@@ -206,11 +206,11 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
     </tr>
     <tr>
       <td>P1-T06</td>
-      <td>Viết nháp mục 3.2 và 3.6 của báo cáo giữa kỳ</td>
+      <td>Viết mục 3.2 và 3.6 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P1-T05</td>
       <td><code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code></td>
       <td>Xong</td>
-      <td>Nháp ở <code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code>. Tên địa điểm site 1 trong 3.6 chờ bổ sung cùng P0-T02.</td>
+      <td>Đã viết ở <code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code>. Tên địa điểm site 1 trong 3.6 chờ bổ sung cùng P0-T02.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -357,7 +357,7 @@ Tuấn làm toàn bộ P2. Bảng dưới ghi lại các task đã làm.
 
 Hạn của giai đoạn: **21/10 (Thứ 4)**.
 
-P3 chỉ gồm task mới. Phần còn lại của P0, P1 được làm xong trước khi P3 bắt đầu; các task đang chờ merge pull request vẫn giữ ghi chú ở bảng P1. Khi kết thúc P3, mọi task từ P0 đến P3 đều ở trạng thái `Xong`; P4 chỉ còn ghép bản nháp vào notebook, chạy lại và nộp.
+P3 chỉ gồm task mới. Phần còn lại của P0, P1 được làm xong trước khi P3 bắt đầu; các task đang chờ merge pull request vẫn giữ ghi chú ở bảng P1. Khi kết thúc P3, mọi task từ P0 đến P3 đều ở trạng thái `Xong`; P4 chỉ còn ghép các mục báo cáo trong `docs/report/` vào notebook, chạy lại và nộp.
 
 Mục 6 của tài liệu thiết kế stage và các phần phân tích cần số đo của P3-T05. Trong lúc chờ, phần mapping không phụ thuộc số đo có thể viết trước.
 
@@ -386,7 +386,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     <tr>
       <td rowspan="2">Tuấn</td>
       <td>P3-T02</td>
-      <td>Viết mục 6 của tài liệu S1; nháp mục 3.1 và phần S1 của mục 3.3; thêm nguồn của S1 vào <code>docs/report/references.md</code></td>
+      <td>Viết mục 6 của tài liệu S1; viết mục 3.1 và phần S1 của mục 3.3 của báo cáo giữa kỳ vào <code>docs/report/</code>; thêm nguồn của S1 vào <code>docs/report/references.md</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s1-preprocessing.md</code> có mục 6; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; <code>references.md</code> có phần S1</td>
       <td>Chưa làm</td>
@@ -394,7 +394,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     </tr>
     <tr>
       <td>P3-T03</td>
-      <td>Tổng hợp nháp mục 3.7 (kế hoạch GPU) từ mục 6 của 6 tài liệu stage</td>
+      <td>Viết mục 3.7 (kế hoạch GPU) của báo cáo giữa kỳ vào <code>docs/report/</code>, tổng hợp từ mục 6 của 6 tài liệu stage</td>
       <td>P3-T01, P3-T02, P3-T06, P3-T08, P3-T10</td>
       <td><code>docs/report/3.7-gpu-plan.md</code></td>
       <td>Chưa làm</td>
@@ -419,7 +419,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     </tr>
     <tr>
       <td>P3-T06</td>
-      <td>Viết mục 6 của tài liệu S2, S3; nháp phần S2, S3 của mục 3.3</td>
+      <td>Viết mục 6 của tài liệu S2, S3; viết phần S2, S3 của mục 3.3 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> có mục 6; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code></td>
       <td>Chưa làm</td>
@@ -427,7 +427,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     </tr>
     <tr>
       <td>P3-T07</td>
-      <td>Nháp phần timing, hot stage và Amdahl của mục 3.5</td>
+      <td>Viết phần timing, hot stage và Amdahl của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/report/3.5-timing.md</code></td>
       <td>Chưa làm</td>
@@ -436,7 +436,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     <tr>
       <td>Đế</td>
       <td>P3-T08</td>
-      <td>Viết mục 6 của tài liệu S4, S5; nháp phần S4, S5 của mục 3.3 và phần correctness của mục 3.5</td>
+      <td>Viết mục 6 của tài liệu S4, S5; viết phần S4, S5 của mục 3.3 và phần correctness của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> có mục 6; <code>docs/report/3.3-s4-matching.md</code>, <code>docs/report/3.3-s5-homography.md</code>, <code>docs/report/3.5-correctness.md</code></td>
       <td>Chưa làm</td>
@@ -453,7 +453,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
     </tr>
     <tr>
       <td>P3-T10</td>
-      <td>Tạo panorama thu nhỏ của 3 site và cặp khó, phân tích chất lượng và trường hợp thất bại của cặp khó; viết mục 6 của tài liệu S6; nháp phần S6 của mục 3.3 và mục 3.4; thêm nguồn của S6 vào <code>docs/report/references.md</code></td>
+      <td>Tạo panorama thu nhỏ của 3 site và cặp khó, phân tích chất lượng và trường hợp thất bại của cặp khó; viết mục 6 của tài liệu S6; viết phần S6 của mục 3.3, mục 3.4 và phần panorama của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code>; thêm nguồn của S6 vào <code>docs/report/references.md</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; <code>references.md</code> có phần S6</td>
       <td>Chưa làm</td>

@@ -201,8 +201,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chọn cặp theo cách đã chốt ở P0-T01, chạy script chuẩn bị dataset, upload <code>dataset/</code> lên Drive chung</td>
       <td>P0-T01, P0-T09, P0-T10</td>
       <td><a href="dataset.md">dataset</a> mục 8 đã điền; <code>dataset/</code> trên Drive có đủ 3 site và cặp khó, mỗi cặp đủ 3 kích thước</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Cả Nhóm chốt bộ cặp ngày 18/10, đã ghi vào dataset mục 8. Đã tạo <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) và upload lên Drive chung, link ở dataset mục 8. Còn chờ: Thành điền địa điểm site 1, Đế đổi tên ảnh trên Drive sang <code>.jpg</code>.</td>
     </tr>
     <tr>
       <td>P1-T06</td>
@@ -332,3 +332,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 
 | Ngày | Quyết định |
 |---|---|
+| 18/10 | Chốt dataset: site1 `thanh-standard1`, site2 `tuan-standard2`, site3 `de-standard2`, challenge `chuong-challenge1` (chi tiết ở dataset mục 8) |

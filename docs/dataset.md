@@ -202,9 +202,30 @@ Ngày 16/10 script chạy được trên Colab với các cặp `tuan-standard1`
 
 ## 8. Kết quả cuối cùng
 
+Cả Nhóm chốt bộ cặp dưới đây ngày 18/10, dựa trên thứ tự đề xuất và kết quả chạy thử V0 ở mục 6. Địa điểm của site 1 do Thành điền sau.
+
 | Vai trò | Site | Địa điểm | Loại | Người chụp | Cặp chính | Cặp dự phòng |
 |---|---|---|---|---|---|---|
-| Site 1 | site1 | | | | | |
-| Site 2 | site2 | | | | | |
-| Site 3 | site3 | | | | | |
-| Cặp khó | challenge | | | | | |
+| Site 1 | site1 | | chuẩn | Thành | thanh-standard1 | |
+| Site 2 | site2 | Ẩn Coffee (`an-coffee`), trong nhà | chuẩn | Tuấn | tuan-standard2 | |
+| Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), ngoài trời | chuẩn | Đế | de-standard2 | |
+| Cặp khó | challenge | Khu vực ký túc xá (`ky-tuc-xa`), ngoài trời | khó: cảnh đêm, chênh sáng, người và xe chuyển động | Chương | chuong-challenge1 | |
+
+Tuấn tạo `dataset/` ngày 18/10 bằng `scripts/prepare_dataset.py` trên máy cá nhân (Python 3.11, Pillow 10.4.0, numpy 2.4.3), từ ảnh gốc tải lại từ Drive cùng ngày. SHA-256 của 8 ảnh gốc trùng với bản đã dùng ở mục 5.3 và ở lần chạy thử V0. Ảnh của Đế trên Drive vẫn có đuôi `.jpeg`, nên bản sao dùng để chạy được đổi tên thành `.jpg`, nội dung giữ nguyên. Đế cần đổi tên trên Drive thì lệnh dưới mới chạy lại được từ `raw/`:
+
+```bash
+python scripts/prepare_dataset.py --raw raw --out dataset \
+    --pair site1=thanh-standard1 --pair site2=tuan-standard2 \
+    --pair site3=de-standard2 --pair challenge=chuong-challenge1
+```
+
+| Site | Khung cắt 16:9 trên ảnh gốc (x0 y0 x1 y1) |
+|---|---|
+| site1 | `0 384 4096 2688` |
+| site2 | `0 777 8160 5367` |
+| site3 | `0 378 4032 2646` |
+| challenge | `0 0 4096 2304` |
+
+Script ghi ra 24 ảnh (4 cặp × 3 kích thước × 2 ảnh) và `dataset/manifest.csv`. Đã kiểm tra mọi ảnh có đúng kích thước 1280×720, 1920×1080 hoặc 3840×2160, là JPEG RGB, không còn EXIF, và SHA-256 trong manifest khớp với file.
+
+Link `dataset/` trên Drive chung: https://drive.google.com/drive/folders/1HOvnly1k1QHOsV17qLzSAG4ihszNzCqO?usp=sharing. Ngày 18/10 đã tải lại thư mục này mà không đăng nhập, cả 25 file trùng SHA-256 với bản tạo ra ở trên.

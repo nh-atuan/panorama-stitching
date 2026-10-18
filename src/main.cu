@@ -1,4 +1,4 @@
-// Authors: Thanh Chuong (23120195)
+// Authors: Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
 // External source: none
 
 #include "common.h"
@@ -125,14 +125,14 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!version_seen) {
         fail("Missing required option --version.");
     }
-    if (options.version != 0) {
-        fail("Only version 0 is currently supported.", panorama::ErrorCode::UnsupportedVersion);
+    if (!panorama::is_supported_version(options.version)) {
+        fail("Version " + std::to_string(options.version) + " is not available; "
+             "supported versions: 0.", panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
 }
 
 using namespace panorama;
-using Clock = std::chrono::high_resolution_clock;
 
 enum class OutputFormat { Png, Jpeg };
 
@@ -217,86 +217,6 @@ void save_image(const std::string& path, OutputFormat format, const Image& image
     if (!written) fail("Cannot write output image: '" + path + "'.", ErrorCode::ImageWriteFailed);
 }
 
-// Private stub signatures are placeholders, not the final shared stage API.
-void v0_preprocess(const Image&, GrayImage&, const Config&, bool debug_mode) {
-    if (debug_mode) std::cerr << "[stub] v0_preprocess\n";
-}
-void v0_detect(const GrayImage&, std::vector<Keypoint>&, const Config&, bool debug_mode) {
-    if (debug_mode) std::cerr << "[stub] v0_detect\n";
-}
-void v0_describe(const GrayImage&, std::vector<Keypoint>&,
-                 std::vector<Descriptor>&, const Config&, bool debug_mode) {
-    if (debug_mode) std::cerr << "[stub] v0_describe\n";
-}
-void v0_match(const std::vector<Descriptor>&, const std::vector<Descriptor>&,
-              std::vector<Match>&, const Config&, bool debug_mode) {
-    if (debug_mode) std::cerr << "[stub] v0_match\n";
-}
-void v0_homography(const std::vector<Keypoint>&, const std::vector<Keypoint>&,
-                   const std::vector<Match>&, Homography&, const Config&, bool debug_mode) {
-    if (debug_mode) std::cerr << "[stub] v0_homography\n";
-}
-void v0_warp_blend(const Image& left, const Image&, const Homography&,
-                   Panorama& output, const Config&, bool debug_mode) {
-    // Borrow A solely for output-I/O testing; no homography or blending is applied.
-    output.image = left;
-    output.offset_x = output.offset_y = 0;
-    if (debug_mode) std::cerr << "[stub] v0_warp_blend: preview is image A\n";
-}
-
-struct PipelineState {
-    GrayImage gray_a, gray_b;
-    std::vector<Keypoint> keypoints_a, keypoints_b;
-    std::vector<Descriptor> descriptors_a, descriptors_b;
-    std::vector<Match> matches;
-    Homography homography;
-    Panorama output;
-};
-
-double elapsed_ms(Clock::time_point start, Clock::time_point end) {
-    return std::chrono::duration<double, std::milli>(end - start).count();
-}
-template <typename Function>
-double measure_stage(Function function, bool collect_timing) {
-    if (!collect_timing) {
-        function();
-        return 0.0;
-    }
-    const Clock::time_point start = Clock::now();
-    function();
-    return elapsed_ms(start, Clock::now());
-}
-
-TimingStats run_pipeline(const Image& left, const Image& right, const Config& config,
-                         PipelineState& state, bool debug_mode, bool collect_timing = true) {
-    TimingStats timing;
-    const Clock::time_point total_start = collect_timing ? Clock::now() : Clock::time_point();
-    timing.stage_ms[0] = measure_stage([&]() {
-        v0_preprocess(left, state.gray_a, config, debug_mode);
-        v0_preprocess(right, state.gray_b, config, debug_mode);
-    }, collect_timing);
-    timing.stage_ms[1] = measure_stage([&]() {
-        v0_detect(state.gray_a, state.keypoints_a, config, debug_mode);
-        v0_detect(state.gray_b, state.keypoints_b, config, debug_mode);
-    }, collect_timing);
-    timing.stage_ms[2] = measure_stage([&]() {
-        v0_describe(state.gray_a, state.keypoints_a, state.descriptors_a, config, debug_mode);
-        v0_describe(state.gray_b, state.keypoints_b, state.descriptors_b, config, debug_mode);
-    }, collect_timing);
-    timing.stage_ms[3] = measure_stage([&]() {
-        v0_match(state.descriptors_a, state.descriptors_b, state.matches, config, debug_mode);
-    }, collect_timing);
-    timing.stage_ms[4] = measure_stage([&]() {
-        v0_homography(state.keypoints_a, state.keypoints_b, state.matches,
-                       state.homography, config, debug_mode);
-    }, collect_timing);
-    timing.stage_ms[5] = measure_stage([&]() {
-        v0_warp_blend(left, right, state.homography, state.output, config, debug_mode);
-    }, collect_timing);
-    if (collect_timing) timing.end_to_end_ms = elapsed_ms(total_start, Clock::now());
-    return timing;
-}
-
 struct TimingSummary {
     TimingStats average, minimum;
     int count = 0;
@@ -323,36 +243,82 @@ void print_timing(const std::string& label, const TimingStats& timing) {
     std::cout << ',' << timing.end_to_end_ms << '\n';
 }
 
+void check_stage(ErrorCode status, Stage stage) {
+    if (status != ErrorCode::Success) fail(std::string(stage_name(stage)) + " failed.", status);
+}
+
+// Diagnostics of the pipeline, written to stderr after all timed runs.
+// The "H(B->A)=" line is parsed by scripts that compare H with a ground truth.
+void print_diagnostics(const Image& left, const Image& right, const Config& config,
+                       const V0Workspace& workspace, const HomographyReport& report) {
+    std::ostream& log = std::cerr;
+    const std::ios_base::fmtflags flags = log.flags();
+    const std::streamsize precision = log.precision();
+    log << std::defaultfloat << std::setprecision(9);
+    log << "[debug] image A=" << left.width << 'x' << left.height
+        << " B=" << right.width << 'x' << right.height << '\n';
+    log << "[debug] config: ";
+    write_config(log, config);
+    log << "[debug] S2 keypoints A=" << workspace.detected_a << " B=" << workspace.detected_b
+        << "; kept by S3 A=" << workspace.keypoints_a.size()
+        << " B=" << workspace.keypoints_b.size() << '\n';
+    log << "[debug] S4 matches=" << workspace.matches.size() << '\n';
+    log << "[debug] ";
+    write_homography_report(log, report);
+    log << "[debug] H(B->A)=";
+    for (int i = 0; i < 9; ++i) log << (i ? " " : "") << workspace.homography.data[i];
+    log << '\n';
+    log << "[debug] S6 canvas=" << workspace.panorama.image.width << 'x'
+        << workspace.panorama.image.height << " offset=(" << workspace.panorama.offset_x
+        << ',' << workspace.panorama.offset_y << ")\n";
+    log.flags(flags);
+    log.precision(precision);
+}
+
 int run(int argc, char** argv) {
     const panorama::CliOptions options = parse_cli(argc, argv);
     const OutputFormat format = output_format(options.output_image);
     if (options.debug) std::cerr << "[debug] Reading images...\n";
     OwnedImage left = load_image(options.left_image);
     OwnedImage right = load_image(options.right_image);
-    Config config;  // Unset algorithm parameters are not used by the stubs.
-    PipelineState state;
-    TimingSummary summary;
-    if (options.debug) {
-        std::cerr << "[debug] Stub benchmark only; seed=" << config.seed
-                  << ", runs=" << options.runs << '\n'
-                  << "[debug] One warm-up (discarded timings).\n";
+    Config config;
+    if (make_v0_config(left.view.width, left.view.height, config) != ErrorCode::Success) {
+        fail("Cannot build the V0 configuration.", ErrorCode::InvalidConfig);
     }
-    // Stage debug messages appear only in the unreported warm-up.
-    run_pipeline(left.view, right.view, config, state, options.debug, false);
+    V0Workspace workspace;
+    Stage stage = Stage::Preprocess;
+    const ErrorCode prepared = v0_prepare(left.view, right.view, config, workspace);
+    if (prepared != ErrorCode::Success) fail("Cannot prepare the V0 pipeline buffers.", prepared);
+    if (options.debug) {
+        std::cerr << "[debug] version=" << options.version << " seed=" << config.seed
+                  << " runs=" << options.runs << '\n'
+                  << "[debug] One warm-up (not timed).\n";
+    }
+    // Only the untimed warm-up collects the S5 report; V0 is deterministic, so the
+    // timed runs produce the same matches, H and panorama.
+    HomographyReport report;
+    ErrorCode status = v0_run(left.view, right.view, config, workspace, nullptr, &stage, &report);
+    check_stage(status, stage);
+    TimingSummary summary;
     std::cout.imbue(std::locale::classic());
     std::cout << std::fixed << std::setprecision(9);
     std::cout << "Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,Total_ms\n";
     for (int index = 0; index < options.runs; ++index) {
-        // Disable logs in every timed stage, including runs with --debug.
-        const TimingStats timing = run_pipeline(left.view, right.view, config, state, false);
+        v0_release_output(workspace);  // Outside the timed region.
+        TimingStats timing;
+        status = v0_run(left.view, right.view, config, workspace, &timing, &stage);
+        check_stage(status, stage);
         summary.add(timing);
         print_timing(std::to_string(index + 1), timing);
         if (options.debug) std::cerr << "[debug] Measured run " << (index + 1) << " complete.\n";
     }
-    if (options.debug) std::cerr << "[debug] Writing preview image (not a panorama)...\n";
-    save_image(options.output_image, format, state.output.image);
+    save_image(options.output_image, format, workspace.panorama.image);
     print_timing("Average", summary.average);
     print_timing("Minimum", summary.minimum);
+    if (options.debug) {
+        std::cout.flush();  // Keep the CSV block and the stderr diagnostics apart.
+        print_diagnostics(left.view, right.view, config, workspace, report);
+    }
     std::cout.flush();
     if (!std::cout) throw std::runtime_error("Cannot write benchmark CSV to stdout.");
     return EXIT_SUCCESS;
@@ -360,6 +326,7 @@ int run(int argc, char** argv) {
 
 const char* error_name(ErrorCode code) {
     switch (code) {
+        case ErrorCode::Success: return "Success";
         case ErrorCode::InvalidArgument: return "InvalidArgument";
         case ErrorCode::UnknownOption: return "UnknownOption";
         case ErrorCode::UnsupportedVersion: return "UnsupportedVersion";
@@ -367,8 +334,16 @@ const char* error_name(ErrorCode code) {
         case ErrorCode::ImageReadFailed: return "ImageReadFailed";
         case ErrorCode::ImageWriteFailed: return "ImageWriteFailed";
         case ErrorCode::InvalidImage: return "InvalidImage";
-        default: return "NumericalFailure";
+        case ErrorCode::InvalidConfig: return "InvalidConfig";
+        case ErrorCode::InsufficientKeypoints: return "InsufficientKeypoints";
+        case ErrorCode::InsufficientMatches: return "InsufficientMatches";
+        case ErrorCode::DegenerateHomography: return "DegenerateHomography";
+        case ErrorCode::NumericalFailure: return "NumericalFailure";
+        case ErrorCode::InvalidCanvas: return "InvalidCanvas";
+        case ErrorCode::AllocationFailed: return "AllocationFailed";
+        case ErrorCode::CudaFailure: return "CudaFailure";
     }
+    return "UnknownError";
 }
 
 }  // namespace

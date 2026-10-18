@@ -1,10 +1,10 @@
 # Interface chung của pipeline Panorama Stitching
 
-Người soạn: Chương (23120195). Cập nhật: 13/10/2026. Task: P0-T14. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026.
+Người soạn: Chương (23120195). Cập nhật: 13/10/2026. Task: P0-T14. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026; cập nhật phần mở đầu, mục 6 và mục 9 cho khớp code cùng ngày.
 
-Tài liệu mô tả contract đã cài trong [`src/common.h`](../src/common.h) theo yêu cầu thiết kế hiện tại. Đây là bản để cả Nhóm góp ý ở P0-T14; chưa có xác nhận cả Nhóm, PR hoặc merge theo P0-T04. Tham số thuật toán còn thuộc P1 của người phụ trách stage. Contract thống nhất cho V0 và các phiên bản CUDA.
+Tài liệu mô tả contract đã cài trong [`src/common.h`](../src/common.h) theo yêu cầu thiết kế hiện tại. Bản này đã merge vào `main` qua PR #2 (P0-T14, P0-T04) và được dùng cho 6 stage V0 cùng pipeline (PR #10). Tham số thuật toán do người phụ trách chốt ở mục 3 tài liệu từng stage. Contract thống nhất cho V0 và các phiên bản CUDA.
 
-Pipeline dự kiến: S1 preprocessing → S2 FAST → S3 BRIEF/ORB → S4 Hamming matching → S5 RANSAC homography → S6 warp/blend. Lựa chọn BRIEF không xoay hay ORB có xoay, sampling pattern và tham số cụ thể cần Thành ghi trong tài liệu S3; cấu trúc 256-bit không tự xác định thuật toán ORB đầy đủ.
+Pipeline dự kiến: S1 preprocessing → S2 FAST → S3 BRIEF/ORB → S4 Hamming matching → S5 RANSAC homography → S6 warp/blend. S3 dùng BRIEF 256 bit không xoay, pattern sinh với seed 16 (chi tiết ở [tài liệu S3](stages/s3-description.md)); cấu trúc 256-bit không tự xác định thuật toán ORB đầy đủ.
 
 ## 1. Kiểu dữ liệu và ranh giới Host–Device
 
@@ -129,7 +129,7 @@ Với T đưa A → canvas, inverse sampling dùng `pA=T^-1*pCanvas`, `pB=H^-1*T
 | `gaussian_radius` | Pixel, 1 <= r <= 16 và r >= ceil(2 * sigma); chi tiết ở mục 3 của [tài liệu S1](stages/s1-preprocessing.md) | Tuấn |
 | `fast_threshold` | Intensity ảnh gray [0,1], >0 và <1 | Thành |
 | `match_ratio_threshold` | Ratio, 0<r<1 | Đế |
-| `match_cross_check` | 0/1, default 1, cần xác nhận trong S4 | Đế |
+| `match_cross_check` | 0/1. Giá trị mặc định của struct trong `common.h` là 1, nhưng S4 đã chốt 0 (không cross-check) và `make_v0_config()` đặt 0 | Đế |
 | `ransac_iters` | Số hypothesis, >0 | Đế |
 | `ransac_threshold` | Pixel trong hệ A, >0; nếu so squared error dùng threshold² | Đế |
 | `seed` | uint32, default 16 để tái lập; cùng mọi version | Đế và cả Nhóm |
@@ -199,9 +199,9 @@ Thông báo CLI định dạng `Error: <message>` gửi stderr; có usage khi l�
 
 ## 9. Trạng thái bàn giao
 
-Đã có các kiểu và quy ước để Nhóm review: ảnh/pitch byte, gray float, pixel center nguyên, descriptor bit order, index pairing, H float B→A, panorama offset, config, timing và lỗi. Chưa có function signatures chung cho stage vì P0-T14 hiện tập trung dữ liệu; count/capacity/ownership phải theo contract này khi bổ sung signatures.
+Các kiểu và quy ước đã dùng trong code: ảnh/pitch byte, gray float, pixel center nguyên, descriptor bit order, index pairing, H float B→A, panorama offset, config, timing và lỗi. Chữ ký từng stage nằm trong header `src/v0_<stage>.h`; API pipeline ở mục 10. Phương pháp và tham số S1–S6 đã chốt ở mục 1, 3 của tài liệu từng stage.
 
-Các mục cần xác nhận trước cài pipeline thật: phương pháp S2/S3 và orientation, parameters/tolerance P1, source sampling pattern, error propagation và cách đo khi nhiều stream. Task P0-T04 vẫn cần cả Nhóm thống nhất và merge. Build/test trên Colab T4 còn phải thực hiện trước PR theo [kế hoạch nhóm](midterm-plan.md).
+Ngày 18/10/2026 `main` build bằng `nvcc -arch=sm_75` và toàn bộ test đạt trên Colab T4. Còn để lại cho các phiên bản CUDA: cách đo khi dùng nhiều stream và tolerance so sánh CPU–GPU.
 
 ## 10. Pipeline V0
 

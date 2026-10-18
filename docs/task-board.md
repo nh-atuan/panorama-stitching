@@ -104,7 +104,7 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>P0-T03</td>
       <td><a href="dataset.md">dataset</a> mục 5.3 đã điền đầy đủ</td>
       <td>Chờ review</td>
-      <td>Tuấn làm thay Thành. scripts/check_pairs.py chạy trên toàn bộ Drive ngày 16/10, kết quả ở dataset mục 5.3 và thứ tự đề xuất ở mục 6. Chỉ 3 cặp của Tuấn không có tiêu chí chưa đạt; ảnh của Chương 2560×1440, của Đế là HEIC, của Thành sai tên file và 1280×960. Từng thành viên còn phải review.</td>
+      <td>Tuấn làm thay Thành. scripts/check_pairs.py chạy lại trên toàn bộ Drive ngày 18/10 sau khi các thành viên cập nhật ảnh, kết quả ở dataset mục 5.3, thứ tự đề xuất và kết quả chạy thử pipeline V0 ở mục 6. Mọi cặp của Tuấn, Thành, Chương không có tiêu chí chưa đạt; ảnh của Đế chỉ còn sai tên file (.jpeg, cặp khó thiếu số). Từng thành viên còn phải review.</td>
     </tr>
     <tr>
       <td>Đế</td>

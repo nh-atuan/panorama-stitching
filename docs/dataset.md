@@ -113,7 +113,7 @@ Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương 
 
 Thành soạn script kiểm tra các cặp chính của từng thành viên theo quy trình ở mục 6, rồi ghi kết quả vào bảng dưới. Không xét các cặp backup.
 
-Kết quả dưới đây do Tuấn làm thay Thành (P0-T10), chạy `scripts/check_pairs.py` ngày 16/10 trên toàn bộ thư mục Drive ở mục 4, tải bằng `gdown`. Mỗi tiêu chí nhận một trong ba kết quả: `Đạt`, `Chưa đạt`, `Cần review`. Tiêu chí không kiểm tra tự động được (cảnh tĩnh, ít parallax, đủ texture với cặp chuẩn, không lộ mặt người lạ) luôn là `Cần review`. Chồng lấn là ước lượng bằng cách tìm độ dịch ngang tốt nhất giữa hai ảnh thu nhỏ; khi tương quan thấp hơn 0.3, ước lượng được ghi là không tin cậy. Ngưỡng độ nét là một nửa trung vị của các cặp đã kiểm tra, chỉ dùng để so sánh tương đối. Bảng này là kết quả của script, chưa phải kết luận review.
+Kết quả dưới đây do Tuấn làm thay Thành (P0-T10), chạy `scripts/check_pairs.py` ngày 18/10 trên toàn bộ thư mục Drive ở mục 4, tải lại bằng `gdown` sau khi các thành viên cập nhật ảnh. Kết quả lần chạy ngày 16/10 không còn đúng với Drive hiện tại. Mỗi tiêu chí nhận một trong ba kết quả: `Đạt`, `Chưa đạt`, `Cần review`. Tiêu chí không kiểm tra tự động được (cảnh tĩnh, ít parallax, đủ texture với cặp chuẩn, không lộ mặt người lạ) luôn là `Cần review`. Chồng lấn là ước lượng bằng cách tìm độ dịch ngang tốt nhất giữa hai ảnh thu nhỏ; khi tương quan thấp hơn 0.3, ước lượng được ghi là không tin cậy. Ngưỡng độ nét là một nửa trung vị của các cặp đã kiểm tra (lần này là 900), chỉ dùng để so sánh tương đối. Bảng này là kết quả của script, chưa phải kết luận review.
 
 Chạy lại từ gốc repo, với ảnh gốc đặt trong `raw/<thành viên>/`:
 
@@ -123,17 +123,21 @@ python scripts/check_pairs.py --raw raw --out results/check_pairs.md
 
 | Mã cặp | Đạt? | Ghi chú |
 |---|---|---|
-| tuan-standard1 | Cần review | Đạt: tên file, JPEG, ảnh ngang, 8160×6144 cắt 16:9 còn 8160×4590, cùng kích thước, cùng thiết bị, ảnh phải chụp sau 7 s, độ nét. Cần review: EXIF có tọa độ GPS; không có tiêu cự quy đổi 35 mm (tiêu cự thật 3.98 mm); chồng lấn ước lượng 28%, không tin cậy (tương quan 0.25); các tiêu chí thủ công |
-| tuan-standard2 | Cần review | Như `tuan-standard1`, ảnh phải chụp sau 7 s. Cần review thêm: độ nét 631, dưới ngưỡng tương đối 1194; chồng lấn ước lượng 56% (tương quan 0.37), cao hơn khoảng 30-50% |
-| tuan-challenge1 | Cần review | Như `tuan-standard1`, ảnh phải chụp sau 11 s. Cần review thêm: độ nét 288; chồng lấn ước lượng 58%, không tin cậy (tương quan 0.04). Yếu tố khó có chủ đích là ít texture, nên ước lượng chồng lấn không tin cậy là hợp lý |
-| chuong-standard1 | Chưa đạt | Ảnh trên Drive chỉ có 2560×1440, dưới 3840×2160, trong khi bảng 5.2 ghi 4096×2304; file không còn EXIF nên không kiểm tra được tiêu cự, thiết bị, thời gian chụp. Chồng lấn ước lượng 74%, không tin cậy (tương quan 0.19) |
-| chuong-challenge1 | Chưa đạt | Như `chuong-standard1`: 2560×1440, không có EXIF. Chồng lấn ước lượng 80%, không tin cậy (tương quan 0.21) |
-| de-standard1 | Chưa đạt | File định dạng HEIC, stb không đọc được (mục 3.1); tên file không có phần mở rộng `.jpg`. Các tiêu chí còn lại chưa kiểm tra được |
-| de-standard2 | Chưa đạt | Như `de-standard1` |
-| de-challenge (thiếu số) | Chưa đạt | Như `de-standard1`; tên file `challenge_left`, `challenge_right` thiếu số thứ tự của cặp |
-| thanh (13 file) | Chưa đạt | Tên file dạng `standard1_1`, `standard1_2`, `standard1_3`... không có `_left`/`_right` nên script không ghép được cặp; một số nhóm có 3 ảnh. Kiểm tra thêm bằng Pillow: mọi ảnh 1280×960, không có EXIF, dưới 3840×2160 |
+| tuan-standard1 | Cần review | Đạt: tên file, JPEG, ảnh ngang, 8160×6144 cắt 16:9 còn 8160×4590, cùng kích thước, cùng thiết bị, chụp liền nhau, độ nét. Cần review: EXIF có tọa độ GPS; không có tiêu cự quy đổi 35 mm (tiêu cự thật 3.98 mm); chồng lấn ước lượng 28%, không tin cậy (tương quan 0.25); các tiêu chí thủ công |
+| tuan-standard2 | Cần review | Như `tuan-standard1`. Cần review thêm: độ nét 631; chồng lấn ước lượng 56% (tương quan 0.37), cao hơn khoảng 30-50% |
+| tuan-challenge1 | Cần review | Như `tuan-standard1`. Cần review thêm: độ nét 288; chồng lấn ước lượng 58%, không tin cậy (tương quan 0.04). Yếu tố khó có chủ đích là ít texture, nên ước lượng chồng lấn không tin cậy là hợp lý |
+| thanh-standard1 | Cần review | Đạt: tên file, JPEG, ảnh ngang, 4096×3072 cắt 16:9 còn 4096×2304, cùng kích thước, cùng thiết bị, chụp liền nhau, không có GPS, độ nét, chồng lấn ước lượng 40%. Cần review: tiêu cự quy đổi 35 mm là 46 mm, cần xác nhận là camera chính 1x; các tiêu chí thủ công |
+| thanh-standard2 | Cần review | Như `thanh-standard1` nhưng camera chính đạt. Cần review: chồng lấn ước lượng 68% (tương quan 0.34); các tiêu chí thủ công |
+| thanh-standard3 | Cần review | Như `thanh-standard2`. Cần review: chồng lấn ước lượng 37%, không tin cậy (tương quan 0.22); các tiêu chí thủ công |
+| thanh-standard4 | Cần review | Như `thanh-standard2`. Cần review: chồng lấn ước lượng 56%, không tin cậy (tương quan 0.28); các tiêu chí thủ công |
+| thanh-challenge1 | Cần review | Như `thanh-standard2`. Cần review: chồng lấn ước lượng 58% (tương quan 0.33); các tiêu chí thủ công |
+| chuong-standard1 | Cần review | Đạt: tên file, JPEG, ảnh ngang, 4096×2304 (đã là 16:9), cùng kích thước, cùng thiết bị, chụp liền nhau, độ nét. Cần review: EXIF có tọa độ GPS; chồng lấn ước lượng 74%, không tin cậy (tương quan 0.19); các tiêu chí thủ công |
+| chuong-challenge1 | Cần review | Như `chuong-standard1`. Cần review: chồng lấn ước lượng 80%, không tin cậy (tương quan 0.21) |
+| de-standard1 | Chưa đạt | Tên file có phần mở rộng `.jpeg` thay vì `.jpg`. Ảnh là JPEG 4032×3024, cắt 16:9 còn 4032×2268. Cần review: không có EXIF nên không kiểm tra được tiêu cự, thiết bị, thời gian chụp; chồng lấn ước lượng 57%, không tin cậy (tương quan 0.16); các tiêu chí thủ công |
+| de-standard2 | Chưa đạt | Như `de-standard1`. Cần review thêm: độ nét 149; chồng lấn ước lượng 62%, không tin cậy (tương quan 0.28) |
+| de-challenge (thiếu số) | Chưa đạt | Như `de-standard1`; tên file `challenge_left`, `challenge_right` còn thiếu số thứ tự của cặp. Cần review thêm: độ nét 278; chồng lấn ước lượng 47%, không tin cậy (tương quan 0.12) |
 
-Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân lưu file của Thành và Đế với phần mở rộng `.jpg`, `.HEIC`, còn `gdown` 5.2.2 trên Colab lưu không có phần mở rộng; script báo cả hai trường hợp là sai quy ước tên file.
+Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân giữ phần mở rộng của file, còn `gdown` 5.2.2 trên Colab lưu file của Thành và Đế không có phần mở rộng. Bảng trên dùng bản tải bằng `gdown` 6.1.
 
 ## 6. Cách chọn ảnh
 
@@ -144,16 +148,39 @@ Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân lưu file của Thành 
 
 | Loại (chuẩn / khó) | Thứ tự ưu tiên đề xuất | Mã cặp chính | Lý do đề xuất | Kết quả review của từng thành viên |
 |---|---|---|---|---|
-| chuẩn | 1 | tuan-standard1 | Thứ tự do script đề xuất ngày 16/10: không có tiêu chí chưa đạt, 4 tiêu chí cần review; chồng lấn ước lượng 28% | |
-| chuẩn | 2 | tuan-standard2 | Không có tiêu chí chưa đạt, 5 cần review; chồng lấn ước lượng 56% | |
-| chuẩn | 3 | chuong-standard1 | 1 chưa đạt (độ phân giải), 5 cần review | |
-| chuẩn | 4 | de-standard1 | 2 chưa đạt (HEIC, tên file), 9 tiêu chí chưa kiểm tra được | |
-| chuẩn | 5 | de-standard2 | Như `de-standard1` | |
-| khó | 1 | tuan-challenge1 | Không có tiêu chí chưa đạt, 5 cần review; ít texture có chủ đích | |
-| khó | 2 | chuong-challenge1 | 1 chưa đạt (độ phân giải), 5 cần review | |
-| khó | 3 | de-challenge (thiếu số) | 2 chưa đạt (HEIC, tên file), 9 tiêu chí chưa kiểm tra được | |
+| chuẩn | 1 | thanh-standard1 | Thứ tự do script đề xuất ngày 18/10: không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 40% | |
+| chuẩn | 2 | thanh-standard3 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 37% | |
+| chuẩn | 3 | thanh-standard4 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 56% | |
+| chuẩn | 4 | thanh-standard2 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 68% | |
+| chuẩn | 5 | chuong-standard1 | Không có tiêu chí chưa đạt, 3 cần review; chồng lấn ước lượng 74% | |
+| chuẩn | 6 | tuan-standard1 | Không có tiêu chí chưa đạt, 4 cần review; chồng lấn ước lượng 28% | |
+| chuẩn | 7 | tuan-standard2 | Không có tiêu chí chưa đạt, 5 cần review; chồng lấn ước lượng 56% | |
+| chuẩn | 8 | de-standard1 | 1 chưa đạt (tên file), 5 cần review; chồng lấn ước lượng 57% | |
+| chuẩn | 9 | de-standard2 | 1 chưa đạt (tên file), 6 cần review; chồng lấn ước lượng 62% | |
+| khó | 1 | thanh-challenge1 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 58% | |
+| khó | 2 | chuong-challenge1 | Không có tiêu chí chưa đạt, 3 cần review; chồng lấn ước lượng 80% | |
+| khó | 3 | tuan-challenge1 | Không có tiêu chí chưa đạt, 5 cần review; ít texture có chủ đích | |
+| khó | 4 | de-challenge (thiếu số) | 1 chưa đạt (tên file), 6 cần review; chồng lấn ước lượng 47% | |
 
-Thứ tự trên do script xếp: cặp có tiêu chí chưa đạt xếp cuối, sau đó ít tiêu chí chưa đạt hoặc chưa kiểm tra được hơn, chồng lấn ước lượng gần 40% hơn, độ nét cao hơn. Ảnh của Thành chưa ghép được cặp nên chưa có trong bảng. Cột review để trống cho từng thành viên điền.
+Thứ tự trên do script xếp: cặp có tiêu chí chưa đạt xếp cuối, sau đó ít tiêu chí chưa đạt hoặc chưa kiểm tra được hơn, chồng lấn ước lượng gần 40% hơn, độ nét cao hơn. Script không biết cặp nào chụp ở địa điểm nào, nên thứ tự này chưa tính yêu cầu 3 địa điểm khác nhau. Cột review để trống cho từng thành viên điền.
+
+Để hỗ trợ review, Tuấn chạy thử pipeline V0 (nhánh `tuan/shared-v0-pipeline`) ngày 18/10 trên cả 13 cặp chính ở 3 kích thước. Ảnh của Đế được đổi tên thành `.jpg` trên bản sao để chạy, ảnh trên Drive giữ nguyên. Đây là kết quả chạy thử, không phải kết luận review:
+
+| Mã cặp | Số inlier small / medium / large | Kết quả |
+|---|---|---|
+| thanh-standard1 | 310 / 274 / 109 | Ra panorama ở cả 3 kích thước |
+| thanh-standard2 | 465 / 423 / 270 | Ra panorama ở cả 3 kích thước |
+| thanh-standard3 | 253 / 187 / 101 | S6 báo `NumericalFailure` ở cả 3 kích thước: phép chiếu đưa một phần ảnh phải qua đường chân trời |
+| thanh-standard4 | 318 / 322 / 155 | Small, medium ra panorama; large bị S6 từ chối vì canvas vượt 10.000 px |
+| tuan-standard1 | 8 / 9 / 0 | Thất bại ở S5 hoặc S6; mái pergola sát máy gây parallax |
+| tuan-standard2 | 186 / 153 / 62 | Ra panorama ở cả 3 kích thước |
+| chuong-standard1 | 186 / 158 / 105 | Ra panorama ở cả 3 kích thước |
+| de-standard1 | 92 / 69 / 7 | Small, medium ra panorama; large thất bại ở S6 |
+| de-standard2 | 167 / 160 / 85 | Ra panorama ở cả 3 kích thước |
+| thanh-challenge1 | 123 / 94 / 39 | Small, medium ra panorama; large bị S6 từ chối vì canvas vượt 10.000 px |
+| chuong-challenge1 | 440 / 391 / 289 | Ra panorama ở cả 3 kích thước |
+| tuan-challenge1 | 5 / 6 / 6 | Thất bại ở S6 ở cả 3 kích thước, đúng với yếu tố ít texture |
+| de-challenge (thiếu số) | 17 / 8 / 8 | Small ra panorama nhưng lệch; medium, large thất bại ở S6 |
 
 ## 7. Chuẩn bị dataset
 

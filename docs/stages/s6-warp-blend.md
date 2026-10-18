@@ -1,8 +1,8 @@
 # S6 - Warping and blending
 
-Người phụ trách: Chương (23120195). Cập nhật lần cuối: 13/10/2026.
+Người phụ trách: Chương (23120195). Cập nhật lần cuối: 18/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7.
 
-Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark; chưa có kết quả Colab T4 hoặc chất lượng trên dataset để nghiệm thu task.
+Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark. Ngày 18/10/2026 test S6 đạt trên Colab T4 và S6 ra panorama cho cả 4 cặp của dataset ở 3 kích thước (mục 5, 7).
 
 Các quy ước dữ liệu bên dưới là đề xuất ban đầu của S6. P0-T14 đã có [`docs/interface.md`](../interface.md) và `common.h` theo yêu cầu của Chương, gồm Homography float32 và stride byte; bản interface còn cần cả Nhóm góp ý và thống nhất trước khi cài pipeline thật. Dataset đã chụp và chuẩn bị đầy đủ theo xác nhận của Chương; chưa chạy S6 trên dataset đó.
 
@@ -436,7 +436,18 @@ Với `P = Wc × Hc`, render có thời gian `O(P)`, bộ nhớ output `O(P)` v�
 
 ## 5. Bằng chứng chất lượng
 
-Đã kiểm tra đáp án pixel/canvas với H biết trước trong `tests/test_v0_warp_blend.cpp`: 194 assertions đạt trên WSL Ubuntu 24.04 với g++ C++11. Cùng bộ test đạt khi bật AddressSanitizer và UndefinedBehaviorSanitizer, không có báo cáo lỗi bộ nhớ/undefined behavior. Đây là kiểm chứng độc lập S6, không phải số đo performance hoặc chứng minh pipeline S2–S5 đúng. Chưa có panorama dataset hoặc kết quả Colab T4.
+Đã kiểm tra đáp án pixel/canvas với H biết trước trong `tests/test_v0_warp_blend.cpp`: 194 assertions đạt trên WSL Ubuntu 24.04 với g++ C++11. Cùng bộ test đạt khi bật AddressSanitizer và UndefinedBehaviorSanitizer, không có báo cáo lỗi bộ nhớ/undefined behavior. Đây là kiểm chứng độc lập S6, không phải số đo performance hoặc chứng minh pipeline S2–S5 đúng. Bộ test này cũng đạt trên Colab T4 ngày 18/10/2026 (mục 7).
+
+Ngày 18/10/2026, `stitch --version 0 --runs 1 --debug` trên Colab T4 với 4 cặp của dataset. Cả 12 lần chạy đều ra panorama; kích thước canvas và offset (đưa hệ A vào canvas) như sau:
+
+| Cặp | small | medium | large |
+|---|---|---|---|
+| site1 | 2420×971, (0,84) | 3692×1496, (0,140) | 7399×3028, (0,313) |
+| site2 | 2732×1426, (0,349) | 4162×2148, (0,502) | 8477×4507, (0,1214) |
+| site3 | 2356×1241, (0,312) | 3558×1791, (0,414) | 7008×3453, (0,758) |
+| challenge | 1832×976, (0,181) | 2746×1489, (0,294) | 5514×2956, (0,561) |
+
+Offset x luôn bằng 0 vì B nằm bên phải A; offset y dương vì B bị chiếu lệch lên trên một phần. Canvas lớn nhất (site2 large, 8477×4507, khoảng 38 triệu pixel) vẫn dưới `max_canvas_pixels` = 100 triệu. Ảnh thu nhỏ của 4 panorama cỡ medium không thấy lệch hoặc ảnh kép rõ rệt; chưa xem crop vùng chồng lấn ở độ phân giải đầy đủ. Trên cặp synthetic (mục 5.5 của `docs/stages/s5-homography.md`), S6 ra panorama cho cả 6 cặp. Panorama và log nằm trong `results/` (đã ignore), tạo lại bằng lệnh ở mục 7.
 
 Chất lượng dataset cần xem cả panorama và crop overlap ở độ phân giải đủ thấy cạnh/ảnh kép. Nếu average không đạt trên site chuẩn, ghi thất bại và xử lý trước benchmark cuối; không coi độ đơn giản là bằng chứng chất lượng.
 
@@ -458,7 +469,7 @@ Hardware texture bilinear chỉ là ứng viên có điều kiện: NVIDIA nêu 
 
 ## 7. Kiểm thử
 
-Kết quả local ngày 13/10: 194 assertions đạt, gồm geometry/pixel và lỗi/OOM giả lập. Toàn bộ kết quả thực tế trên Colab T4 hiện là **chưa chạy**. Tests đọc header stage và link module thật; đáp án pixel được tính riêng, không gọi helper đang kiểm thử để tạo đáp án.
+Kết quả local ngày 13/10: 194 assertions đạt, gồm geometry/pixel và lỗi/OOM giả lập. Kết quả trên Colab T4 ở bảng cuối mục. Tests đọc header stage và link module thật; đáp án pixel được tính riêng, không gọi helper đang kiểm thử để tạo đáp án.
 
 ```bash
 g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror -O2 -I src \
@@ -466,12 +477,25 @@ g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror -O2 -I src \
 ./build/test_v0_warp_blend
 ```
 
-Lệnh cần chạy thêm trên Colab T4 từ gốc repo, in `nvidia-smi` trước; output test kỳ vọng `PASS: 194 assertions ...`:
+Lệnh trên Colab T4 từ gốc repo, in `nvidia-smi` trước; output test kỳ vọng `PASS: 194 assertions ...`:
 
 ```bash
-nvcc -arch=sm_75 -I src src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o test_s6
-./test_s6
+nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror -I src \n    src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o build/test_s6
+./build/test_s6
 ```
+
+Panorama trên dataset, từ gốc repo sau khi build `stitch` (lặp cho `site1`, `site2`, `site3`, `challenge` và `small`, `medium`, `large`):
+
+```bash
+./stitch dataset/site1/small_left.jpg dataset/site1/small_right.jpg results/site1_small_pano.jpg \n    --version 0 --runs 1 --debug
+```
+
+| Ngày | Môi trường | Lệnh | Kết quả |
+|---|---|---|---|
+| 18/10/2026 | Colab Tesla T4, CUDA 13.0 (V13.0.88) | `nvcc` như trên | Build không lỗi; `PASS: 194 assertions for S6 geometry, pixels, error handling and OOM` |
+| 18/10/2026 | Cùng phiên, g++ 13.3.0 với `-fsanitize=address,undefined -fno-sanitize-recover=all` | `test_v0_warp_blend.cpp` | `PASS: 194 assertions ...`, không có báo lỗi sanitizer |
+| 18/10/2026 | Cùng phiên, `nvcc` | `tests/test_v0_pipeline.cpp` (S1–S6 trên cặp dịch tổng hợp) | `PASS: 15947 assertions for the V0 pipeline S1-S6`, đạt cả với ASan/UBSan |
+| 18/10/2026 | Cùng phiên | `stitch` trên 4 cặp dataset × 3 kích thước | 12/12 ra panorama, canvas ở mục 5 |
 
 Trước khi gọi, đặt `config.homography_epsilon=1e-6f` và `config.max_canvas_pixels=100000000`. Các tham số S1–S5 không được S6 sử dụng. Giới hạn diện tích có thể đặt thấp hơn để kiểm thử budget; không đổi giới hạn giữa các phiên bản benchmark.
 
@@ -553,3 +577,4 @@ Lượt 12/10 chọn phương pháp sơ bộ; 13/10 chốt tham số và cài b�
 | Ngày | Thay đổi | Lý do |
 |---|---|---|
 | 13/10/2026 | Bản cài chuyển feather sang average 50/50; S6 cấp phát output và caller nhận ownership khi thành công | Yêu cầu coding mới của Chương; các phiên bản so sánh sau này phải cùng phương pháp |
+| 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và panorama trên dataset | Nghiệm thu P1-T17 |

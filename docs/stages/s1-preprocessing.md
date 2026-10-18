@@ -1,6 +1,6 @@
 # S1 - Preprocessing
 
-Người phụ trách: Tuấn. Cập nhật lần cuối: 16/10.
+Người phụ trách: Tuấn. Cập nhật lần cuối: 18/10.
 
 S1 nhận ảnh màu đã đọc bằng stb, chuyển sang ảnh xám rồi làm mượt để giảm nhiễu trước khi S2 tìm keypoint, theo mô tả của [đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md) mục 2.1. S1 chạy độc lập trên từng ảnh của cặp.
 
@@ -133,7 +133,40 @@ Mã nguồn: `src/v0_preprocess.cpp` (kiểm tra đầu vào, chuyển ảnh xá
 
 ## 5. Bằng chứng chất lượng
 
-Chưa có. Mục này dùng ảnh xám trước và sau blur của một cặp ảnh dev; công cụ `tests/tool_export_gray.cpp` xuất hai ảnh đó dưới dạng PNG 8-bit (để xem) và file `.f32` (giá trị `float` nguyên vẹn, để làm đầu vào cho S2, S3). File `.f32` gồm `int32 width`, `int32 height`, rồi `width × height` số `float` trong [0, 1], row-major, không padding, little-endian. Cặp ảnh dev chưa chuẩn bị.
+Công cụ `tests/tool_export_gray.cpp` chạy S1 trên một ảnh và xuất hai ảnh: chỉ chuyển xám (`_gray`) và chuyển xám rồi làm mượt với σ = 1.0, r = 3 (`_blur`), mỗi ảnh có bản PNG 8-bit để xem và bản `.f32` giữ nguyên giá trị `float`. File `.f32` gồm `int32 width`, `int32 height`, rồi `width × height` số `float` trong [0, 1], row-major, không padding, little-endian. Ảnh xuất ra nằm trong `results/` (đã ignore), không commit.
+
+Ngày 18/10, trên Colab T4, công cụ chạy trên ảnh trái của 4 cặp dataset ở cả 3 kích thước. Các số dưới đây tính bằng numpy từ file `.f32`. "Gradient" là trung bình |hiệu hai pixel kề nhau| theo chiều ngang cộng theo chiều dọc, dùng để đo mức chi tiết tần số cao còn lại sau blur:
+
+| Ảnh trái | Kích thước | Trung bình xám (trước = sau) | Độ lệch chuẩn trước → sau | Gradient trước → sau | Tỷ lệ gradient sau/trước |
+|---|---|---:|---|---|---:|
+| site1 | 1280×720 | 0.4936 | 0.1807 → 0.1610 | 0.10010 → 0.03575 | 0.357 |
+| site1 | 1920×1080 | 0.4937 | 0.1837 → 0.1669 | 0.08525 → 0.03587 | 0.421 |
+| site1 | 3840×2160 | 0.4937 | 0.1843 → 0.1761 | 0.04950 → 0.03185 | 0.643 |
+| site2 | 1280×720 | 0.4499 | 0.2373 → 0.2307 | 0.04278 → 0.02270 | 0.531 |
+| site2 | 1920×1080 | 0.4500 | 0.2382 → 0.2333 | 0.03533 → 0.01920 | 0.543 |
+| site2 | 3840×2160 | 0.4501 | 0.2388 → 0.2364 | 0.02354 → 0.01431 | 0.608 |
+| site3 | 1280×720 | 0.4405 | 0.2173 → 0.2147 | 0.02167 → 0.01391 | 0.642 |
+| site3 | 1920×1080 | 0.4405 | 0.2174 → 0.2159 | 0.02039 → 0.01097 | 0.538 |
+| site3 | 3840×2160 | 0.4405 | 0.2175 → 0.2169 | 0.01491 → 0.00832 | 0.558 |
+| challenge | 1280×720 | 0.2391 | 0.2063 → 0.1726 | 0.13929 → 0.04867 | 0.349 |
+| challenge | 1920×1080 | 0.2391 | 0.2147 → 0.1825 | 0.12755 → 0.04929 | 0.386 |
+| challenge | 3840×2160 | 0.2390 | 0.2213 → 0.2000 | 0.08385 → 0.04686 | 0.559 |
+
+Nhận xét:
+
+- Độ sáng trung bình không đổi đến 4 chữ số thập phân, đúng với kernel có tổng bằng 1 và biên clamp.
+- Blur giữ lại 35–64% gradient. Độ lệch chuẩn chỉ giảm ít (nhiều nhất ở cặp khó, 0.2063 → 0.1726), nghĩa là S1 bỏ chủ yếu nhiễu và chi tiết nhỏ, còn tương phản giữa các vùng lớn vẫn giữ.
+- Cặp khó (cảnh đêm) mất gradient nhiều nhất ở cỡ small, phù hợp với nhiễu ảnh tối.
+- Với cùng σ, ảnh lớn giữ lại nhiều gradient hơn (site1: 0.357 ở small, 0.643 ở large). Đây là hệ quả đã nêu ở mục 3: dùng một bộ tham số cho mọi kích thước thì ảnh 4K được làm mượt ít hơn so với nội dung.
+- S2 nhận ảnh blur này và vẫn tìm đủ keypoint cho S4, S5: cả 12 lần chạy dataset đều ra panorama, số match và inlier ở mục 5 của `docs/stages/s4-matching.md`.
+
+Lệnh tái lập từ gốc repo (`build/stb_impl.o` build riêng, không bật `-Werror` vì header stb sinh cảnh báo `missing-field-initializers`):
+
+```bash
+nvcc -arch=sm_75 -std=c++11 -O2 -I src -c src/stb_impl.cpp -o build/stb_impl.o
+nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror -I src src/v0_preprocess.cpp     src/gaussian_kernel.cpp src/gaussian_blur.cpp src/image_layout.cpp build/stb_impl.o     tests/tool_export_gray.cpp -o build/tool_export_gray
+./build/tool_export_gray dataset/site1/small_left.jpg results/s1/site1_small_left 1 3
+```
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
@@ -168,6 +201,7 @@ Kết quả ngày 13/10:
 | Colab Tesla T4, CUDA 13.0 (V13.0.88) | `nvcc -arch=sm_75 ...` | Build không lỗi; `PASS: 1758 assertions for S1 grayscale, blur, errors and OOM` |
 | Colab Tesla T4 | `g++ -fsanitize=address,undefined -fno-sanitize-recover=all` | Build không lỗi; `PASS: 1758 assertions ...`, không có báo lỗi sanitizer |
 | Colab Tesla T4, ngày 16/10, sau khi tách `gaussian_blur.cpp` và `image_layout.cpp` | `nvcc -arch=sm_75 ...` và g++ với sanitizer như trên | `PASS: 1758 assertions ...` ở cả hai, không có báo lỗi sanitizer |
+| Colab Tesla T4, CUDA 13.0, ngày 18/10, bản trên `main` | `nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror ...` và g++ 13.3 với sanitizer | `PASS: 1758 assertions ...` ở cả hai, không có báo lỗi sanitizer |
 
 | Test | Đầu vào | Kết quả mong đợi |
 |---|---|---|
@@ -182,7 +216,7 @@ Kết quả ngày 13/10:
 | Chạy hai lần, tái dùng output | Cùng đầu vào | Giống từng bit |
 | Cấp phát thất bại | Giả lập `bad_alloc` | `AllocationFailed`, output không đổi |
 
-AddressSanitizer và UndefinedBehaviorSanitizer chạy trên Colab (MinGW trên máy cá nhân không hỗ trợ). Công cụ `tests/tool_export_gray.cpp` chưa chạy trên Colab.
+AddressSanitizer và UndefinedBehaviorSanitizer chạy trên Colab (MinGW trên máy cá nhân không hỗ trợ). Công cụ `tests/tool_export_gray.cpp` chạy trên Colab T4 ngày 18/10, kết quả ở mục 5.
 
 ## 8. Trường hợp biên và rủi ro
 

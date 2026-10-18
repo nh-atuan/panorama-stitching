@@ -103,9 +103,18 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 | tuan-standard2-b1 | Tuấn | an-coffee | chuẩn | | | | |
 | tuan-challenge1 | Tuấn | an-coffee | khó | Ít texture | 07/10 12:35 | nubia Neo 3 GT 5G | 8160×6144 |
 | tuan-challenge1-b1 | Tuấn | an-coffee | khó | | | | |
+| thanh-standard1 | Thành | | chuẩn | | 07/10 16:41 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard2 | Thành | | chuẩn | | 07/10 16:33 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard3 | Thành | | chuẩn | | 07/10 16:26 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard4 | Thành | | chuẩn | | 07/10 14:19 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard4-b1 | Thành | | chuẩn | | 07/10 14:18 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-challenge1 | Thành | | khó | | 07/10 16:37 | Xiaomi 2210129SG | 4096×3072 |
 | chuong-standard1 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:25:05 | vivo iQOO Neo10 | 4096×2304 |
 | chuong-standard2 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:27:33 | vivo iQOO Neo10 | 4096×2304 |
 | chuong-challenge1 | Chương | ky-tuc-xa | khó | Cảnh đêm (chính); chênh sáng, người/xe chuyển động và motion blur (kèm theo) | 07/10/2026 18:01:27 | vivo iQOO Neo10 | 4096×2304 |
+| de-standard1 | Đế | mai-an-coffee | chuẩn | | Không có EXIF | Không có EXIF | 4032×3024 |
+| de-standard2 | Đế | mai-an-coffee | chuẩn | | Không có EXIF | Không có EXIF | 4032×3024 |
+| de-challenge1 | Đế | mai-an-coffee | khó | | Không có EXIF | Không có EXIF | 4032×3024 |
 
 Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương ứng với tên file ở mục 4, ví dụ `tuan-standard1-b1` gồm `tuan/standard1_left_b1.jpg` và `tuan/standard1_right_b1.jpg`.
 

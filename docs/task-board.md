@@ -448,8 +448,8 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Dựng khung code của <code>Group16_Midterm.ipynb</code> theo <a href="midterm-plan.md#13-quy-định-notebook-báo-cáo">mục 13 của kế hoạch</a>: <code>nvidia-smi</code>, lấy <code>src/</code> từ Drive, build, chạy test, cặp synthetic, benchmark, panorama</td>
       <td>P3-T04</td>
       <td>Run all thành công trên một phiên Colab T4 mới; không dùng <code>%%writefile</code>; notebook commit không kèm output</td>
-      <td>Chưa làm</td>
-      <td>Lệnh build, test và cặp synthetic có sẵn ở mục 7 các tài liệu stage và mục 5.5 tài liệu S5.</td>
+      <td>Đang làm</td>
+      <td>Chương đã dựng 37 cell: đề mục tiếng Anh, Markdown tiếng Việt, code comment tiếng Anh; setup upload/Drive/existing, kiểm tra T4 và SHA-256 dataset, build nguồn thật, test S1–S6/CLI, 6 cặp synthetic, panorama/crop, adapter timing/Amdahl và readiness gate. Helper <code>scripts/midterm_notebook.py</code>; 16 test local đạt ngày 20/10, code cell biên dịch cú pháp đạt, notebook không output. Hướng dẫn tại <a href="notebook-guide.md">notebook-guide</a>. Chờ script/giao diện P3-T04 của Thành và Run all thực tế trên Colab T4; chưa đủ điều kiện chuyển Xong.</td>
     </tr>
     <tr>
       <td>P3-T10</td>

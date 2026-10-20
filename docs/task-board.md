@@ -406,8 +406,8 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Viết script benchmark V0 <code>scripts/run_benchmark.py</code> và test</td>
       <td>P2-T01</td>
       <td>Script chạy <code>stitch</code> cho 3 site × 3 kích thước theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a> (warm-up, <code>--runs 5</code>), in tên GPU và CPU, gom CSV, xuất bảng trung bình và nhỏ nhất của từng stage; test đạt trên Colab</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Nhánh thanh/p3, PR #14. Colab T4 20/10: build bằng <code>nvcc -arch=sm_75</code>, <code>tests/test_run_benchmark.py</code> 10 test đạt, test notebook 16 test đạt; chạy đủ 9 cấu hình với <code>--runs 5</code>. Giao diện <code>--stitch --dataset --runs --out</code>, ghi <code>&lt;out&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> đúng layout adapter của notebook, kèm <code>summary.csv</code>, <code>summary.md</code>, <code>environment.json</code>.</td>
     </tr>
     <tr>
       <td>P3-T05</td>

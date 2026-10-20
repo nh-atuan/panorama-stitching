@@ -414,8 +414,8 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Chạy benchmark chính thức, xác định hot stage và tính giới hạn Amdahl</td>
       <td>P3-T04</td>
       <td>Bảng timing ở 3 kích thước và biểu đồ theo stage sinh từ CSV, đo trong cùng một phiên Colab T4; nêu hot stage và cách nó thay đổi theo độ phân giải; <code>p</code> và <code>1/(1-p)</code> tính bằng code</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Nhánh thanh/p3, PR #14. Số đo trong một phiên Colab T4 ngày 20/10 (Tesla T4, <code>--runs 5</code>, 9 cấu hình). <code>scripts/plot_benchmark.py</code> sinh từ <code>summary.csv</code> hai biểu đồ cột chồng theo stage (ms và % của Total), bảng hot stage, <code>p</code> và <code>1/(1-p)</code>; 8 test đạt trên Colab T4. Hot stage: S4 ở small và medium cả 3 site (trung bình 56,2% và 40,0%); ở large là S2 với site1, S6 với site2 và site3. Lần Run all cuối của notebook đo lại nên số trong lời văn báo cáo phải đối chiếu với output đó.</td>
     </tr>
     <tr>
       <td>P3-T06</td>

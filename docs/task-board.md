@@ -37,8 +37,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Ghi địa điểm dự kiến vào <a href="dataset.md">dataset</a> mục 5.1</td>
       <td></td>
       <td>Đủ 4 dòng</td>
-      <td>Đang làm</td>
-      <td>Đã có dòng của Tuấn, Chương, Đế. Còn thiếu tên địa điểm của Thành.</td>
+      <td>Xong</td>
+      <td>Đã có dòng của cả 4 người. Thành chụp ở 5 địa điểm, mỗi địa điểm một dòng (điền ngày 20/10).</td>
     </tr>
     <tr>
       <td>P0-T03</td>
@@ -46,7 +46,7 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>P0-T06</td>
       <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
       <td>Đang làm</td>
-      <td>Cả 4 người đã upload ảnh gốc. Nhóm miễn cặp chuẩn thứ hai cho Chương (Quyết định đã chốt 18/10). Bảng 5.2 đã có dòng của Thành, Đế (lấy từ EXIF); còn thiếu site slug của Thành và Tuấn đổi tên ảnh của Đế trên Drive sang <code>.jpg</code>, cặp khó thành <code>challenge1</code>.</td>
+      <td>Cả 4 người đã upload ảnh gốc. Nhóm miễn cặp chuẩn thứ hai cho Chương (Quyết định đã chốt 18/10). Bảng 5.2 đã có dòng của Thành, Đế (lấy từ EXIF); site slug của Thành đã điền ngày 20/10; còn thiếu việc Tuấn đổi tên ảnh của Đế trên Drive sang <code>.jpg</code>, cặp khó thành <code>challenge1</code>.</td>
     </tr>
     <tr>
       <td>P0-T04</td>
@@ -202,7 +202,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P0-T01, P0-T09, P0-T10</td>
       <td><a href="dataset.md">dataset</a> mục 8 đã điền; <code>dataset/</code> trên Drive có đủ 3 site và cặp khó, mỗi cặp đủ 3 kích thước</td>
       <td>Đang làm</td>
-      <td>Cả Nhóm chốt bộ cặp ngày 18/10 (dataset mục 8). <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) đã upload lên Drive chung. Còn thiếu tên địa điểm site 1 ở mục 8 và việc đổi tên ảnh của Đế trên Drive.</td>
+      <td>Cả Nhóm chốt bộ cặp ngày 18/10 (dataset mục 8). <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) đã upload lên Drive chung. Tên địa điểm site 1 ở mục 8 đã điền ngày 20/10. Còn thiếu việc đổi tên ảnh của Đế trên Drive.</td>
     </tr>
     <tr>
       <td>P1-T06</td>
@@ -210,7 +210,7 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>P1-T05</td>
       <td><code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code></td>
       <td>Xong</td>
-      <td>Đã viết ở <code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code>. Tên địa điểm site 1 trong 3.6 chờ bổ sung cùng P0-T02.</td>
+      <td>Đã viết ở <code>docs/report/3.2-problem-understanding.md</code> và <code>docs/report/3.6-dataset.md</code>. Tên địa điểm site 1 trong 3.6 đã bổ sung ngày 20/10.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>

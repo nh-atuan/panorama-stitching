@@ -84,7 +84,11 @@ Link Drive: https://drive.google.com/drive/folders/127SOMhoY2EwBbkCxGWGPju-EbmG0
 | Người chụp | Tên địa điểm | Site slug | Loại (trong nhà / ngoài trời) | Mô tả ngắn |
 |---|---|---|---|---|
 | Tuấn | Ẩn Coffee | an-coffee | Cả hai | Quán cà phê; `standard1` chụp ngoài trời, `standard2` chụp trong nhà |
-| Thành | | | | |
+| Thành | Nhà thờ | nha-tho | Ngoài trời | `standard1` |
+| Thành | Đường ngoài trời | duong-ngoai-troi | Ngoài trời | `standard2` |
+| Thành | Quán cafe Houjicha | houjicha-cafe | Trong nhà | `standard3` |
+| Thành | Sau khuôn viên Trường Đại học Đồng Nai | dai-hoc-dong-nai | Ngoài trời | `standard4`, `standard4-b1` |
+| Thành | Trên đường đi | duong-di | Ngoài trời | `challenge1`: có người di chuyển |
 | Chương | Khuôn viên Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM | hcmus-campus | Ngoài trời | `standard1`: bờ tường đá; `standard2`: bia đá khuôn viên |
 | Chương | Khu vực ký túc xá | ky-tuc-xa | Ngoài trời | `challenge1`: cảnh đêm, chênh sáng và đối tượng chuyển động |
 | Đế | Tiệm cà phê Mai An | mai-an-coffee | Cả hai | Quán cà phê; `standard1` chụp trong nhà, `standard2` chụp ngoài trời|
@@ -103,12 +107,12 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 | tuan-standard2-b1 | Tuấn | an-coffee | chuẩn | | | | |
 | tuan-challenge1 | Tuấn | an-coffee | khó | Ít texture | 07/10 12:35 | nubia Neo 3 GT 5G | 8160×6144 |
 | tuan-challenge1-b1 | Tuấn | an-coffee | khó | | | | |
-| thanh-standard1 | Thành | | chuẩn | | 07/10 16:41 | Xiaomi 2210129SG | 4096×3072 |
-| thanh-standard2 | Thành | | chuẩn | | 07/10 16:33 | Xiaomi 2210129SG | 4096×3072 |
-| thanh-standard3 | Thành | | chuẩn | | 07/10 16:26 | Xiaomi 2210129SG | 4096×3072 |
-| thanh-standard4 | Thành | | chuẩn | | 07/10 14:19 | Xiaomi 2210129SG | 4096×3072 |
-| thanh-standard4-b1 | Thành | | chuẩn | | 07/10 14:18 | Xiaomi 2210129SG | 4096×3072 |
-| thanh-challenge1 | Thành | | khó | | 07/10 16:37 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard1 | Thành | nha-tho | chuẩn | | 07/10 16:41 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard2 | Thành | duong-ngoai-troi | chuẩn | | 07/10 16:33 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard3 | Thành | houjicha-cafe | chuẩn | | 07/10 16:26 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard4 | Thành | dai-hoc-dong-nai | chuẩn | | 07/10 14:19 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-standard4-b1 | Thành | dai-hoc-dong-nai | chuẩn | | 07/10 14:18 | Xiaomi 2210129SG | 4096×3072 |
+| thanh-challenge1 | Thành | duong-di | khó | Người di chuyển | 07/10 16:37 | Xiaomi 2210129SG | 4096×3072 |
 | chuong-standard1 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:25:05 | vivo iQOO Neo10 | 4096×2304 |
 | chuong-standard2 | Chương | hcmus-campus | chuẩn | | 08/10/2026 10:27:33 | vivo iQOO Neo10 | 4096×2304 |
 | chuong-challenge1 | Chương | ky-tuc-xa | khó | Cảnh đêm (chính); chênh sáng, người/xe chuyển động và motion blur (kèm theo) | 07/10/2026 18:01:27 | vivo iQOO Neo10 | 4096×2304 |
@@ -211,11 +215,11 @@ Ngày 16/10 script chạy được trên Colab với các cặp `tuan-standard1`
 
 ## 8. Kết quả cuối cùng
 
-Cả Nhóm chốt bộ cặp dưới đây ngày 18/10, dựa trên thứ tự đề xuất và kết quả chạy thử V0 ở mục 6. Địa điểm của site 1 do Thành điền sau.
+Cả Nhóm chốt bộ cặp dưới đây ngày 18/10, dựa trên thứ tự đề xuất và kết quả chạy thử V0 ở mục 6.
 
 | Vai trò | Site | Địa điểm | Loại | Người chụp | Cặp chính | Cặp dự phòng |
 |---|---|---|---|---|---|---|
-| Site 1 | site1 | | chuẩn | Thành | thanh-standard1 | |
+| Site 1 | site1 | Nhà thờ (`nha-tho`), ngoài trời | chuẩn | Thành | thanh-standard1 | |
 | Site 2 | site2 | Ẩn Coffee (`an-coffee`), trong nhà | chuẩn | Tuấn | tuan-standard2 | |
 | Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), ngoài trời | chuẩn | Đế | de-standard2 | |
 | Cặp khó | challenge | Khu vực ký túc xá (`ky-tuc-xa`), ngoài trời | khó: cảnh đêm, chênh sáng, người và xe chuyển động | Chương | chuong-challenge1 | |

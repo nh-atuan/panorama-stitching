@@ -45,8 +45,8 @@ Hạn của giai đoạn: **06/10 (Thứ 3)**.
       <td>Chụp ảnh theo quy định, upload ảnh gốc, điền bảng ứng viên</td>
       <td>P0-T06</td>
       <td>Đủ số lượng theo <a href="dataset.md">dataset</a> mục 2</td>
-      <td>Đang làm</td>
-      <td>Cả 4 người đã upload ảnh gốc. Nhóm miễn cặp chuẩn thứ hai cho Chương (Quyết định đã chốt 18/10). Bảng 5.2 đã có dòng của Thành, Đế (lấy từ EXIF); site slug của Thành đã điền ngày 20/10; còn thiếu việc Tuấn đổi tên ảnh của Đế trên Drive sang <code>.jpg</code>, cặp khó thành <code>challenge1</code>.</td>
+      <td>Xong</td>
+      <td>Cả 4 người đã upload ảnh gốc. Nhóm miễn cặp chuẩn thứ hai cho Chương (Quyết định đã chốt 18/10). Bảng 5.2 đã có dòng của Thành, Đế (lấy từ EXIF); site slug của Thành đã điền ngày 20/10.</td>
     </tr>
     <tr>
       <td>P0-T04</td>
@@ -201,8 +201,8 @@ Mỗi stage được cài đặt và kiểm thử độc lập bằng dữ liệ
       <td>Chọn cặp theo cách đã chốt ở P0-T01, chạy script chuẩn bị dataset, upload <code>dataset/</code> lên Drive chung</td>
       <td>P0-T01, P0-T09, P0-T10</td>
       <td><a href="dataset.md">dataset</a> mục 8 đã điền; <code>dataset/</code> trên Drive có đủ 3 site và cặp khó, mỗi cặp đủ 3 kích thước</td>
-      <td>Đang làm</td>
-      <td>Cả Nhóm chốt bộ cặp ngày 18/10 (dataset mục 8). <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) đã upload lên Drive chung. Tên địa điểm site 1 ở mục 8 đã điền ngày 20/10. Còn thiếu việc đổi tên ảnh của Đế trên Drive.</td>
+      <td>Xong</td>
+      <td>Cả Nhóm chốt bộ cặp ngày 18/10 (dataset mục 8). <code>dataset/</code> (24 ảnh, manifest khớp SHA-256) đã upload lên Drive chung. Tên địa điểm site 1 ở mục 8 đã điền ngày 20/10.</td>
     </tr>
     <tr>
       <td>P1-T06</td>
@@ -390,7 +390,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T05</td>
       <td><code>docs/stages/s1-preprocessing.md</code> có mục 6; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; <code>references.md</code> có phần S1</td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S1 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; phần S1 trong <code>references.md</code>.</td>
+      <td>Mục 6 tài liệu S1 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; phần S1 trong <code>references.md</code>.</td>
     </tr>
     <tr>
       <td>P3-T03</td>
@@ -398,7 +398,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T01, P3-T02, P3-T06, P3-T08, P3-T10</td>
       <td><code>docs/report/3.7-gpu-plan.md</code></td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/p3</code>, chờ merge vào <code>main</code>. <code>docs/report/3.7-gpu-plan.md</code> tổng hợp mapping V1 của 6 stage, ba ý tưởng tối ưu cho S2, S4, S6, rủi ro và cách kiểm chứng V1.</td>
+      <td><code>docs/report/3.7-gpu-plan.md</code> tổng hợp mapping V1 của 6 stage, ba ý tưởng tối ưu cho S2, S4, S6, rủi ro và cách kiểm chứng V1.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -423,7 +423,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T05</td>
       <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> có mục 6; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code></td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/shared-thanh-p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S2, S3 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code>.</td>
+      <td>Mục 6 tài liệu S2, S3 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code>.</td>
     </tr>
     <tr>
       <td>P3-T07</td>
@@ -431,7 +431,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T05</td>
       <td><code>docs/report/3.5-timing.md</code></td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/shared-thanh-p3</code>, chờ merge vào <code>main</code>. <code>docs/report/3.5-timing.md</code>: bảng timing 9 cấu hình, hot stage theo độ phân giải, p và 1/(1-p) cho S2 + S4 + S6.</td>
+      <td><code>docs/report/3.5-timing.md</code>: bảng timing 9 cấu hình, hot stage theo độ phân giải, p và 1/(1-p) cho S2 + S4 + S6.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -449,7 +449,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T04</td>
       <td>Run all thành công trên một phiên Colab T4 mới; không dùng <code>%%writefile</code>; notebook commit không kèm output</td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/shared-chuong-p3</code>, chờ merge vào <code>main</code>. Notebook lấy <code>src/</code> upload qua panel Files và <code>Group16_support.zip</code> (dataset, <code>scripts/</code>, <code>tests/</code>, ảnh nguồn synthetic) từ Drive chung; benchmark gọi <code>scripts/run_benchmark.py</code>, Amdahl tính cho S2 + S4 + S6. Run all trên Colab T4 ngày 21/10 đạt mọi kiểm tra tự động: build, test, 6 cặp synthetic, 4 panorama, benchmark 9 cấu hình. Notebook commit không kèm output. Hướng dẫn chạy ở <a href="notebook-guide.md">notebook-guide</a>.</td>
+      <td>Notebook lấy <code>src/</code> upload qua panel Files và <code>Group16_support.zip</code> (dataset, <code>scripts/</code>, <code>tests/</code>, ảnh nguồn synthetic) từ Drive chung; benchmark gọi <code>scripts/run_benchmark.py</code>, Amdahl tính cho S2 + S4 + S6. Run all trên Colab T4 ngày 21/10 đạt mọi kiểm tra tự động: build, test, 6 cặp synthetic, 4 panorama, benchmark 9 cấu hình. Notebook commit không kèm output. Hướng dẫn chạy ở <a href="notebook-guide.md">notebook-guide</a>.</td>
     </tr>
     <tr>
       <td>P3-T10</td>
@@ -457,7 +457,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T05</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; <code>references.md</code> có phần S6</td>
       <td>Xong</td>
-      <td>Nhánh <code>tuan/shared-chuong-p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; phần S6 trong <code>references.md</code>. Phân tích panorama và crop dựa trên lần Run all ngày 21/10.</td>
+      <td>Mục 6 tài liệu S6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; phần S6 trong <code>references.md</code>. Phân tích panorama và crop dựa trên lần Run all ngày 21/10.</td>
     </tr>
   </tbody>
 </table>

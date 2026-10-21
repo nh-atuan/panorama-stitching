@@ -1,6 +1,6 @@
 # S1 - Preprocessing
 
-Người phụ trách: Tuấn. Cập nhật lần cuối: 18/10.
+Người phụ trách: Tuấn. Cập nhật lần cuối: 21/10.
 
 S1 nhận ảnh màu đã đọc bằng stb, chuyển sang ảnh xám rồi làm mượt để giảm nhiễu trước khi S2 tìm keypoint, theo mô tả của [đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md) mục 2.1. S1 chạy độc lập trên từng ảnh của cặp.
 
@@ -170,7 +170,57 @@ nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror -I src src/v0_p
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
-Chưa viết.
+### 6.1 Căn cứ từ benchmark V0
+
+Số đo do Thành chạy ngày 20/10 trong một phiên Colab Tesla T4 (CPU Intel Xeon @ 2.00GHz), một lần warm-up rồi `--runs 5`. Bảng lấy hàng `average` trong `results/p3-t04/benchmark/summary.csv` (nhánh `thanh/p3-results`). Thời gian S1 gồm cả hai ảnh A và B.
+
+| Site | Kích thước | S1 (ms) | Tỷ trọng trong Total |
+|---|---|---:|---:|
+| site1 | small | 30.551 | 2.8% |
+| site1 | medium | 69.432 | 4.2% |
+| site1 | large | 305.414 | 6.8% |
+| site2 | small | 30.111 | 2.7% |
+| site2 | medium | 69.875 | 4.3% |
+| site2 | large | 278.694 | 6.1% |
+| site3 | small | 29.868 | 4.0% |
+| site3 | medium | 67.999 | 5.2% |
+| site3 | large | 280.722 | 8.0% |
+
+Trung bình tỷ trọng trên ba site là 3.2% ở small, 4.6% ở medium và 7.0% ở large. S1 không phải hot stage ở cấu hình nào. Thời gian S1 gần như tỷ lệ với số pixel: medium có 2.25 lần số pixel của small và S1 chậm hơn khoảng 2.3 lần; large có 9 lần số pixel và S1 chậm hơn khoảng 9.3 đến 10 lần. Ba site cho thời gian gần bằng nhau ở cùng kích thước vì khối lượng việc của S1 không phụ thuộc nội dung ảnh. Tỷ trọng tăng theo độ phân giải vì S4 gần như không đổi theo kích thước (số descriptor bị chặn ở 2000), trong khi S1 tăng theo pixel.
+
+### 6.2 Mapping V1 cơ bản
+
+Cả ba lượt của S1 đều là phép tính độc lập trên từng pixel, nên mapping đơn giản là một thread cho một pixel output. V1 dùng ba kernel, theo đúng ba lượt ở mục 4:
+
+| Kernel | Một thread làm gì | Đọc | Ghi |
+|---|---|---|---|
+| Grayscale | Pixel `(x, y)`: đọc 3 byte RGB, tính `(0.299R + 0.587G + 0.114B) / 255` | Ảnh RGB `uint8` trên Device | `output` `float` |
+| Blur ngang | Pixel `(x, y)`: cộng `2r+1` tap theo thứ tự `k = -r..r`, chỉ số x clamp vào `[0, W-1]` | `output` | `temp` |
+| Blur dọc | Pixel `(x, y)`: cộng `2r+1` tap theo thứ tự `k = -r..r`, chỉ số y clamp vào `[0, H-1]` | `temp` | `output` |
+
+- Grid 2D, block ban đầu 32×8 thread để một warp đọc 32 pixel liên tiếp trên cùng hàng. 256 thread mỗi block nằm trong khoảng 128–256 mà CUDA C++ Best Practices Guide (mục 11.3) gợi ý để bắt đầu thử. Kích thước block là cấu hình để đo lại, không phải tham số của phương pháp.
+- Trọng số kernel (tối đa 33 giá trị vì `r ≤ 16`) vẫn sinh trên Host bằng `src/gaussian_kernel.cpp` như V0, rồi chép vào constant memory. Ở mỗi bước cộng, mọi thread trong warp đọc cùng một trọng số; theo mục 10.2.6 của cùng tài liệu, khi cả warp đọc cùng một địa chỉ thì constant memory nhanh gần bằng register.
+- Thread nằm ngoài ảnh (khi W hoặc H không chia hết cho kích thước block) chỉ thoát, không ghi gì.
+- Ảnh RGB được chép từ Host lên Device một lần cho mỗi ảnh. `output` ở lại trên Device để S2 dùng tiếp, không chép về Host giữa các stage.
+- V1 dùng global memory cho cả ba lượt. Thứ tự cộng trong mỗi pixel giữ như V0, build với `--fmad=false` khi đối chiếu để chênh lệch chỉ đến từ làm tròn `float`.
+
+S3 dùng lại blur của S1 (`gaussian_blur_in_place` với σ = 2, r = 4), nên hai kernel blur viết theo tham số `r` và trọng số truyền vào để S3 dùng chung.
+
+### 6.3 Hướng tối ưu V2/V3 và rủi ro
+
+S1 chỉ chiếm 3–8% thời gian V0 nên không thuộc nhóm stage ưu tiên tối ưu (S2, S4, S6). Các ý tưởng dưới đây chỉ làm khi profiling V1 cho thấy S1 hoặc phần truyền dữ liệu của S1 đáng kể:
+
+1. **Shared memory tile có halo cho blur.** Mỗi block nạp một tile cùng `r` pixel halo mỗi phía vào shared memory, các thread đọc tap từ đó thay vì đọc lại global memory `2r+1` lần. Rủi ro: với `r = 3`, halo nhỏ nên lợi ích có thể thấp; phải đo trước khi giữ.
+2. **Gộp grayscale với blur ngang.** Đề cuối kỳ gợi ý kernel fusion grayscale + blur. Một kernel đọc RGB, tính giá trị xám cho cả vùng halo rồi blur ngang luôn, bỏ một lượt ghi và đọc lại `output`. Thứ tự cộng vẫn phải giữ như V0.
+3. **Xử lý hai ảnh song song và pinned memory.** A và B độc lập ở S1, có thể chạy trên hai CUDA stream; chép RGB từ pinned memory để chồng việc chép ảnh này với tính toán ảnh kia.
+
+Rủi ro chính: S1 bị giới hạn bởi băng thông bộ nhớ. Ở large, mỗi ảnh RGB khoảng 24.9 MB phải chép lên Device, nên thời gian chép có thể lớn hơn thời gian kernel. Chi phí này cần đo riêng thay vì chỉ báo thời gian kernel. V0 cấp phát `temp` trong mỗi lần gọi; V1 cần ghi rõ việc cấp phát Device nằm trong hay ngoài vùng đo của S1.
+
+### 6.4 Kiểm chứng V1
+
+Chạy lại các test ở mục 7 với output của V1: ảnh hằng, ảnh một màu, điểm sáng, ảnh ngẫu nhiên nhiều kích thước và nhiều cặp (σ, r), ảnh nhỏ hơn bán kính, ảnh có kích thước không chia hết cho block. Sai lệch tuyệt đối lớn nhất so với V0 phải ≤ 1e-5 (mục 3). Sau đó so output S1 của V1 với V0 trên ảnh dataset ở cả ba kích thước, rồi chạy toàn pipeline và bộ cặp synthetic ở mục 5.5 của tài liệu S5.
+
+Thời gian S1 trên GPU đo bằng CUDA events quanh ba kernel, có đồng bộ trước khi đọc kết quả; thời gian chép ảnh RGB lên Device ghi thành một cột riêng. Chưa có kernel hay số đo speedup nào của S1.
 
 ## 7. Kiểm thử
 
@@ -240,13 +290,16 @@ Ghi chú:
 - S1 chỉ kiểm tra được stride và kích thước, không kiểm tra được buffer thực sự có đủ `stride * height` byte. Việc đó thuộc bên gọi.
 - Mọi lỗi đầu vào trả về trước khi ghi vào `output`. Khi cả ảnh và config sai, trả `InvalidImage`.
 - Ở 4K cùng σ = 1.0 làm ảnh mượt ít hơn theo tỉ lệ nội dung so với 720p; số keypoint có thể khác nhau giữa các kích thước.
-- S1 là stage bị giới hạn bởi băng thông bộ nhớ; chưa có số đo.
+- S1 là stage bị giới hạn bởi băng thông bộ nhớ. Số đo V0 ngày 20/10 ở mục 6.1: S1 chiếm 3–8% thời gian và tăng gần tỷ lệ với số pixel.
 
 ## 9. Nguồn tham khảo
 
 | Nguồn | Ngày truy cập | Dùng cho phần nào |
 |---|---|---|
 | [Đề cuối kỳ CSC14120](../specs/CSC14120_2026_Final%20Project.md), mục 2.1 và 2.2 | 07/10 | Mục 1 |
+| [Đề cuối kỳ CSC14120](../specs/CSC14120_2026_Final%20Project.md), phần tối ưu ở mức pipeline (kernel fusion grayscale + blur, pinned memory, CUDA stream) | 21/10 | Mục 6.3 |
+| [ITU-R Recommendation BT.601-7 (03/2011)](https://www.itu.int/rec/R-REC-BT.601) | 21/10 | Hệ số đổi ảnh xám ở mục 1.1 |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html), mục 9.1.2, 10.1.1, 10.1.2, 10.2.1, 10.2.3, 10.2.6, 11.3 | 21/10 | Mục 6: CUDA events, pinned memory, chồng truyền dữ liệu với tính toán, coalescing, shared memory, constant memory, kích thước block |
 
 ## 10. Lịch sử thay đổi tham số
 

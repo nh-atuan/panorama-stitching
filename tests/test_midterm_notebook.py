@@ -1,4 +1,4 @@
-# Authors: Thanh Chuong (23120195)
+# Authors: Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
 # External source: none
 
 """Offline checks of notebook structure, evidence parsing, and dataset integrity.
@@ -181,10 +181,15 @@ class ReproducibilityTests(unittest.TestCase):
             overlap_box("missing diagnostics", 4, 3, 4, 3)
 
 
+NOTEBOOK = ROOT / "Group16_Midterm.ipynb"
+
+
+# The Colab workspace holds src/, scripts/, tests/ and data, not the notebook file itself.
+@unittest.skipUnless(NOTEBOOK.is_file(), "notebook file is not part of this workspace")
 class NotebookTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.notebook = json.loads((ROOT / "Group16_Midterm.ipynb").read_text(encoding="utf-8"))
+        cls.notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
 
     def test_code_cells_compile_and_are_clean(self):
         ids = []
@@ -208,12 +213,31 @@ class NotebookTests(unittest.TestCase):
             if line.startswith("#"):
                 self.assertTrue(all(ord(character) < 128 or character in "—·" for character in line), line)
 
-    def test_pending_benchmark_is_not_claimed_complete(self):
+    def configuration_value(self, name):
         by_id = {cell["id"]: "".join(cell["source"]) for cell in self.notebook["cells"]}
-        self.assertIn("BENCHMARK_ARGS = None", by_id["configuration"])
+        for node in ast.parse(by_id["configuration"]).body:
+            if isinstance(node, ast.Assign) and any(
+                    isinstance(target, ast.Name) and target.id == name for target in node.targets):
+                return ast.literal_eval(node.value)
+        self.fail(f"{name} is not assigned in the configuration cell")
+
+    def test_benchmark_arguments_match_runner(self):
+        from run_benchmark import parse_args
+        arguments = self.configuration_value("BENCHMARK_ARGS")
+        values = {"stitch": "build/stitch", "dataset": "dataset", "runs": "5", "out": "results/b"}
+        parsed = parse_args([argument.format(**values) for argument in arguments])
+        self.assertEqual((str(parsed.stitch), str(parsed.dataset), parsed.runs, str(parsed.out)),
+                         (str(Path("build/stitch")), "dataset", 5, str(Path("results/b"))))
+
+    def test_accelerated_stages_follow_team_decision(self):
+        self.assertEqual(self.configuration_value("ACCELERATED_STAGES"), [2, 4, 6])
+
+    def test_benchmark_and_readiness_are_not_claimed_in_advance(self):
+        by_id = {cell["id"]: "".join(cell["source"]) for cell in self.notebook["cells"]}
         self.assertIn("BENCHMARK_EXECUTED = False", by_id["benchmark-integration"])
         self.assertIn("not ready", by_id["readiness"])
         self.assertIn("source_manifest(PROJECT) == SOURCE_HASHES", by_id["readiness"])
+        self.assertIn("src/ comes only from the submission", by_id["workspace"])
 
 
 if __name__ == "__main__":

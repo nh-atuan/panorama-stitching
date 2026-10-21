@@ -1,6 +1,6 @@
 # S6 - Warping and blending
 
-Người phụ trách: Chương (23120195). Cập nhật lần cuối: 18/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7.
+Người phụ trách: Chương (23120195). Cập nhật lần cuối: 21/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7.
 
 Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark. Ngày 18/10/2026 test S6 đạt trên Colab T4 và S6 ra panorama cho cả 4 cặp của dataset ở 3 kích thước (mục 5, 7).
 
@@ -453,17 +453,56 @@ Chất lượng dataset cần xem cả panorama và crop overlap ở độ phân
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
-Định hướng P0: một thread xử lý một pixel canvas; các pixel không cần ghi chung vị trí. V1 dùng global memory và bilinear tự tính theo cùng công thức V0. Mapping chi tiết được viết ở P3 sau khi có số đo theo [bảng task](../task-board.md).
+### 6.1. Căn cứ từ benchmark V0
 
-Phần tính canvas/inverse và kiểm tra H cũng phải được tính đến trong thiết kế V1 để đáp ứng yêu cầu các stage chạy trên GPU. Không chỉ chuyển vòng lặp lớn rồi mô tả toàn bộ S6 đã chạy GPU; nếu có host allocation/đọc metadata phải nêu rõ và đo phần liên quan. Phân chia kernel/setup cụ thể chưa chốt.
+Số đo do Thành chạy ngày 20/10/2026 trong một phiên Colab Tesla T4 (CPU Intel Xeon @ 2.00GHz), một lần warm-up rồi `--runs 5`. Bảng lấy hàng `average` trong `results/p3-t04/benchmark/summary.csv` (nhánh `thanh/p3-results`); kích thước canvas lấy từ log `--debug` cùng lần chạy. Cột cuối là thời gian S6 chia cho số pixel canvas.
 
-| Ý tưởng có thể khảo sát sau profiling | Bằng chứng cần có trước khi chọn | Điều kiện giữ correctness |
+| Site | Kích thước | S6 (ms) | Tỷ trọng trong Total | Canvas | ns / pixel canvas |
+|---|---|---:|---:|---|---:|
+| site1 | small | 121.577 | 11.0% | 2420×971 | 51.7 |
+| site1 | medium | 296.588 | 17.7% | 3692×1496 | 53.7 |
+| site1 | large | 1273.371 | 28.4% | 7399×3028 | 56.8 |
+| site2 | small | 196.378 | 17.6% | 2732×1426 | 50.4 |
+| site2 | medium | 454.659 | 28.1% | 4162×2148 | 50.9 |
+| site2 | large | 1983.117 | 43.6% | 8477×4507 | 51.9 |
+| site3 | small | 152.952 | 20.5% | 2356×1241 | 52.3 |
+| site3 | medium | 332.342 | 25.3% | 3558×1791 | 52.2 |
+| site3 | large | 1315.008 | 37.6% | 7008×3453 | 54.3 |
+
+Trung bình tỷ trọng trên ba site là 16.4% ở small, 23.7% ở medium và 36.5% ở large. S6 là hot stage ở site2 và site3 large. Thời gian mỗi pixel canvas gần như không đổi (50.4 đến 56.8 ns), nên thời gian S6 tỷ lệ với diện tích canvas chứ không với diện tích ảnh vào. Canvas lớn hơn nhiều so với tổng hai ảnh khi B bị chiếu phối cảnh mạnh: ở site2 large, canvas khoảng 38 triệu pixel trong khi mỗi ảnh vào có khoảng 8.3 triệu pixel. S6 thuộc nhóm stage ưu tiên tối ưu (S2, S4, S6).
+
+V0 làm bốn việc trong vùng đo: nghịch đảo H và tính canvas (chi phí hằng), cấp phát và xóa về 0 buffer output, chép A vào canvas, rồi duyệt mọi pixel canvas để gather B và blend. Ba việc sau tăng theo diện tích canvas.
+
+### 6.2. Mapping V1 cơ bản
+
+| Bước | Công việc trên GPU | Ghi chú |
 |---|---|---|
-| Fusion warp/validity/blend nếu V1 lưu buffer trung gian | Chi phí launch hoặc đọc/ghi intermediate chiếm đáng kể | Giữ cùng mẫu, trọng số và round |
+| Setup | Một kernel một thread: chuẩn hóa H, nghịch đảo bằng scaled partial pivoting, kiểm tra điều kiện, chiếu bốn góc B, tính canvas và offset. Dùng cùng code `double` như V0 dưới dạng hàm `__host__ __device__` | Host phải đọc lại kích thước canvas để cấp phát output; đây là một điểm đồng bộ, được đo trong S6 |
+| Xóa canvas | `cudaMemset` buffer output về 0 | Giống `new uint8_t[bytes]()` của V0 |
+| Chép A | Một thread cho một pixel A, ghi 3 byte vào canvas tại `(x + offset_x, y + offset_y)` | A đã nằm trên Device từ S1 |
+| Gather B và blend | Grid 2D phủ canvas, một thread cho một pixel canvas: chiếu `(xa, ya)` bằng `H⁻¹` với cùng thứ tự `fma` như V0, kiểm tra validity, bilinear 4 mẫu của B, blend 50/50 với giá trị A đã có, làm tròn half-up rồi ghi | Mỗi pixel canvas chỉ do một thread ghi, không cần atomic |
+
+- Block ban đầu 32×8 thread để một warp ghi 32 pixel liên tiếp trên một hàng canvas. Kích thước block là cấu hình để đo lại.
+- Pixel không có nguồn B hợp lệ thoát sớm và giữ giá trị A hoặc nền, như V0. Warp nằm trên biên footprint của B sẽ bị divergence.
+- Đọc 4 mẫu của B là gather theo phép chiếu nên không coalesce hoàn toàn; các thread kề nhau đọc vùng nguồn gần nhau nên L1/L2 cache giúp được một phần.
+- V1 giữ `double` như V0 để kết quả giống V0. Trên T4 (compute capability 7.5), throughput phép cộng, nhân, FMA 64 bit chỉ là 2 kết quả mỗi chu kỳ mỗi multiprocessor, so với 64 cho 32 bit [R10, mục 12.1.1, bảng 5]. Đây là rủi ro hiệu năng chính của S6 trên T4. Đổi sang `float` là đổi phương pháp tính, phải cả Nhóm quyết định và áp dụng cho cả V0.
+- Panorama ở site2 large khoảng 114 MB RGB. Chép output về Host để ghi file nằm ngoài vùng đo theo quy định đo thời gian, nhưng vẫn cần ghi lại riêng khi so sánh end-to-end.
+
+### 6.3. Hướng tối ưu V2/V3 và rủi ro
+
+1. **Gộp xóa canvas, chép A và gather B vào một kernel.** Mỗi thread tự quyết định giá trị cuối của pixel: nền, A, B hoặc trung bình, đọc A trực tiếp từ ảnh A thay vì từ canvas. Mỗi pixel canvas chỉ ghi một lần, bỏ được `cudaMemset`, kernel chép A và lượt đọc lại canvas. `has_a` vẫn xác định bằng hình học như V0 nên kết quả không đổi.
+2. **Chỉ gather trong bounding box footprint của B.** Phần canvas ngoài bounding box của bốn góc B đã chiếu chỉ có A hoặc nền, không cần chiếu và nội suy. Ở canvas lớn như site2 large, phần này đáng kể. Pixel trong box vẫn kiểm tra validity như V0.
+3. **Giảm phép tính `double`.** Trong `project`, các số hạng `fma(m[1], y, m[2])`, `fma(m[4], y, m[5])`, `fma(m[7], y, m[8])` chỉ phụ thuộc hàng; tính một lần mỗi hàng (ví dụ lưu trong shared memory cho block) rồi dùng lại cho mọi pixel trên hàng. Kết quả giống từng bit vì cùng phép toán và cùng thứ tự.
+
+Các ý tưởng có điều kiện khác, chỉ khảo sát khi profiling chỉ ra nguyên nhân cụ thể:
+
+| Ý tưởng | Bằng chứng cần có trước khi chọn | Điều kiện giữ correctness |
+|---|---|---|
 | Texture point fetch + bilinear tự tính | Gather/source access là bottleneck | Giữ quy ước tọa độ và layout, tính cả chi phí packing/copy |
 | Đổi block shape hoặc work-per-thread | Register/occupancy/throughput cho thấy hạn chế cụ thể | Không bỏ pixel, không thay precision tùy tiện |
+| Pinned memory và chép panorama theo từng dải hàng trên CUDA stream | Chép output về Host chiếm đáng kể khi so end-to-end | Không đổi nội dung output |
 
-Không gán trước ý tưởng nào vào V2/V3 của toàn pipeline; đề yêu cầu mỗi phiên bản có một ý tưởng chính đo được. Shared memory không mặc nhiên giúp gather projective vì vùng nguồn có thể không khớp tile.
+Đề yêu cầu mỗi phiên bản có một ý tưởng chính đo được, nên chưa gán ý tưởng nào vào V2 hay V3 trước khi có profiling V1. Shared memory không mặc nhiên giúp gather projective vì vùng nguồn có thể không khớp tile.
 
 Hardware texture bilinear chỉ là ứng viên có điều kiện: NVIDIA nêu trọng số nội suy có 8 bit phần lẻ và quy ước tọa độ x-0.5, y-0.5 [R9, mục 15.2]. Với tâm pixel nguyên của S6, texture không normalized cần chuyển đúng half-texel. Không hứa kết quả bit-identical với bilinear số thực tự tính. Nếu dùng, cần ngưỡng consistency đã chốt, kiểm thử mask/biên và tính chi phí tài nguyên; không tự dùng `--use_fast_math` như thay thế miễn phí.
 
@@ -563,6 +602,8 @@ Nhận xét chất lượng/hiệu năng từ paper được giữ trong bối c
 | R7 | Chen, KuanYan, Garg, Atik, & Wang, Yu-Shuen. (2024). *Seamless-through-breaking: Rethinking image stitching for optimal alignment*. ACCV, 4352–4367. [CVF](https://openaccess.thecvf.com/content/ACCV2024/html/Chen_Seamless-Through-Breaking_Rethinking_Image_Stitching_for_Optimal_Alignment_ACCV_2024_paper.html). 12/10/2026 | Metadata/abstract từ CVF; tham khảo để phân biệt optical-flow/inpainting với global H, không chuyển số đo hay cam kết của phương pháp sang Nhóm |
 | R8 | Kim, Minsu, Lee, Jaewon, Lee, Byeonghun, Im, Sunghoon, & Jin, Kyong Hwan. (2024). *Implicit neural image stitching with enhanced and blended feature reconstruction*. WACV, 4087–4096. [CVF](https://openaccess.thecvf.com/content/WACV2024/html/Kim_Implicit_Neural_Image_Stitching_With_Enhanced_and_Blended_Feature_Reconstruction_WACV_2024_paper.html). 12/10/2026 | Đọc metadata/abstract và phần phương pháp được primary PDF search trả về; related work, không triển khai mô hình |
 | R9 | NVIDIA. *CUDA C Programming Guide*, CUDA 12.5, mục 15.1–15.2. [Texture fetching](https://docs.nvidia.com/cuda/archive/12.5.0/cuda-c-programming-guide/index.html#texture-fetching). 12/10/2026 | Đọc quy tắc point/linear filtering, half-texel và độ chính xác weights. Phiên bản toolkit thực tế trên Colab cần in khi triển khai |
+| R10 | NVIDIA. *CUDA C++ Best Practices Guide*, CUDA 13.0. [HTML](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html). 21/10/2026 | Mục 12.1.1 (bảng 5, throughput phép tính 32 bit và 64 bit theo compute capability), 10.1.1–10.1.2 (pinned memory, chồng truyền dữ liệu với tính toán), 9.1.2 (CUDA events); dùng cho mục 6 |
+| R11 | Benchmark V0 ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv` và log `--debug` trên nhánh `thanh/p3-results`. 21/10/2026 | Thời gian, tỷ trọng S6 và kích thước canvas ở mục 6.1 |
 
 ### 9.2. Trích dẫn chưa dùng làm căn cứ trực tiếp
 
@@ -578,3 +619,4 @@ Lượt 12/10 chọn phương pháp sơ bộ; 13/10 chốt tham số và cài b�
 |---|---|---|
 | 13/10/2026 | Bản cài chuyển feather sang average 50/50; S6 cấp phát output và caller nhận ownership khi thành công | Yêu cầu coding mới của Chương; các phiên bản so sánh sau này phải cùng phương pháp |
 | 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và panorama trên dataset | Nghiệm thu P1-T17 |
+| 21/10/2026 | Không đổi tham số. Viết mục 6 dựa trên benchmark V0 ngày 20/10 | P3-T10 |

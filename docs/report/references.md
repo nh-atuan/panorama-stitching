@@ -63,3 +63,16 @@ Người tổng hợp: Tuấn (23120185), làm thay Thành ở P1. Ngày truy c�
 | [Rublee, E., Rabaud, V., Konolige, K., Bradski, G. (2011). ORB: an efficient alternative to SIFT or SURF](https://doi.org/10.1109/ICCV.2011.6126544), ICCV | S2/S3: phương án xếp hạng Harris và rotated BRIEF, patch 31×31 | Dùng cho phần phương án đã cân nhắc |
 | [OpenCV 4.x, `features2d.hpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/include/opencv2/features2d.hpp) và [`orb.cpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/src/orb.cpp) | S2: ngưỡng FAST mặc định 10 (FAST) và 20 (ORB); S3: ORB làm mượt Gaussian 7×7, σ = 2 | Đọc khai báo `create` và dòng `GaussianBlur`; không thêm OpenCV vào chương trình |
 | [Vigna, S. SplitMix64 reference](https://prng.di.unimi.it/splitmix64.c) | S3: bộ sinh số ngẫu nhiên cho pattern | Chuyển sang Python trong công cụ sinh pattern |
+
+## S6 - Chương
+
+Người tổng hợp: Chương (23120195). Code S6 (`src/v0_warp_blend.cpp`) do Nhóm tự viết từ contract và mã giả trong tài liệu S6, không chép code ngoài. Danh mục đầy đủ và mức kiểm chứng của từng nguồn nằm ở mục 9 [tài liệu S6](../stages/s6-warp-blend.md#9-nguồn-tham-khảo).
+
+| Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
+|---|---|---|
+| [Szeliski, R. Image alignment and stitching: A tutorial](https://doi.org/10.1561/0600000009), Foundations and Trends in Computer Graphics and Vision 2(1) | S6: hệ quy chiếu, resampling, compositing | Mục 6 bản technical report; truy cập 12/10/2026 |
+| [Brown, M., Lowe, D. G. (2007). Automatic panoramic image stitching using invariant features](https://www.cs.ubc.ca/~lowe/papers/07brown.pdf), IJCV 74 | S6: so sánh linear blending và multi-band, giới hạn khi có vật chuyển động | Mục 6–7 và 9; truy cập 12/10/2026 |
+| [Burt, P. J., Adelson, E. H. (1983). A multiresolution spline with application to image mosaics](https://doi.org/10.1145/245.247), ACM TOG 2(4) | S6: nguồn gốc multi-band blending (phương án không chọn) | Tên và abstract; chưa đọc toàn văn |
+| [NVIDIA CUDA C Programming Guide 12.5, texture fetching](https://docs.nvidia.com/cuda/archive/12.5.0/cuda-c-programming-guide/index.html#texture-fetching) | S6 mục 6: giới hạn độ chính xác của bilinear phần cứng | Mục 15.1–15.2; truy cập 12/10/2026 |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html) | S6 mục 6: throughput phép tính 64 bit trên compute capability 7.5, pinned memory, CUDA events | Mục 12.1.1 (bảng 5), 10.1.1–10.1.2, 9.1.2; truy cập 21/10/2026 |
+| Benchmark V0 ngày 20/10/2026 (`results/p3-t04/` trên nhánh `thanh/p3-results`) và lần Run all notebook ngày 21/10/2026 | S6 mục 6.1, báo cáo 3.5 panorama | Thời gian S6, kích thước canvas, panorama và crop |

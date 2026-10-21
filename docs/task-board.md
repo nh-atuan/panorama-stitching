@@ -380,8 +380,8 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Chốt các stage đưa lên GPU và phân công V1-V3 dựa trên số đo</td>
       <td>P3-T05</td>
       <td>Quyết định ghi vào mục "Quyết định đã chốt"; bảng phân công ở mục 2 của <a href="midterm-plan.md">kế hoạch</a> được cập nhật nếu có thay đổi</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Quyết định ngày 21/10 ghi ở mục "Quyết định đã chốt". Phân công V1-V3 giữ như mục 2 của kế hoạch.</td>
     </tr>
     <tr>
       <td rowspan="2">Tuấn</td>
@@ -389,16 +389,16 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Viết mục 6 của tài liệu S1; viết mục 3.1 và phần S1 của mục 3.3 của báo cáo giữa kỳ vào <code>docs/report/</code>; thêm nguồn của S1 vào <code>docs/report/references.md</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s1-preprocessing.md</code> có mục 6; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; <code>references.md</code> có phần S1</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S1 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.1-team-plan.md</code>, <code>docs/report/3.3-s1-preprocessing.md</code>; phần S1 trong <code>references.md</code>.</td>
     </tr>
     <tr>
       <td>P3-T03</td>
       <td>Viết mục 3.7 (kế hoạch GPU) của báo cáo giữa kỳ vào <code>docs/report/</code>, tổng hợp từ mục 6 của 6 tài liệu stage</td>
       <td>P3-T01, P3-T02, P3-T06, P3-T08, P3-T10</td>
       <td><code>docs/report/3.7-gpu-plan.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/p3</code>, chờ merge vào <code>main</code>. <code>docs/report/3.7-gpu-plan.md</code> tổng hợp mapping V1 của 6 stage, ba ý tưởng tối ưu cho S2, S4, S6, rủi ro và cách kiểm chứng V1.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -406,32 +406,32 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Viết script benchmark V0 <code>scripts/run_benchmark.py</code> và test</td>
       <td>P2-T01</td>
       <td>Script chạy <code>stitch</code> cho 3 site × 3 kích thước theo <a href="midterm-plan.md#12-quy-định-đo-thời-gian-v0">mục 12 của kế hoạch</a> (warm-up, <code>--runs 5</code>), in tên GPU và CPU, gom CSV, xuất bảng trung bình và nhỏ nhất của từng stage; test đạt trên Colab</td>
-      <td>Chờ review</td>
-      <td>Nhánh thanh/p3, PR #14. Colab T4 20/10: build bằng <code>nvcc -arch=sm_75</code>, <code>tests/test_run_benchmark.py</code> 10 test đạt, test notebook 16 test đạt; chạy đủ 9 cấu hình với <code>--runs 5</code>. Giao diện <code>--stitch --dataset --runs --out</code>, ghi <code>&lt;out&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> đúng layout adapter của notebook, kèm <code>summary.csv</code>, <code>summary.md</code>, <code>environment.json</code>.</td>
+      <td>Xong</td>
+      <td>Nhánh thanh/p3, đã merge PR #14 ngày 21/10. Colab T4 20/10: build bằng <code>nvcc -arch=sm_75</code>, <code>tests/test_run_benchmark.py</code> 10 test đạt, test notebook 16 test đạt; chạy đủ 9 cấu hình với <code>--runs 5</code>. Giao diện <code>--stitch --dataset --runs --out</code>, ghi <code>&lt;out&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> đúng layout adapter của notebook, kèm <code>summary.csv</code>, <code>summary.md</code>, <code>environment.json</code>.</td>
     </tr>
     <tr>
       <td>P3-T05</td>
       <td>Chạy benchmark chính thức, xác định hot stage và tính giới hạn Amdahl</td>
       <td>P3-T04</td>
       <td>Bảng timing ở 3 kích thước và biểu đồ theo stage sinh từ CSV, đo trong cùng một phiên Colab T4; nêu hot stage và cách nó thay đổi theo độ phân giải; <code>p</code> và <code>1/(1-p)</code> tính bằng code</td>
-      <td>Chờ review</td>
-      <td>Nhánh thanh/p3, PR #14. Số đo trong một phiên Colab T4 ngày 20/10 (Tesla T4, <code>--runs 5</code>, 9 cấu hình). <code>scripts/plot_benchmark.py</code> sinh từ <code>summary.csv</code> hai biểu đồ cột chồng theo stage (ms và % của Total), bảng hot stage, <code>p</code> và <code>1/(1-p)</code>; 8 test đạt trên Colab T4. Hot stage: S4 ở small và medium cả 3 site (trung bình 56,2% và 40,0%); ở large là S2 với site1, S6 với site2 và site3. Lần Run all cuối của notebook đo lại nên số trong lời văn báo cáo phải đối chiếu với output đó.</td>
+      <td>Xong</td>
+      <td>Nhánh thanh/p3, đã merge PR #14 ngày 21/10. Số đo trong một phiên Colab T4 ngày 20/10 (Tesla T4, <code>--runs 5</code>, 9 cấu hình). <code>scripts/plot_benchmark.py</code> sinh từ <code>summary.csv</code> hai biểu đồ cột chồng theo stage (ms và % của Total), bảng hot stage, <code>p</code> và <code>1/(1-p)</code>; 8 test đạt trên Colab T4. Hot stage: S4 ở small và medium cả 3 site (trung bình 56,2% và 40,0%); ở large là S2 với site1, S6 với site2 và site3. Lần Run all cuối của notebook đo lại nên số trong lời văn báo cáo phải đối chiếu với output đó.</td>
     </tr>
     <tr>
       <td>P3-T06</td>
       <td>Viết mục 6 của tài liệu S2, S3; viết phần S2, S3 của mục 3.3 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s2-detection.md</code>, <code>docs/stages/s3-description.md</code> có mục 6; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/shared-thanh-p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S2, S3 dựa trên benchmark V0 ngày 20/10; <code>docs/report/3.3-s2-detection.md</code>, <code>docs/report/3.3-s3-description.md</code>.</td>
     </tr>
     <tr>
       <td>P3-T07</td>
       <td>Viết phần timing, hot stage và Amdahl của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/report/3.5-timing.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/shared-thanh-p3</code>, chờ merge vào <code>main</code>. <code>docs/report/3.5-timing.md</code>: bảng timing 9 cấu hình, hot stage theo độ phân giải, p và 1/(1-p) cho S2 + S4 + S6.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -448,16 +448,16 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Dựng khung code của <code>Group16_Midterm.ipynb</code> theo <a href="midterm-plan.md#13-quy-định-notebook-báo-cáo">mục 13 của kế hoạch</a>: <code>nvidia-smi</code>, lấy <code>src/</code> từ Drive, build, chạy test, cặp synthetic, benchmark, panorama</td>
       <td>P3-T04</td>
       <td>Run all thành công trên một phiên Colab T4 mới; không dùng <code>%%writefile</code>; notebook commit không kèm output</td>
-      <td>Đang làm</td>
-      <td>Chương đã dựng 37 cell: đề mục tiếng Anh, Markdown tiếng Việt, code comment tiếng Anh; setup upload/Drive/existing, kiểm tra T4 và SHA-256 dataset, build nguồn thật, test S1–S6/CLI, 6 cặp synthetic, panorama/crop, adapter timing/Amdahl và readiness gate. Helper <code>scripts/midterm_notebook.py</code>; 16 test local đạt ngày 20/10, code cell biên dịch cú pháp đạt, notebook không output. Hướng dẫn tại <a href="notebook-guide.md">notebook-guide</a>. Chờ script/giao diện P3-T04 của Thành và Run all thực tế trên Colab T4; chưa đủ điều kiện chuyển Xong.</td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/shared-chuong-p3</code>, chờ merge vào <code>main</code>. Notebook lấy <code>src/</code> upload qua panel Files và <code>Group16_support.zip</code> (dataset, <code>scripts/</code>, <code>tests/</code>, ảnh nguồn synthetic) từ Drive chung; benchmark gọi <code>scripts/run_benchmark.py</code>, Amdahl tính cho S2 + S4 + S6. Run all trên Colab T4 ngày 21/10 đạt mọi kiểm tra tự động: build, test, 6 cặp synthetic, 4 panorama, benchmark 9 cấu hình. Notebook commit không kèm output. Hướng dẫn chạy ở <a href="notebook-guide.md">notebook-guide</a>.</td>
     </tr>
     <tr>
       <td>P3-T10</td>
       <td>Tạo panorama thu nhỏ của 3 site và cặp khó, phân tích chất lượng và trường hợp thất bại của cặp khó; viết mục 6 của tài liệu S6; viết phần S6 của mục 3.3, mục 3.4 và phần panorama của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code>; thêm nguồn của S6 vào <code>docs/report/references.md</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s6-warp-blend.md</code> có mục 6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; <code>references.md</code> có phần S6</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Nhánh <code>tuan/shared-chuong-p3</code>, chờ merge vào <code>main</code>. Mục 6 tài liệu S6; <code>docs/report/3.3-s6-warp-blend.md</code>, <code>docs/report/3.4-sequential-v0.md</code>, <code>docs/report/3.5-panoramas.md</code>; phần S6 trong <code>references.md</code>. Phân tích panorama và crop dựa trên lần Run all ngày 21/10.</td>
     </tr>
   </tbody>
 </table>
@@ -476,3 +476,5 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 18/10 | Nhóm đồng ý Tuấn làm thay toàn bộ task của Thành ở P0, P1 và phần còn lại của Đế, Chương trước P3; dòng `Authors:` ghi người thực sự viết. Thành xác nhận phương pháp và tham số S2, S3 như tài liệu stage |
 | 18/10 | Chương được miễn cặp chuẩn thứ hai theo dataset mục 2, vì bộ dataset đã chốt |
 | 18/10 | Ngưỡng sai số homography so với ground truth (P1-T01): RMSE ≤ 0.5 px và Max ≤ 1 px trên cả 6 cặp synthetic ở mục 5.5 tài liệu S5 |
+| 21/10 | P3-T01: V1 cài kernel cho cả 6 stage; V2, V3 ưu tiên tối ưu S2, S4, S6, ba stage chiếm nhiều thời gian nhất ở cả ba độ phân giải. Ước lượng Amdahl tính p cho S2 + S4 + S6; không tính cho cả 6 stage vì p gần bằng 1. Phân công V1-V3 giữ như mục 2 của kế hoạch |
+| 21/10 | Notebook không cần comment tác giả; yêu cầu ở mục 9.3 của kế hoạch chỉ áp dụng cho file code |

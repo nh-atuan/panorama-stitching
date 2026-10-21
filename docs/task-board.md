@@ -439,8 +439,8 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>Viết mục 6 của tài liệu S4, S5; viết phần S4, S5 của mục 3.3 và phần correctness của mục 3.5 của báo cáo giữa kỳ vào <code>docs/report/</code></td>
       <td>P3-T05</td>
       <td><code>docs/stages/s4-matching.md</code>, <code>docs/stages/s5-homography.md</code> có mục 6; <code>docs/report/3.3-s4-matching.md</code>, <code>docs/report/3.3-s5-homography.md</code>, <code>docs/report/3.5-correctness.md</code></td>
-      <td>Chưa làm</td>
-      <td>Sai số trên cặp synthetic đã có ở mục 5.5 tài liệu S5.</td>
+      <td>Xong</td>
+      <td>Đế hoàn thiện bản nháp ngày 21/10: mục 6 S4/S5 và ba file báo cáo 3.3-s4, 3.3-s5, 3.5-correctness. Mapping dựa trên benchmark V0 ngày 20/10; correctness bao gồm S1–S6, tích hợp và sáu cặp synthetic đã ghi nhận trên T4. Giữ nguyên code và tham số V0. Đủ đầu ra theo task và tiêu chí báo cáo tại mục 14 kế hoạch; chưa ghép notebook. P3-T05 vẫn chờ review; P3-T01 là quyết định chung chưa hoàn thành.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>

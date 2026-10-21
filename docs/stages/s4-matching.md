@@ -1,6 +1,6 @@
 # S4 - Matching
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 18/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và kết quả trên dataset ở mục 5, 7.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 21/10/2026; Đế viết mapping GPU P3-T08 từ benchmark scalar ngày 20/10. Tuấn (23120185) đã bổ sung kết quả Colab T4 ngày 18/10.
 
 Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
 
@@ -90,12 +90,12 @@ Nguồn của ratio test là [Lowe (2004), mục 7.1](https://www.cs.ubc.ca/~low
 Quy ước thuật toán đã chốt:
 
 - Forward: lấy hai ứng viên khác `indexB`, xếp theo khóa `(distance, indexB)`.
-- Ratio: ngưỡng cố định 0.80 = 4/5, kiểm tra chặt `5u * best_distance < 4u * second_distance`; không chia hoặc bình phương distance. Tích tối đa 1280, không tràn uint32.
+- Ratio: ngưỡng cố định $0.80=\frac45$, kiểm tra chặt `5u * best_distance < 4u * second_distance`; không chia hoặc bình phương distance. Tích tối đa 1280, không tràn uint32.
 - Không tìm NN chiều ngược, không cross-check, không áp ratio test chiều ngược và không ép uniqueness B.
 - Không thêm cutoff Hamming tuyệt đối hoặc giới hạn top-M ở lượt này.
 - Sau lọc, dưới 4 match trả `InsufficientMatches`, đúng yêu cầu chuẩn bị 4-point homography. Có 4 match chưa bảo đảm hình học không suy biến.
 
-Config vẫn lưu `match_ratio_threshold=0.80f`, nhưng method cố định dùng tỷ lệ nguyên 4/5 cho phép so sánh. Cách này tránh trường hợp chuyển 0.80f sang double làm cặp d1=8, d2=10 đi qua vì sai số biểu diễn threshold; cặp đúng tỷ lệ 0.80 phải bị loại. Không thay kiểu/layout Config. r khác 0.80f hoặc `match_cross_check=1` không hợp lệ cho pipeline đã chốt này. Nếu cần xem xét lại cấu hình sau kiểm thử, báo lại cho cả Nhóm để cùng quyết định, cập nhật đồng thời mọi version và đo lại; không thay đổi riêng bản CUDA hoặc tối ưu.
+Config vẫn lưu `match_ratio_threshold=0.80f`, nhưng method cố định dùng tỷ lệ nguyên $4/5$ cho phép so sánh. Cách này tránh trường hợp chuyển 0.80f sang double làm cặp $d_1=8$, $d_2=10$ đi qua vì sai số biểu diễn threshold; cặp đúng tỷ lệ 0.80 phải bị loại. Không thay kiểu/layout Config. r khác 0.80f hoặc `match_cross_check=1` không hợp lệ cho pipeline đã chốt này. Nếu cần xem xét lại cấu hình sau kiểm thử, báo lại cho cả Nhóm để cùng quyết định, cập nhật đồng thời mọi version và đo lại; không thay đổi riêng bản CUDA hoặc tối ưu.
 
 ## 4. Thuật toán chi tiết
 
@@ -138,9 +138,9 @@ Input null khi count dương, count âm, vượt miền `int32_t` hoặc kích t
 
 ### 4.3. Độ phức tạp
 
-Với nA, nB descriptor, mỗi cặp cần XOR và popcount 8 word. Thời gian tìm kiếm `O(8 * nA * nB)` khi word cố định; vòng popcount scalar có tối đa 32 lượt/word. Lọc output `O(nA)`. V0 có thể dùng top-two `O(1)` cho từng A, cộng output tối đa `O(nA)`; CUDA có thể dùng buffer top-two/keep flags `O(nA)`. Không cần reverse buffer hoặc ma trận `nA * nB`.
+Với $n_A,n_B$ descriptor, mỗi cặp cần XOR và popcount 8 word. Thời gian tìm kiếm $O(8n_A n_B)$ khi word cố định; vòng popcount scalar có tối đa 32 lượt/word. Lọc output $O(n_A)$. V0 có thể dùng top-two $O(1)$ cho từng A, cộng output tối đa $O(n_A)$; CUDA có thể dùng buffer top-two/keep flags $O(n_A)$. Không cần reverse buffer hoặc ma trận $n_A n_B$.
 
-Độ phân giải ảnh ảnh hưởng gián tiếp qua số keypoint còn lại sau S3; nếu max-keypoints cố định thì nA/nB không tăng theo toàn bộ số pixel. Phải in số descriptor khi phân tích timing S4.
+Độ phân giải ảnh ảnh hưởng gián tiếp qua số keypoint còn lại sau S3; nếu max-keypoints cố định thì $n_A$/$n_B$ không tăng theo toàn bộ số pixel. Phải in số descriptor khi phân tích timing S4.
 
 ## 5. Bằng chứng chất lượng
 
@@ -161,9 +161,54 @@ Cả 12 lần chạy đều ra panorama. Số match giảm khi ảnh lớn hơn 
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
-Phân tích sơ bộ: distance giữa các cặp descriptor có thể tính độc lập; top-two và compact output cần reduction/bước bổ sung. `__popc` là hướng CUDA được đề gợi ý cho Hamming. Không có lượt reverse search. V1 phải giữ khóa tie-break và output order của V0; compaction theo prefix-sum là một hướng giữ thứ tự.
+### 6.1. Căn cứ từ benchmark V0
 
-Mapping thread/warp/block cùng ý tưởng tối ưu sẽ chốt ở P3 sau khi có số đo, theo bảng công việc. Chưa tuyên bố occupancy, bottleneck hoặc speedup.
+V0 dùng vòng `bits &= bits - 1` để đếm bit, chạy đơn luồng. Số đo do Thành chạy ngày 20/10/2026 trong một phiên Colab Tesla T4, CPU Intel Xeon @ 2.00GHz; mỗi cấu hình warm-up một lần rồi đo năm lần. Bảng sau lấy hàng `average` của `results/p3-t04/benchmark/summary.csv`, tỷ trọng tính bằng $p_4=T_{S4}/T_{\mathrm{total}}$.
+
+| Site | Kích thước | S4 (ms) | Tỷ trọng trong Total |
+|---|---|---:|---:|
+| site1 | small | 682.458 | 61.6% |
+| site1 | medium | 677.294 | 40.5% |
+| site1 | large | 671.092 | 15.0% |
+| site2 | small | 673.140 | 60.4% |
+| site2 | medium | 668.359 | 41.4% |
+| site2 | large | 664.157 | 14.6% |
+| site3 | small | 346.234 | 46.4% |
+| site3 | medium | 499.615 | 38.0% |
+| site3 | large | 430.840 | 12.3% |
+
+Trung bình cộng tỷ trọng trên ba site là 56.2% ở small, 40.0% ở medium và 14.0% ở large. S4 là hot stage ở cả ba site với small/medium; ở large, hot stage chuyển sang S2 tại site1 và S6 tại site2/site3. S4 phù hợp để ưu tiên triển khai CUDA, nhưng cải thiện riêng S4 không giải quyết toàn bộ thời gian ở large. Đây là đầu vào cho quyết định chung P3-T01, không thay quyết định của cả Nhóm.
+
+Ở site1/site2, log ghi S3 giữ 2000 descriptor mỗi ảnh tại cả ba kích thước. Khi đó S4 xét 4 triệu cặp, bất kể số pixel; điều này giải thích thời gian S4 ít thay đổi theo độ phân giải.
+
+### 6.2. Mapping V1 cơ bản
+
+Thiết kế dự kiến dùng **một block cho một descriptor A**, ban đầu 128 thread/block. Số thread là cấu hình triển khai để đo lại khi có kernel, không thay k, ratio hoặc method. Các buffer đầu vào/đầu ra nằm trên Device; Host chỉ cấp phát, launch và nhận metadata/kết quả khi caller cần.
+
+| Bước | Công việc trên GPU | Output |
+|---|---|---|
+| Khoảng cách | Block `i` xử lý A[i]; thread `t` duyệt B[j] với `j=t, t+blockDim.x, ...`. Mỗi cặp tính tổng tám `__popc(A[i].word XOR B[j].word)` | Hai ứng viên cục bộ của từng thread |
+| Top-two | Lưu ứng viên vào shared memory, reduction trong block theo khóa `(distance,indexB)`; mỗi lần merge giữ hai indexB khác nhau, kể cả khi distance bằng nhau | Best, second-best cho A[i] |
+| Ratio | Thread 0 dùng $5d_1<4d_2$, ghi flag và ứng viên vào slot i; thread không có ứng viên dùng sentinel 257/index invalid | Mảng flag và match tạm theo indexA |
+| Compact | V1 cơ bản có thể dùng một thread Device quét flag theo i tăng dần, ghi prefix exclusive, sau đó kernel scatter ghi match vào prefix[i] | Match list tăng theo indexA và số match |
+
+Không ghi output cuối bằng atomic append: thứ tự block hoàn thành không bảo đảm thứ tự indexA. Prefix được tính trên Device; bước quét tuần tự là phần hạn chế đã biết của V1, sẽ được đo trước khi thay bằng parallel scan. Tail khi số B không chia hết block size được mask; tất cả thread vẫn phải tới các barrier của block.
+
+GPU không cần lưu ma trận distance $n_A\times n_B$: scratch toàn stage gồm top-two/flag/prefix/match theo A, cỡ $O(n_A)$, cộng scratch theo block đang xử lý. Không có lượt reverse search hoặc ràng buộc mỗi B chỉ được nhận một A. Giữ descriptor trên Device sau S3 và bàn giao match cho S5 để hạn chế round-trip; adapter với vector Host của V0 cần được thống nhất khi cài V1, không đổi interface chung trong P3.
+
+### 6.3. Hướng tối ưu V2/V3 và rủi ro
+
+1. **Tái sử dụng descriptor B:** thử tile shared memory cho nhiều A, hoặc bố trí buffer nội bộ theo word để các lane đọc liên tiếp. Đo bandwidth/cache trước; staging có thể thêm barrier và giảm số block cư trú. Payload/interface ngoài stage vẫn giữ nguyên.
+2. **Đổi mức phân chia công việc:** so block/A với warp/A, dùng register/shuffle cho top-two nếu profiling chỉ ra chi phí reduction. Merge phải giữ cả second-best khi bằng distance và giữ tie-break indexB.
+3. **Parallel scan và tái sử dụng workspace:** thay bước prefix tuần tự bằng scan có thứ tự, giảm allocation/launch khi có bằng chứng chúng chiếm đáng kể. Không đổi thứ tự match để đổi lấy tốc độ.
+
+`__popc` đếm bit 1 của word 32 bit theo [CUDA Math API 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-math-api/cuda_math_api/group__CUDA__MATH__INTRINSIC__INT.html). Bố trí bộ nhớ, launch và truyền dữ liệu dựa trên [CUDA Best Practices 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html); mapping trên là thiết kế của Nhóm, chưa có kernel hoặc speedup đã đo.
+
+### 6.4. Kiểm chứng V1
+
+Đối chiếu chính xác best/second-best, distance, flag, số match và toàn bộ danh sách `(indexA,indexB,distance)` với V0, gồm ties, ratio đúng ranh giới 4/5, input rỗng/ít B, nhiều A chọn cùng B, tail block và lỗi allocation/config. Chạy lại cùng input và đổi block size vẫn phải cùng output. Sau đó chạy S1–S6 và bộ synthetic ở mục 5.5 tài liệu S5.
+
+Đo S4 bằng CUDA events có đồng bộ đúng, gồm reduction/scan/scatter; ghi riêng chi phí truyền dữ liệu và end-to-end để tránh chỉ báo thời gian kernel distance. Trước khi profiling V1, chưa kết luận compute-bound/memory-bound, occupancy hay speedup.
 
 ## 7. Kiểm thử
 
@@ -231,3 +276,4 @@ Nguồn OpenCV cung cấp mô tả để đối chiếu, không phải phụ thu
 | 13/10/2026 | Cài V0 S4, view/config helpers và test; 59 checks local đạt | Không đổi method/tham số; chờ kiểm chứng nvcc trên Colab T4 |
 | 13/10/2026 | Gộp view/config vào feature_support.h/.cpp, giữ implementation S4 riêng | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |
 | 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và kết quả trên dataset | Nghiệm thu P1-T12 |
+| 21/10/2026 | Giữ phương pháp, tham số và implementation V0 scalar; bổ sung mục 6 cho P3-T08 | Mapping V1 dự kiến và hướng tối ưu dựa trên benchmark ngày 20/10; chưa cài CUDA hoặc công bố speedup |

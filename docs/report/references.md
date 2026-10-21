@@ -30,6 +30,16 @@ Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới �
 
 Tra cứu có mục tiêu, không phải khảo sát đầy đủ mọi công bố đến năm 2026. Các đánh giá về mức phù hợp với C++/CUDA của đồ án là suy luận từ yêu cầu và contract hiện có. Mọi kết luận chất lượng/hiệu năng trên dataset Nhóm cần kết quả chạy thực tế.
 
+### Bổ sung cho P3-T08 — mapping GPU
+
+Đế bổ sung ngày 21/10/2026, dùng cho mục 6 của S4/S5 và nội dung GPU trong báo cáo. Đây là nguồn thiết kế, không cung cấp số đo speedup của nhóm.
+
+| Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
+|---|---|---|
+| [NVIDIA CUDA Math API 13.0 — Integer Intrinsics](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-math-api/cuda_math_api/group__CUDA__MATH__INTRINSIC__INT.html) | S4: `__popc` trên word 32 bit ở Device | Mục khai báo và ý nghĩa `__popc` |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html) | S4/S5: profiling, bố trí bộ nhớ, truyền Host–Device, timing và giới hạn Amdahl | Các mục Assess, Timing, Memory Optimizations và Data Transfer; mapping block/thread và prefix deterministic là thiết kế của nhóm |
+| Benchmark V0 scalar ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv`, CSV/log từng site và `environment.json` | Căn cứ hiệu năng cho mapping S4/S5 | Đối chiếu chín hàng average với 45 lần đo gốc; các file kết quả được lưu riêng, không commit vào repo |
+
 ## S2/S3 - Tuấn soạn thay Thành
 
 Người tổng hợp: Tuấn (23120185), làm thay Thành ở P1. Ngày truy cập: 16/10/2026. Không dùng code hay bảng pattern của OpenCV; pattern BRIEF do Nhóm tự sinh bằng `tests/tool_gen_brief_pattern.py`.

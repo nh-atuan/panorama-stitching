@@ -1,5 +1,16 @@
 # Nguồn tham khảo báo cáo
 
+## S1 - Tuấn
+
+Người tổng hợp: Tuấn (23120185). Code S1 do Nhóm tự viết, không chép từ nguồn ngoài.
+
+| Nguồn | Ngày truy cập | Dùng cho phần nào |
+|---|---|---|
+| [Đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md), mục 2.1, 2.2 và phần tối ưu ở mức pipeline | 07/10, 21/10 | Mô tả S1; ý tưởng gộp grayscale với blur, pinned memory, CUDA stream ở mục 6.3 tài liệu S1 |
+| [ITU-R Recommendation BT.601-7 (03/2011)](https://www.itu.int/rec/R-REC-BT.601) | 21/10 | Hệ số đổi ảnh xám 0.299, 0.587, 0.114 |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html), mục 9.1.2, 10.1.1, 10.1.2, 10.2.1, 10.2.3, 10.2.6, 11.3 | 21/10 | Mục 6 tài liệu S1: CUDA events, pinned memory, chồng truyền dữ liệu với tính toán, coalescing, shared memory, constant memory, kích thước block |
+| Benchmark V0 ngày 20/10 của Thành: `results/p3-t04/benchmark/summary.csv` trên nhánh `thanh/p3-results` | 21/10 | Thời gian và tỷ trọng S1 ở mục 6.1 tài liệu S1 |
+
 ## S4/S5 - Đế
 
 Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới đây: 13/10/2026. Phần này phục vụ thiết kế/cài V0 S4/S5 và việc chuyển nội dung sang notebook. Các file code ghi tác giả, nguồn ý tưởng và phần Nhóm tự cài; SplitMix64 reference được ghi nguồn trong module sampling. Không dùng trọng số hoặc implementation learned matcher, không link OpenCV/Eigen/LAPACK.

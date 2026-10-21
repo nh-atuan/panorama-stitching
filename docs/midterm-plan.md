@@ -178,7 +178,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 
 1. **Build:** dùng `nvcc -arch=sm_75` theo quy định trên lớp, chạy trên Colab T4.
 2. **Cấu trúc file:** các file đặt phẳng trong `src/` như đề yêu cầu. Mỗi stage V0 nằm trong file riêng của người phụ trách, ví dụ `v0_preprocess.cpp`, `v0_detect.cpp`, `v0_describe.cpp`, `v0_match.cpp`, `v0_homography.cpp`, `v0_warp_blend.cpp`. Người quản lý các file dùng chung (`common.h`, `cuda_utils.cuh`, `versions.h`, `main.cu`, `stb_impl.cpp`) và `docs/interface.md`: Chương. Mọi thay đổi vẫn đi qua pull request file dùng chung theo mục 10; thay đổi interface đã chốt thì báo lại cho cả Nhóm để cùng quyết định.
-3. **Comment đầu file bắt buộc** ở mọi file nhóm viết hoặc sửa:
+3. **Comment đầu file bắt buộc** ở mọi file nhóm viết hoặc sửa, trừ notebook (`.ipynb`):
 
     ```cpp
     // Authors: <Full name> (<Student ID>), ...

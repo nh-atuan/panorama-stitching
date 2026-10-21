@@ -69,7 +69,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 1. Chỉ làm đúng phạm vi task. Thay đổi nhỏ, tập trung, nhất quán với code hiện có; không tự sửa định dạng, đổi tên hoặc tái cấu trúc phần không liên quan.
 2. Giữ nguyên các thay đổi sẵn có của người dùng. Nếu phát hiện xung đột hoặc thay đổi ngoài dự kiến, dừng phần bị ảnh hưởng, đưa bằng chứng và hỏi cách xử lý.
 3. Tuân thủ quy định viết code trong `docs/midterm-plan.md`, đặc biệt:
-    - comment đầu file ở mọi file được viết hoặc sửa theo đúng mẫu ở mục 9 của `docs/midterm-plan.md` (đề bài yêu cầu ghi tác giả và nguồn bên ngoài nếu có): dòng `Authors:` gồm họ tên đầy đủ kèm MSSV của người viết hoặc sửa (lấy từ file hướng dẫn agent cá nhân), dòng `External source:` ghi `none` hoặc dòng `Adapted from:` kèm tên nguồn, URL, ngày truy cập và dòng `Changes:` mô tả phần Nhóm đã thay đổi so với nguồn;
+    - comment đầu file ở mọi file được viết hoặc sửa, trừ notebook (`.ipynb`), theo đúng mẫu ở mục 9 của `docs/midterm-plan.md` (đề bài yêu cầu ghi tác giả và nguồn bên ngoài nếu có): dòng `Authors:` gồm họ tên đầy đủ kèm MSSV của người viết hoặc sửa (lấy từ file hướng dẫn agent cá nhân), dòng `External source:` ghi `none` hoặc dòng `Adapted from:` kèm tên nguồn, URL, ngày truy cập và dòng `Changes:` mô tả phần Nhóm đã thay đổi so với nguồn;
     - V0 hoàn toàn tuần tự: không OpenMP, không `std::thread`, `std::async`, `std::execution`, không intrinsics SIMD, không cờ `-fopenmp`;
     - trong `src/` chỉ dùng thư viện chuẩn C/C++ và stb;
     - mọi yếu tố ngẫu nhiên dùng seed cố định;
@@ -90,7 +90,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 4. Rà soát lại **toàn bộ** thay đổi trước khi bàn giao:
     - diff chỉ chứa thay đổi thuộc task; không có file tạm, output sinh tự động ngoài ý muốn hay bí mật;
     - không có cấu trúc bị cấm trong V0 (tìm bằng `grep` các từ khóa như `omp`, `thread`, `async`, `execution`, `immintrin`);
-    - mọi file mới hoặc đã sửa có comment tác giả và nguồn;
+    - mọi file mới hoặc đã sửa, trừ notebook, có comment tác giả và nguồn;
     - tài liệu liên quan (tài liệu thiết kế stage, `docs/interface.md`) đã được cập nhật nếu hành vi hoặc interface thay đổi;
     - `git diff --check` không báo lỗi.
 5. Đối chiếu từng tiêu chí xong của task trong `docs/task-board.md` và mục "Tiêu chí hoàn thành một task" trong `docs/midterm-plan.md`. Tiêu chí nào chưa đạt phải được nêu rõ.

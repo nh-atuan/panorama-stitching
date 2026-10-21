@@ -464,7 +464,51 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
 
 ## P4 - Hoàn thiện và nộp
 
-Lập chi tiết khi P3 hoàn thành. Hạn của giai đoạn: **23/10 (Thứ 6)**.
+Hạn của giai đoạn: **23/10 (Thứ 6)**.
+
+P4 là giai đoạn cuối. Chương ghép các mục báo cáo trong `docs/report/` vào `Group16_Midterm.ipynb` và chạy lại notebook; mỗi người review phần của mình và gửi chỗ cần sửa cho Chương, không sửa trực tiếp file `.ipynb`.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cả nhóm</td>
+      <td>P4-T01</td>
+      <td>Mỗi người review phần của mình trong notebook sau lần Run all: nội dung đúng với bản trong <code>docs/report/</code>, mọi con số trong lời văn khớp output; gửi chỗ cần sửa cho Chương</td>
+      <td>P4-T03</td>
+      <td>Cả 4 người xác nhận phần của mình</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Chương</td>
+      <td>P4-T02</td>
+      <td>Ghép các mục báo cáo trong <code>docs/report/</code> vào <code>Group16_Midterm.ipynb</code>, thay các đoạn sơ bộ cũ (kể cả các câu "Chờ P3-T01/P3-T03")</td>
+      <td></td>
+      <td>Notebook có đủ mục 3.1-3.7 và mục tài liệu tham khảo theo <code>docs/report/</code>; pull request đã merge vào <code>main</code>, notebook trong repo không có output</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P4-T03</td>
+      <td>Chạy Run all trên phiên Colab T4 mới; xem panorama và kết quả rồi bật <code>QUALITY_REVIEW_CONFIRMED</code>, <code>FINAL_REPORT_CONFIRMED</code>; sửa con số trong lời văn theo output và theo góp ý của P4-T01</td>
+      <td>P4-T02</td>
+      <td>Cell cuối in <code>READY</code>; mọi con số trong lời văn khớp output; bản notebook có output lưu trên Drive chung</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Quyết định đã chốt
 

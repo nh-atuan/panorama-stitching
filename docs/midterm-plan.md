@@ -63,9 +63,9 @@ flowchart LR
 |---|---|---|
 | P0 | Chuẩn bị | Đã lập, kết thúc 06/10 (Thứ 3) |
 | P1 | Cài đặt từng stage | Đã lập, kết thúc 13/10 (Thứ 3) |
-| P2 | Ghép và kiểm chứng V0 | Lập khi P1 hoàn thành |
-| P3 | Đo và phân tích | Lập khi P2 hoàn thành |
-| P4 | Hoàn thiện và nộp | Lập khi P3 hoàn thành |
+| P2 | Ghép và kiểm chứng V0 | Đã lập, kết thúc 18/10 (Chủ nhật) |
+| P3 | Đo và phân tích | Đã lập, kết thúc 21/10 (Thứ 4) |
+| P4 | Hoàn thiện và nộp | Đã lập, kết thúc 23/10 (Thứ 6) |
 
 Kết quả cần có khi kết thúc P0:
 
@@ -234,7 +234,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 2. **Một nguồn code duy nhất:** cell setup lấy `src/` (upload hoặc từ Drive) và build. Không dùng `%%writefile` và không chép code vào notebook, chỉ trích các đoạn ngắn để minh họa.
 3. **Số liệu từ output:** bảng và biểu đồ do code sinh từ CSV. Lời phân tích chỉ dùng những con số đã in ra trong output. Sau lần Run all cuối cùng, rà lại từng con số trong lời văn.
 4. Panorama hiển thị bản thu nhỏ trong notebook để file không quá nặng.
-5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Một người ghép các phần vào notebook (chưa phân công). Sau khi ghép, nội dung cần sửa được gửi cho người này để tránh conflict trên file `.ipynb`.
+5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Chương ghép các phần vào notebook. Sau khi ghép, nội dung cần sửa được gửi cho Chương để tránh conflict trên file `.ipynb`.
 6. **Trích dẫn:** trong suốt quá trình làm, mỗi người ghi nguồn đã tham khảo vào `docs/report/references.md` (URL, ngày truy cập, dùng cho phần nào). Code hoặc ý tưởng lấy từ bên ngoài phải được ghi nguồn cả ở đầu file code lẫn trong notebook.
 
 ## 14. Tiêu chí hoàn thành một task

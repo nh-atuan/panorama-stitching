@@ -1,0 +1,15 @@
+[debug] Reading images...
+[debug] version=0 seed=16 runs=5
+[debug] One warm-up (not timed).
+[debug] Measured run 1 complete.
+[debug] Measured run 2 complete.
+[debug] Measured run 3 complete.
+[debug] Measured run 4 complete.
+[debug] Measured run 5 complete.
+[debug] image A=3840x2160 B=3840x2160
+[debug] config: gaussian_sigma=1 gaussian_radius=3 fast_threshold=0.0500000007 max_keypoints=2000 match_ratio_threshold=0.800000012 match_cross_check=0 ransac_iters=2000 ransac_threshold=6 seed=16 homography_epsilon=9.99999997e-07 max_canvas_pixels=100000000
+[debug] S2 keypoints A=2000 B=2000; kept by S3 A=2000 B=2000
+[debug] S4 matches=246
+[debug] S5 seed=16 max_iters=2000 threshold_px=6 confidence=0.99 attempts=1216 valid=1199 rejected=17 best_id=598 budget=1216 sample_hash=9556755501608992129 best_inliers=61 best_msac=7032.03554 refits=2 first_refit_msac=6944.10601 refit_msac=6938.83617 final_inliers=62 final_msac=6938.8362 success=1
+[debug] H(B->A)=0.000204863216 1.00943716e-05 1 -9.69546163e-05 0.000448129547 0.116531126 -8.56237676e-08 2.54634247e-09 0.000539483503
+[debug] S6 canvas=8477x4507 offset=(0,1214)

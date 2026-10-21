@@ -40,9 +40,9 @@ Tra cứu có mục tiêu, không phải khảo sát đầy đủ mọi công b�
 | [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html) | S4/S5: profiling, bố trí bộ nhớ, truyền Host–Device, timing và giới hạn Amdahl | Các mục Assess, Timing, Memory Optimizations và Data Transfer; mapping block/thread và prefix deterministic là thiết kế của nhóm |
 | Benchmark V0 scalar ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv`, CSV/log từng site và `environment.json` | Căn cứ hiệu năng cho mapping S4/S5 | Đối chiếu chín hàng average với 45 lần đo gốc; các file kết quả được lưu riêng, không commit vào repo |
 
-## S2/S3 - Tuấn soạn thay Thành
+## S2/S3 - Thành
 
-Người tổng hợp: Tuấn (23120185), làm thay Thành ở P1. Ngày truy cập: 16/10/2026. Không dùng code hay bảng pattern của OpenCV; pattern BRIEF do Nhóm tự sinh bằng `tests/tool_gen_brief_pattern.py`.
+Người tổng hợp: Thành (23120166). Ngày truy cập: 16/10/2026. Không dùng code hay bảng pattern của OpenCV; pattern BRIEF do Nhóm tự sinh bằng `tests/tool_gen_brief_pattern.py`.
 
 | Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
 |---|---|---|
@@ -50,5 +50,8 @@ Người tổng hợp: Tuấn (23120185), làm thay Thành ở P1. Ngày truy c�
 | [Rosten, E., Porter, R., Drummond, T. (2010). Faster and better: a machine learning approach to corner detection](https://arxiv.org/abs/0810.2434), IEEE TPAMI | S2: so sánh độ lặp lại theo số điểm liên tiếp n | Trang arXiv và phần đánh giá độ lặp lại |
 | [Calonder, M., Lepetit, V., Strecha, C., Fua, P. (2010). BRIEF: Binary Robust Independent Elementary Features](https://www.cs.ubc.ca/~lowe/525/papers/calonder_eccv10.pdf), ECCV | S3: test nhị phân, làm mượt σ = 2 trên cửa sổ 9×9, cách lấy mẫu G II | Đọc mục 3.1-3.3 |
 | [Rublee, E., Rabaud, V., Konolige, K., Bradski, G. (2011). ORB: an efficient alternative to SIFT or SURF](https://doi.org/10.1109/ICCV.2011.6126544), ICCV | S2/S3: phương án xếp hạng Harris và rotated BRIEF, patch 31×31 | Dùng cho phần phương án đã cân nhắc |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html) | S2/S3 mục 6: CUDA events, coalescing, shared memory, constant memory, kích thước block | Mục 9.1.2, 10.2.1, 10.2.3, 10.2.6, 11.3; truy cập 21/10/2026 |
+| [NVIDIA CUDA Programming Guide, mục 5.4.6.2 Warp Vote Functions](https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cpp-language-extensions.html#warp-vote-functions) | S3 mục 6.3: ghép bit descriptor bằng `__ballot_sync` | Mô tả `__ballot_sync`; truy cập 21/10/2026 |
+| Benchmark V0 ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv` và log `--debug` trên nhánh `thanh/p3-results` | S2/S3 mục 6.1, báo cáo 3.5 timing | Hàng average, minimum và số keypoint, match, canvas trong log |
 | [OpenCV 4.x, `features2d.hpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/include/opencv2/features2d.hpp) và [`orb.cpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/src/orb.cpp) | S2: ngưỡng FAST mặc định 10 (FAST) và 20 (ORB); S3: ORB làm mượt Gaussian 7×7, σ = 2 | Đọc khai báo `create` và dòng `GaussianBlur`; không thêm OpenCV vào chương trình |
 | [Vigna, S. SplitMix64 reference](https://prng.di.unimi.it/splitmix64.c) | S3: bộ sinh số ngẫu nhiên cho pattern | Chuyển sang Python trong công cụ sinh pattern |

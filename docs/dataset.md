@@ -221,7 +221,7 @@ Cả Nhóm chốt bộ cặp dưới đây ngày 18/10, dựa trên thứ tự �
 |---|---|---|---|---|---|---|
 | Site 1 | site1 | Nhà thờ (`nha-tho`), ngoài trời | chuẩn | Thành | thanh-standard1 | |
 | Site 2 | site2 | Ẩn Coffee (`an-coffee`), trong nhà | chuẩn | Tuấn | tuan-standard2 | |
-| Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), ngoài trời | chuẩn | Đế | de-standard2 | |
+| Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), trong nhà | chuẩn | Đế | de-standard2 | |
 | Cặp khó | challenge | Khu vực ký túc xá (`ky-tuc-xa`), ngoài trời | khó: cảnh đêm, chênh sáng, người và xe chuyển động | Chương | chuong-challenge1 | |
 
 Tuấn tạo `dataset/` ngày 18/10 bằng `scripts/prepare_dataset.py` trên máy cá nhân (Python 3.11, Pillow 10.4.0, numpy 2.4.3), từ ảnh gốc tải lại từ Drive cùng ngày. SHA-256 của 8 ảnh gốc trùng với bản đã dùng ở mục 5.3 và ở lần chạy thử V0. Ảnh của Đế trên Drive vẫn có đuôi `.jpeg`, nên bản sao dùng để chạy được đổi tên thành `.jpg`, nội dung giữ nguyên. Đế cần đổi tên trên Drive thì lệnh dưới mới chạy lại được từ `raw/`:

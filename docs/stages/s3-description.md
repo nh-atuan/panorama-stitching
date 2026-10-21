@@ -1,8 +1,8 @@
 # S3 - Description
 
-Người phụ trách: Thành (23120166). Người soạn: Tuấn (23120185), làm thay ở P1. Cập nhật lần cuối: 16/10.
+Người phụ trách: Thành (23120166). Cập nhật lần cuối: 21/10.
 
-Task: P0-T08 (mục 1, 2), P1-T09 (mục 3, 4, 8), P1-T10 (code, mục 5, 7). Phương pháp và tham số trong tài liệu này là đề xuất của Tuấn, chờ Thành xác nhận; việc làm thay chờ cả Nhóm đồng ý.
+Task: P0-T08 (mục 1, 2), P1-T09 (mục 3, 4, 8), P1-T10 (code, mục 5, 7).
 
 S3 tính descriptor nhị phân 256 bit cho mỗi keypoint của S2 để S4 ghép bằng khoảng cách Hamming. S3 chạy độc lập trên từng ảnh của cặp.
 
@@ -132,7 +132,51 @@ Test tích hợp trên cặp tổng hợp dịch (37, -11) pixel: 1090 trên 111
 
 ## 6. Mức phù hợp với GPU và mapping V1 dự kiến
 
-Chưa viết (P3).
+### 6.1 Căn cứ từ benchmark V0
+
+Số đo do Thành chạy ngày 20/10 trong một phiên Colab Tesla T4 (CPU Intel Xeon @ 2.00GHz), một lần warm-up rồi `--runs 5`. Bảng lấy hàng `average` trong `results/p3-t04/benchmark/summary.csv` (nhánh `thanh/p3-results`); số keypoint lấy từ log `--debug` cùng lần chạy. Thời gian S3 gồm cả hai ảnh A và B.
+
+| Site | Kích thước | S3 (ms) | Tỷ trọng trong Total | Keypoint A / B |
+|---|---|---:|---:|---|
+| site1 | small | 42.958 | 3.9% | 2000 / 2000 |
+| site1 | medium | 88.998 | 5.3% | 2000 / 2000 |
+| site1 | large | 352.431 | 7.9% | 2000 / 2000 |
+| site2 | small | 42.566 | 3.8% | 2000 / 2000 |
+| site2 | medium | 87.897 | 5.4% | 2000 / 2000 |
+| site2 | large | 338.089 | 7.4% | 2000 / 2000 |
+| site3 | small | 39.919 | 5.4% | 1461 / 1440 |
+| site3 | medium | 85.691 | 6.5% | 1684 / 1780 |
+| site3 | large | 333.408 | 9.5% | 1458 / 1779 |
+
+Trung bình tỷ trọng trên ba site là 4.4% ở small, 5.8% ở medium và 8.3% ở large. S3 không phải hot stage ở cấu hình nào. Thời gian S3 tăng gần tỷ lệ với số pixel (large gấp khoảng 8 lần small) và gần như không đổi giữa các site ở cùng kích thước, kể cả site3 có ít keypoint hơn. Như vậy phần lớn thời gian S3 nằm ở bước làm mượt toàn ảnh (σ = 2, r = 4), còn phần tính 256 bit cho tối đa 2000 keypoint mỗi ảnh chiếm ít.
+
+### 6.2 Mapping V1 cơ bản
+
+| Bước | Một thread làm gì | Output |
+|---|---|---|
+| Làm mượt | Dùng lại hai kernel blur của S1 (mục 6.2 tài liệu S1) với trọng số σ = 2, r = 4: một thread cho một pixel ở lượt ngang, một thread cho một pixel ở lượt dọc | Ảnh `smoothed` trên Device |
+| Descriptor | Một thread cho một keypoint: làm tròn tâm như V0, kiểm tra patch nằm trong ảnh, chạy 256 test theo thứ tự `k = 0..255`, ghép 8 word | Descriptor và cờ giữ/bỏ của keypoint |
+| Compact | Prefix sum trên cờ giữ/bỏ rồi chép keypoint và descriptor được giữ về vị trí mới | Hai mảng cùng thứ tự đầu vào |
+
+- V0 chép ảnh của S1 sang buffer riêng rồi blur tại chỗ. Trên GPU, lượt ngang có thể đọc thẳng ảnh của S1 và ghi vào buffer tạm, lượt dọc ghi vào `smoothed`; giá trị giống hệt V0 mà bỏ được một lượt chép ảnh. Ảnh của S1 không bị ghi, đúng quy ước ở mục 2.
+- Bảng 256 test (1 KB `int8_t`) đặt trong constant memory. Ở mỗi test `k`, mọi thread trong warp đọc cùng một phần tử của bảng.
+- Mỗi thread đọc 512 pixel rải rác trong patch 31×31 của keypoint của nó, nên truy cập global memory không coalesce; L1/L2 cache giúp được một phần vì các test tập trung quanh tâm.
+- Compact phải giữ thứ tự đầu vào nên không dùng atomic append. Với keypoint của S2, mọi keypoint đều được giữ (border 15), nhưng bước này vẫn cần để đúng với đầu vào bất kỳ.
+- Kết quả chỉ gồm phép so sánh `<` trên giá trị đã làm mượt. Nếu blur trên GPU giống V0 từng bit (cùng trọng số, cùng thứ tự cộng, build với `--fmad=false` khi đối chiếu) thì descriptor giống V0 từng bit.
+
+### 6.3 Hướng tối ưu V2/V3 và rủi ro
+
+S3 chiếm 3.8–9.5% thời gian V0 nên không thuộc nhóm stage ưu tiên (S2, S4, S6). Các ý tưởng dưới đây chỉ làm khi profiling V1 cho thấy S3 đáng kể:
+
+1. **Một warp cho một keypoint, ghép bit bằng `__ballot_sync`.** Ở vòng `r = 0..7`, lane `l` làm test `k = 32r + l`; `__ballot_sync` trả về đúng word `data[r]`, vì bit `k % 32 = l` nằm ở vị trí lane. Cách này bỏ vòng lặp 256 test trong một thread và ghi descriptor bằng một lần ghi mỗi word.
+2. **Chỉ làm mượt vùng quanh keypoint.** Descriptor chỉ đọc các pixel trong patch 31×31 của keypoint. Ở large, làm mượt cửa sổ 39×39 (patch cộng halo 4) quanh tối đa 2000 keypoint ít việc hơn làm mượt cả ảnh 3840×2160; ở small thì có thể ngược lại vì các cửa sổ chồng nhau. Giá trị phải giống V0, kể cả clamp ở mép ảnh.
+3. **Nạp patch vào shared memory.** Kết hợp với ý 1: mỗi warp nạp patch của keypoint vào shared memory một lần rồi chạy 256 test từ đó, thay vì đọc global memory rải rác.
+
+Rủi ro: truy cập bộ nhớ rải rác khi gather; ý 2 làm việc phụ thuộc số keypoint và vị trí của chúng nên phải đo ở cả ba kích thước. Chưa có kernel hay số đo GPU nào của S3.
+
+### 6.4 Kiểm chứng V1
+
+So descriptor và danh sách keypoint của V1 với V0 từng bit và đúng thứ tự. Dùng lại các test ở mục 7: ảnh ramp theo x và y, làm tròn tâm, dịch ảnh, compact với keypoint ngoài biên và tọa độ cực lớn, ảnh hẹp hơn patch, danh sách rỗng. Sau đó so trên ảnh dataset ở cả ba kích thước, chạy toàn pipeline và bộ cặp synthetic ở mục 5.5 tài liệu S5. Thời gian S3 đo bằng CUDA events gồm cả làm mượt và compact.
 
 ## 7. Kiểm thử
 
@@ -214,9 +258,11 @@ Sau khi tách `gaussian_blur.cpp` và `image_layout.cpp` khỏi S1, test S1 vẫ
 | [OpenCV 4.x, `orb.cpp`](https://github.com/opencv/opencv/blob/4.x/modules/features2d/src/orb.cpp) | 16/10 | Đối chiếu cách làm mượt trước khi tính bit (mục 1); không dùng code hay bảng pattern |
 | [Vigna, S. SplitMix64](https://prng.di.unimi.it/splitmix64.c) | 16/10 | Bộ sinh số ngẫu nhiên cho pattern (mục 4.1) |
 | [Đề cuối kỳ CSC14120](../specs/CSC14120_2026_Final%20Project.md), mục 2 | 16/10 | Yêu cầu stage |
+| [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html), mục 9.1.2, 10.2.1, 10.2.3, 10.2.6 | 21/10 | Mục 6: CUDA events, coalescing, shared memory, constant memory |
+| [NVIDIA CUDA Programming Guide, mục 5.4.6.2 Warp Vote Functions](https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cpp-language-extensions.html#warp-vote-functions) | 21/10 | Mục 6.3: `__ballot_sync` đặt bit N khi predicate của lane N khác 0 |
 
 ## 10. Lịch sử thay đổi tham số
 
 | Ngày | Thay đổi | Lý do |
 |---|---|---|
-| 16/10 | Đề xuất BRIEF 256 bit không xoay, patch 31, G II σ = 6.2, seed 16, làm mượt σ = 2, r = 4 | Giá trị ban đầu, chờ Thành xác nhận. Ở P2 xem số inlier trên cặp khó để quyết định có cần orientation không |
+| 16/10 | Đề xuất BRIEF 256 bit không xoay, patch 31, G II σ = 6.2, seed 16, làm mượt σ = 2, r = 4 | Giá trị ban đầu. Ở P2 xem số inlier trên cặp khó để quyết định có cần orientation không |

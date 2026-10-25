@@ -1,3 +1,5 @@
+<!-- Authors: Nguyen Ho Anh Tuan (23120185). External source: none. -->
+
 # Kế hoạch thực hiện bài nộp giữa kỳ CSC14120
 
 **Bài nộp:** Midterm Submission - Proposal and Sequential Version (10% điểm đồ án).
@@ -234,7 +236,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 2. **Một nguồn code duy nhất:** cell setup lấy `src/` (upload hoặc từ Drive) và build. Không dùng `%%writefile` và không chép code vào notebook, chỉ trích các đoạn ngắn để minh họa.
 3. **Số liệu từ output:** bảng và biểu đồ do code sinh từ CSV. Lời phân tích chỉ dùng những con số đã in ra trong output. Sau lần Run all cuối cùng, rà lại từng con số trong lời văn.
 4. Panorama hiển thị bản thu nhỏ trong notebook để file không quá nặng.
-5. **Soạn nháp tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Chương ghép các phần vào notebook. Sau khi ghép, nội dung cần sửa được gửi cho Chương để tránh conflict trên file `.ipynb`.
+5. **Soạn nội dung tách riêng:** mỗi người viết phần của mình trong `docs/report/<section>.md`, ví dụ `3.3-s4-matching.md`. Chương phụ trách ghép các phần vào notebook; bản hoàn thiện được sửa tập trung để tránh conflict trên file `.ipynb`. Các thành viên đã xác nhận nội dung phần mình, không cần chờ xác nhận lại; số liệu và nhận xét của bản cuối vẫn phải đối chiếu với output của lần chạy đang báo cáo.
 6. **Trích dẫn:** trong suốt quá trình làm, mỗi người ghi nguồn đã tham khảo vào `docs/report/references.md` (URL, ngày truy cập, dùng cho phần nào). Code hoặc ý tưởng lấy từ bên ngoài phải được ghi nguồn cả ở đầu file code lẫn trong notebook.
 
 ## 14. Tiêu chí hoàn thành một task

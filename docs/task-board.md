@@ -1,3 +1,5 @@
+<!-- Authors: Nguyen Ho Anh Tuan (23120185). External source: none. -->
+
 # Bảng công việc giữa kỳ
 
 Quy tắc chung nằm trong [kế hoạch giữa kỳ](midterm-plan.md). Kế hoạch được lập cuốn chiếu: chỉ giai đoạn hiện tại có task chi tiết. Giai đoạn kế tiếp được lập khi giai đoạn trước hoàn thành. Hạn được ghi cho cả giai đoạn; mọi task trong giai đoạn phải xong trước hạn đó. Mốc cố định duy nhất là **23/10 (Thứ 6)**.
@@ -466,7 +468,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
 
 Hạn của giai đoạn: **23/10 (Thứ 6)**.
 
-P4 là giai đoạn cuối. Chương ghép các mục báo cáo trong `docs/report/` vào `Group16_Midterm.ipynb` và chạy lại notebook; mỗi người review phần của mình và gửi chỗ cần sửa cho Chương, không sửa trực tiếp file `.ipynb`.
+P4 là giai đoạn cuối. Chương phụ trách ghép các mục báo cáo trong `docs/report/` vào `Group16_Midterm.ipynb` và chạy lại notebook. Các thành viên đã xác nhận nội dung phần mình; không cần chờ xác nhận lại. Bản notebook cuối vẫn phải được đối chiếu với kết quả của lần Run all mới.
 
 <table>
   <thead>
@@ -484,11 +486,11 @@ P4 là giai đoạn cuối. Chương ghép các mục báo cáo trong `docs/repo
     <tr>
       <td>Cả nhóm</td>
       <td>P4-T01</td>
-      <td>Mỗi người review phần của mình trong notebook sau lần Run all: nội dung đúng với bản trong <code>docs/report/</code>, mọi con số trong lời văn khớp output; gửi chỗ cần sửa cho Chương</td>
+      <td>Rà bản notebook cuối sau lần chạy kỹ thuật của P4-T03: nội dung đúng với bản trong <code>docs/report/</code>, số liệu và nhận xét khớp output; sửa các chỗ sai lệch trước khi lưu bản nộp</td>
       <td>P4-T03</td>
-      <td>Cả 4 người xác nhận phần của mình</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xác nhận nội dung của thành viên đã có; bản cuối được đối chiếu với output của phiên đang báo cáo</td>
+      <td>Xong</td>
+      <td>Đã đối chiếu nội dung với output phiên Colab T4 <code>20261024T113622Z-5c29204a</code>, xem panorama và 12 crop gốc. Sửa nhận xét site1 và giới hạn kết luận từ synthetic; các thành viên đã xác nhận, không chờ xác nhận lại.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>
@@ -496,16 +498,16 @@ P4 là giai đoạn cuối. Chương ghép các mục báo cáo trong `docs/repo
       <td>Ghép các mục báo cáo trong <code>docs/report/</code> vào <code>Group16_Midterm.ipynb</code>, thay các đoạn sơ bộ cũ (kể cả các câu "Chờ P3-T01/P3-T03")</td>
       <td></td>
       <td>Notebook có đủ mục 3.1-3.7 và mục tài liệu tham khảo theo <code>docs/report/</code>; pull request đã merge vào <code>main</code>, notebook trong repo không có output</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>Đủ nội dung và references, đã chạy trên Colab T4; bản Git không có output, source 42 cell khớp bản có output. Nhánh <code>tuan/shared-chuong-p4</code>, chờ merge vào <code>main</code>.</td>
     </tr>
     <tr>
       <td>P4-T03</td>
-      <td>Chạy Run all trên phiên Colab T4 mới; xem panorama và kết quả rồi bật <code>QUALITY_REVIEW_CONFIRMED</code>, <code>FINAL_REPORT_CONFIRMED</code>; sửa con số trong lời văn theo output và theo góp ý của P4-T01</td>
+      <td>Chạy Run all trên phiên Colab T4 mới; lưu output cho P4-T01 đối chiếu; sau khi rà panorama và nội dung thì bật <code>QUALITY_REVIEW_CONFIRMED</code>, <code>FINAL_REPORT_CONFIRMED</code> và kiểm tra cell cuối</td>
       <td>P4-T02</td>
       <td>Cell cuối in <code>READY</code>; mọi con số trong lời văn khớp output; bản notebook có output lưu trên Drive chung</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Colab T4 24/10, phiên <code>20261024T113622Z-5c29204a</code>: build sm_75 và test đạt, sáu cặp synthetic đạt ngưỡng, chạy lặp H/pixel giống nhau, đủ chín cấu hình benchmark. Cell cuối <code>READY</code>, 16 check đạt. <a href="https://colab.research.google.com/drive/1iSOB8s5oUhBIv-opfKYZCO7SpTUWs-Op">Notebook có output trên Drive chung</a> đã đọc lại để kiểm tra đủ 42 cell và 18 ảnh, gồm 12 crop. Năm test cấu trúc được skip trong workspace Colab, đã chạy đạt trên local.</td>
     </tr>
   </tbody>
 </table>
@@ -522,3 +524,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 18/10 | Ngưỡng sai số homography so với ground truth (P1-T01): RMSE ≤ 0.5 px và Max ≤ 1 px trên cả 6 cặp synthetic ở mục 5.5 tài liệu S5 |
 | 21/10 | P3-T01: V1 cài kernel cho cả 6 stage; V2, V3 ưu tiên tối ưu S2, S4, S6, ba stage chiếm nhiều thời gian nhất ở cả ba độ phân giải. Ước lượng Amdahl tính p cho S2 + S4 + S6; không tính cho cả 6 stage vì p gần bằng 1. Phân công V1-V3 giữ như mục 2 của kế hoạch |
 | 21/10 | Notebook không cần comment tác giả; yêu cầu ở mục 9.3 của kế hoạch chỉ áp dụng cho file code |
+| 24/10 | Nhóm trưởng xác nhận các thành viên đã xác nhận nội dung phần mình; P4 không chờ xác nhận lại. Tiếp tục đối chiếu bản notebook cuối với output mới trước khi nghiệm thu |

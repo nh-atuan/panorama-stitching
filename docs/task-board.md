@@ -498,8 +498,8 @@ P4 là giai đoạn cuối. Chương phụ trách ghép các mục báo cáo tro
       <td>Ghép các mục báo cáo trong <code>docs/report/</code> vào <code>Group16_Midterm.ipynb</code>, thay các đoạn sơ bộ cũ (kể cả các câu "Chờ P3-T01/P3-T03")</td>
       <td></td>
       <td>Notebook có đủ mục 3.1-3.7 và mục tài liệu tham khảo theo <code>docs/report/</code>; pull request đã merge vào <code>main</code>, notebook trong repo không có output</td>
-      <td>Chờ review</td>
-      <td>Đủ nội dung và references, đã chạy trên Colab T4; bản Git không có output, source 42 cell khớp bản có output. Nhánh <code>tuan/shared-chuong-p4</code>, chờ merge vào <code>main</code>.</td>
+      <td>Xong</td>
+      <td>Đủ nội dung và references, đã chạy trên Colab T4; bản Git không có output, source 42 cell khớp bản có output.</td>
     </tr>
     <tr>
       <td>P4-T03</td>

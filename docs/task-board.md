@@ -499,7 +499,7 @@ P4 là giai đoạn cuối. Chương phụ trách ghép các mục báo cáo tro
       <td></td>
       <td>Notebook có đủ mục 3.1-3.7 và mục tài liệu tham khảo theo <code>docs/report/</code>; pull request đã merge vào <code>main</code>, notebook trong repo không có output</td>
       <td>Xong</td>
-      <td>Đủ nội dung và references, đã chạy trên Colab T4; bản Git không có output, source 42 cell khớp bản có output.</td>
+      <td>Đủ nội dung và references; bản trước đã merge qua PR #19 và #20. Ngày 25/10 Chương chốt <code>Group16_Midterm1.ipynb</code> có output (86 cell, 21 code cell), đồng bộ sang <code>Group16_Midterm.ipynb</code> chỉ xóa output và execution count. Giữ nguyên toàn bộ source/thứ tự/metadata; gồm metadata synthetic, gallery A/B và trace đặc trưng. Theo yêu cầu trực tiếp của Chương, bản đồng bộ được commit lên <code>main</code> riêng với commit tài liệu/test.</td>
     </tr>
     <tr>
       <td>P4-T03</td>

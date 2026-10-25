@@ -6,7 +6,9 @@ Người soạn: Thanh Chương (23120195). Task: P3-T09. Cập nhật: 25/10/20
 
 `Group16_Midterm.ipynb` là báo cáo giữa kỳ, gồm mục lục và các phần đánh số 0–8. Phần 1–7 tương ứng mục 3.1–3.7 của đề, phần 8 là tài liệu tham khảo và khai báo dùng AI. Tiêu đề và giải thích viết bằng tiếng Việt, code và comment bằng tiếng Anh. Mỗi mục `##` hoặc `###` nằm ở đầu một cell riêng để thanh mục lục của Colab liệt kê đủ các mục.
 
-Code trình bày gom vào cell `helpers` ở đầu notebook. Dòng đầu của cell này là `# @title ... { display-mode: "form" }`, nên Colab thu gọn code và chỉ hiện tiêu đề; bấm **Show code** để xem. Các cell code còn lại chỉ vài dòng gọi hàm trong `helpers`. Notebook không chép lại code của `src/` và không dùng `%%writefile`.
+Bản chốt do Chương chọn ngày 25/10 là `Group16_Midterm1.ipynb` có output, gồm 86 cell (21 code cell). File `Group16_Midterm.ipynb` tại gốc repo là bản sao của file này, chỉ đặt `outputs=[]` và `execution_count=null` trong code cell; giữ nguyên source, thứ tự cell và metadata. Bản có output không được commit cùng bản làm việc. Khi đóng gói nộp, dùng nội dung của bản có output nhưng đặt tên file trong ZIP là `Group16_Midterm.ipynb`.
+
+Code trình bày chủ yếu gom vào cell `helpers` ở đầu notebook. Dòng đầu của cell này là `# @title ... { display-mode: "form" }`, nên Colab thu gọn code và chỉ hiện tiêu đề; bấm **Show code** để xem. Các cell báo cáo chủ yếu gọi hàm trong `helpers`; ba cell metadata synthetic, ảnh A/B và trace đặc trưng giữ code hiển thị trực tiếp theo bản chốt. Notebook không chép lại code của `src/` và không dùng `%%writefile`.
 
 Một số điểm hiển thị đã kiểm tra trên Colab ngày 25/10:
 
@@ -36,7 +38,7 @@ zip -r Group16_support.zip dataset scripts tests raw/tuan/standard1_left.jpg -x 
 
 1. Mở notebook trên Colab, chọn T4 GPU.
 2. Tải `src/` lên theo bảng trên.
-3. Chọn Runtime → Run all. Notebook kiểm tra môi trường và 24 ảnh theo manifest, build, in bảng tham số đọc từ `src/`, chạy test, chạy cặp synthetic, sinh panorama và vùng cắt, chạy benchmark 9 cấu hình rồi tính Amdahl.
+3. Chọn Runtime → Run all. Notebook kiểm tra môi trường và 24 ảnh theo manifest, build, in bảng tham số đọc từ `src/`, chạy test, in metadata và chạy cặp synthetic, hiển thị ảnh A/B và trace keypoint/match/inlier, sinh panorama và vùng cắt, chạy benchmark 9 cấu hình rồi tính Amdahl. Trace chạy riêng ngoài benchmark.
 4. Trong lúc cell benchmark chạy, không chạy cell nặng nào khác.
 
 Output chỉ hiện bảng và hình tóm tắt. Log đầy đủ của mọi lệnh nằm trong `results/logs/` của thư mục làm việc; CSV, panorama và vùng cắt nằm trong `results/`. Mỗi lệnh lỗi làm cell dừng và in 30 dòng cuối của log.
@@ -57,4 +59,4 @@ Trước khi đưa notebook lên Git: xóa mọi output và execution count. B�
 python -m unittest discover -s tests -p test_midterm_notebook.py -v
 ```
 
-Test kiểm tra parser CSV, đủ 9 cấu hình và 45 lần đo giả lập, phát hiện sửa dữ liệu hoặc hash, ZIP traversal, fingerprint nguồn, crop tọa độ, và cấu trúc notebook: mục 0–8 và neo của mục lục, cell `helpers` ở dạng form, cell báo cáo ngắn và chỉ gọi hàm có trong `helpers`, không còn mã task, cờ nội bộ hay sơ đồ mermaid, `BENCHMARK_ARGS` khớp giao diện của `scripts/run_benchmark.py`. Dữ liệu giả lập chỉ dùng cho unit test. Trong workspace Colab không có file notebook nên nhóm test cấu trúc notebook được bỏ qua. Kết quả trên máy không thay thế lần chạy trên Colab T4.
+Test kiểm tra parser CSV, đủ 9 cấu hình và 45 lần đo giả lập, phát hiện sửa dữ liệu hoặc hash, ZIP traversal, fingerprint nguồn, crop tọa độ, và cấu trúc notebook: mục 0–8 và neo của mục lục, cell `helpers` ở dạng form, cell báo cáo ngắn và chỉ gọi hàm có trong `helpers` (trừ ba cell hiển thị bổ sung), không còn mã task, cờ nội bộ hay sơ đồ mermaid, `BENCHMARK_ARGS` khớp giao diện của `scripts/run_benchmark.py`. Nếu bản chốt có output hiện diện trên máy, test so sánh toàn bộ notebook sau khi chỉ xóa output/count. Dữ liệu giả lập chỉ dùng cho unit test. Trong workspace Colab không có file notebook nên nhóm test cấu trúc notebook được bỏ qua. Kết quả trên máy không thay thế lần chạy trên Colab T4.

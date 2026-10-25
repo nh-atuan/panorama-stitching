@@ -7,6 +7,7 @@ These checks are not evidence of an official Colab T4 Run all.
 """
 
 import ast
+import copy
 import csv
 import io
 import json
@@ -261,10 +262,36 @@ class NotebookTests(unittest.TestCase):
         tree = ast.parse(cells.pop("helpers"))
         defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
         for cell_id, source in cells.items():
+            if cell_id in {"fixture-metadata", "input-pairs", "feature-trace"}:
+                # The final author-approved notebook keeps these displays inline.
+                continue
             self.assertLessEqual(len(source.splitlines()), 8, cell_id)
             for node in ast.walk(ast.parse(source)):
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                     self.assertIn(node.func.id, defined, f"{cell_id}: {node.func.id}")
+
+    def test_added_displays_follow_the_evidence_order(self):
+        ids = [cell["id"] for cell in self.notebook["cells"]]
+        self.assertLess(ids.index("fixture-metadata"), ids.index("synthetic"))
+        self.assertLess(ids.index("input-pairs"), ids.index("panorama-run"))
+        self.assertLess(ids.index("feature-trace"), ids.index("panorama-run"))
+        sources = self.code_cells()
+        self.assertIn("case_homography", sources["fixture-metadata"])
+        self.assertIn("check_points", sources["fixture-metadata"])
+        self.assertIn("DATASET / pair", sources["input-pairs"])
+        self.assertIn("tests/tool_pipeline_trace.cpp", sources["feature-trace"])
+        self.assertIn("NVCC_FLAGS", sources["feature-trace"])
+
+    def test_matches_final_snapshot_except_execution_results(self):
+        snapshot = ROOT / "Group16_Midterm1.ipynb"
+        if not snapshot.is_file():
+            self.skipTest("output-bearing final snapshot is intentionally not committed")
+        expected = copy.deepcopy(json.loads(snapshot.read_text(encoding="utf-8")))
+        for cell in expected["cells"]:
+            if cell["cell_type"] == "code":
+                cell["execution_count"] = None
+                cell["outputs"] = []
+        self.assertEqual(expected, self.notebook)
 
 
 if __name__ == "__main__":

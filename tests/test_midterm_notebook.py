@@ -10,6 +10,7 @@ import ast
 import csv
 import io
 import json
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -204,22 +205,38 @@ class NotebookTests(unittest.TestCase):
                 self.assertNotIn("%%writefile", source)
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_required_sections_and_english_headings(self):
+    def test_numbered_sections_and_contents(self):
         text = "\n".join("".join(cell["source"]) for cell in self.notebook["cells"]
                          if cell["cell_type"] == "markdown")
-        for number in range(1, 8):
-            self.assertIn(f"## 3.{number} ", text)
+        for number in range(0, 9):
+            self.assertRegex(text, rf"(?m)^## {number}\\. ")
+            self.assertIn(f'<a name="muc-{number}"></a>', text)
         for line in text.splitlines():
-            if line.startswith("#"):
-                self.assertTrue(all(ord(character) < 128 or character in "—·" for character in line), line)
+            if line.startswith("## ") and line != "## Mục lục":
+                self.assertRegex(line, r"^## \d\\. ", line)
+            if line.startswith("### ") and not line.startswith("### Mục"):
+                self.assertRegex(line, r"^### \d\.\d ", line)
+        for anchor in set(re.findall(r"\]\(#([\w-]+)\)", text)):
+            self.assertIn(f'<a name="{anchor}"></a>', text, anchor)
+
+    def test_no_draft_or_internal_references(self):
+        text = "\n".join("".join(cell["source"]) for cell in self.notebook["cells"])
+        for pattern in (r"P\d-T\d", r"docs/stages", "QUALITY_REVIEW_CONFIRMED", "FINAL_REPORT_CONFIRMED",
+                        "REQUIRE_COMPLETE_RUN", r"thanh/p3", r"results/p3-t04", "```mermaid", "«", "»"):
+            self.assertNotRegex(text, pattern)
+        self.assertNotIn("group16", self.notebook["metadata"])
+
+    def code_cells(self):
+        return {cell["id"]: "".join(cell["source"]) for cell in self.notebook["cells"]
+                if cell["cell_type"] == "code"}
 
     def configuration_value(self, name):
-        by_id = {cell["id"]: "".join(cell["source"]) for cell in self.notebook["cells"]}
-        for node in ast.parse(by_id["configuration"]).body:
-            if isinstance(node, ast.Assign) and any(
-                    isinstance(target, ast.Name) and target.id == name for target in node.targets):
-                return ast.literal_eval(node.value)
-        self.fail(f"{name} is not assigned in the configuration cell")
+        for source in self.code_cells().values():
+            for node in ast.parse(source).body:
+                if isinstance(node, ast.Assign) and any(
+                        isinstance(target, ast.Name) and target.id == name for target in node.targets):
+                    return ast.literal_eval(node.value)
+        self.fail(f"{name} is not assigned in a code cell")
 
     def test_benchmark_arguments_match_runner(self):
         from run_benchmark import parse_args
@@ -232,12 +249,22 @@ class NotebookTests(unittest.TestCase):
     def test_accelerated_stages_follow_team_decision(self):
         self.assertEqual(self.configuration_value("ACCELERATED_STAGES"), [2, 4, 6])
 
-    def test_benchmark_and_readiness_are_not_claimed_in_advance(self):
-        by_id = {cell["id"]: "".join(cell["source"]) for cell in self.notebook["cells"]}
-        self.assertIn("BENCHMARK_EXECUTED = False", by_id["benchmark-integration"])
-        self.assertIn("not ready", by_id["readiness"])
-        self.assertIn("source_manifest(PROJECT) == SOURCE_HASHES", by_id["readiness"])
-        self.assertIn("src/ comes only from the submission", by_id["workspace"])
+    def test_helper_cell_is_a_colab_form_and_keeps_input_rules(self):
+        cells = self.code_cells()
+        helpers = cells["helpers"]
+        self.assertRegex(helpers.splitlines()[0], r'^# @title .*\{ display-mode: "form" \}$')
+        self.assertIn("src/ comes only from the submission", helpers)
+        self.assertIn("parse_stitch_csv", helpers)
+
+    def test_report_cells_are_short_and_call_defined_helpers(self):
+        cells = self.code_cells()
+        tree = ast.parse(cells.pop("helpers"))
+        defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+        for cell_id, source in cells.items():
+            self.assertLessEqual(len(source.splitlines()), 8, cell_id)
+            for node in ast.walk(ast.parse(source)):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                    self.assertIn(node.func.id, defined, f"{cell_id}: {node.func.id}")
 
 
 if __name__ == "__main__":

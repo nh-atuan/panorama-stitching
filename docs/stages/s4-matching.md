@@ -16,7 +16,7 @@ Phương pháp đã chốt: **exact brute-force 2-NN Hamming trên descriptor bi
 
 Hamming đếm số bit khác nhau, là metric tự nhiên cho các test nhị phân BRIEF/rotated BRIEF. [OpenCV BFMatcher](https://docs.opencv.org/4.13.0/d3/da1/classcv_1_1BFMatcher.html), mục `create`, chỉ định Hamming cho ORB/BRISK/BRIEF và mô tả cross-check là alternative của ratio test. Contract hiện tại dùng một bit/test, không dùng ORB WTA_K=3/4 cần Hamming2. Exact search tránh approximation error ở hai láng giềng; ratio test loại các descriptor không phân biệt rõ best với second-best.
 
-Đây là lựa chọn cân bằng giữa panorama quality, correctness, khả năng tự cài, GPU parallelism và fair CPU–GPU comparison; không gọi là SOTA. Việc tắt cross-check bỏ điều kiện tương hỗ bổ sung để giữ correspondence qua ratio cho S5, nhưng cũng có thể giữ thêm outlier. Tác động chất lượng trên ảnh Nhóm là giả thuyết cần kiểm thử. Bản nhóm tự cài theo [kế hoạch](../midterm-plan.md), mục 9, không thêm OpenCV vào `src/`.
+Đây là lựa chọn cân bằng giữa panorama quality, correctness, khả năng tự cài, GPU parallelism và fair CPU–GPU comparison; không gọi là SOTA. Việc tắt cross-check bỏ điều kiện tương hỗ bổ sung để giữ correspondence qua ratio cho S5, nhưng cũng có thể giữ thêm outlier. Tác động chất lượng trên ảnh Nhóm là giả thuyết cần kiểm thử. Bản nhóm tự cài theo [kế hoạch](../archive/midterm-plan.md), mục 9, không thêm OpenCV vào `src/`.
 
 ### 1.2. Các phương án matching
 

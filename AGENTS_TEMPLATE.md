@@ -25,7 +25,7 @@ Agent phải đọc và tuân thủ các nguồn sau, theo thứ tự ưu tiên 
 
 1. Yêu cầu hiện tại của người dùng, trong phạm vi đề bài cho phép.
 2. Đề bài chính thức của môn học trong `docs/specs/`: `CSC14120_2026_Final Project_MidTerm.md` (đề giữa kỳ) và `CSC14120_2026_Final Project.md` (đề cuối kỳ). Đây là bản chép nguyên văn từ hai file PDF cùng tên. Các file PDF không được commit, mỗi thành viên tự đặt vào `docs/specs/`. Khi có khác biệt, PDF là chuẩn.
-3. Quy định của Nhóm trong `docs/midterm-plan.md`.
+3. Quy định của Nhóm trong `docs/final-plan.md` (giai đoạn cuối kỳ) và `docs/archive/midterm-plan.md` (nền tảng V0 giữa kỳ).
 4. Task đang làm trong `docs/task-board.md`, được xác định bằng mã task dạng `P<số giai đoạn>-T<số thứ tự>`.
 5. Các tài liệu liên quan khác trong `docs/`: `dataset.md`, `interface.md` và `docs/stages/*.md` khi đã có.
 6. Khuôn mẫu này và các quy tắc riêng của thành viên.
@@ -37,7 +37,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 1. **Tuyệt đối không tự quyết** bất kỳ điều gì chưa được đề bài, tài liệu của Nhóm hoặc người dùng quy định rõ. Agent chỉ được đề xuất các phương án (kèm ưu, nhược điểm và khuyến nghị), sau đó chờ người dùng chọn.
 2. Những việc luôn phải hỏi trước khi làm:
     - chọn hoặc đổi phương pháp, tham số, cấu hình của một stage;
-    - thay đổi interface chung (`common.h`, quy ước dữ liệu trong `docs/interface.md`);
+    - thay đổi contract chung (`src/common/common.h`, contract workspace GPU, quy ước dữ liệu trong `docs/interface.md`);
     - sửa file thuộc phần phụ trách của thành viên khác hoặc file dùng chung;
     - thêm thư viện, công cụ hoặc phụ thuộc mới;
     - tạo, đổi tên, di chuyển hoặc xóa file và thư mục ngoài phạm vi task;
@@ -57,9 +57,9 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 3. Khảo sát trạng thái hiện tại bằng thao tác chỉ đọc: cấu trúc repo, `git status`, nhánh hiện tại và mức đồng bộ với `main`, code, test và tài liệu liên quan. Nếu nhánh đang thiếu thay đổi mới của `main`, hỏi người dùng có muốn kéo `main` về trước khi làm không.
 4. Tóm tắt cho người dùng: mục tiêu, phạm vi, tiêu chí nghiệm thu, các giả định và các câu hỏi còn mở. Chỉ bắt đầu sửa đổi khi người dùng đã xác nhận.
 5. **Kiểm tra công cụ để tự kiểm chứng.** Liệt kê các tool, MCP server, skill hoặc plugin cần dùng để build, chạy test và rà soát (ví dụ shell, `git`, `nvcc`, Python, trình chạy notebook, quyền đọc/ghi file). Nếu thiếu công cụ hoặc thiếu quyền, phải báo rõ cho người dùng là cần cấp gì, và không được bắt đầu phần việc cần kiểm chứng khi chưa có đủ. Nếu chưa có công cụ nào để tự chạy trên Colab T4, gợi ý người dùng kết nối một công cụ như ở bước 5 của mục "Cách sử dụng".
-6. Làm việc trên đúng nhánh theo loại thay đổi (mục 10 của `docs/midterm-plan.md`):
-    - code và test của stage mình: nhánh giai đoạn `<tên thành viên>/p<số giai đoạn>`, ví dụ `de/p1`;
-    - file dùng chung (`common.h`, `main.cu`, `versions.h`, `cuda_utils.cuh`, `stb_impl.cpp`, `docs/interface.md`): nhánh riêng `<tên thành viên>/shared-<mô tả ngắn>` và một pull request riêng, nhỏ;
+6. Làm việc trên đúng nhánh theo loại thay đổi (mục 8.1 của `docs/final-plan.md` và mục 10 của `docs/archive/midterm-plan.md`):
+    - code và test của stage mình: nhánh giai đoạn `<tên thành viên>/p<số giai đoạn>`, ví dụ `de/p5`;
+    - file dùng chung (`src/main.cu`, `src/versions.h`, `src/common/*`, contract workspace dùng chung, `docs/interface.md`, runner và script hạ tầng dùng chung): nhánh riêng `<tên thành viên>/shared-<mô tả ngắn>` và một pull request riêng, nhỏ;
     - tài liệu trong phạm vi của mình (trạng thái task, bảng trong `docs/dataset.md`, tài liệu stage và phần báo cáo của mình): commit thẳng lên `main`.
 
     Nếu đang ở nhánh không đúng với loại thay đổi, hỏi người dùng trước khi tạo hoặc chuyển nhánh.
@@ -68,19 +68,20 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 
 1. Chỉ làm đúng phạm vi task. Thay đổi nhỏ, tập trung, nhất quán với code hiện có; không tự sửa định dạng, đổi tên hoặc tái cấu trúc phần không liên quan.
 2. Giữ nguyên các thay đổi sẵn có của người dùng. Nếu phát hiện xung đột hoặc thay đổi ngoài dự kiến, dừng phần bị ảnh hưởng, đưa bằng chứng và hỏi cách xử lý.
-3. Tuân thủ quy định viết code trong `docs/midterm-plan.md`, đặc biệt:
-    - comment đầu file ở mọi file được viết hoặc sửa, trừ notebook (`.ipynb`), theo đúng mẫu ở mục 9 của `docs/midterm-plan.md` (đề bài yêu cầu ghi tác giả và nguồn bên ngoài nếu có): dòng `Authors:` gồm họ tên đầy đủ kèm MSSV của người viết hoặc sửa (lấy từ file hướng dẫn agent cá nhân), dòng `External source:` ghi `none` hoặc dòng `Adapted from:` kèm tên nguồn, URL, ngày truy cập và dòng `Changes:` mô tả phần Nhóm đã thay đổi so với nguồn;
-    - V0 hoàn toàn tuần tự: không OpenMP, không `std::thread`, `std::async`, `std::execution`, không intrinsics SIMD, không cờ `-fopenmp`;
-    - trong `src/` chỉ dùng thư viện chuẩn C/C++ và stb;
+3. Tuân thủ quy định viết code trong `docs/final-plan.md` và `docs/archive/midterm-plan.md`, đặc biệt:
+    - comment đầu file ở mọi file được viết hoặc sửa, trừ notebook (`.ipynb`), theo đúng mẫu ở mục 9 của `docs/archive/midterm-plan.md` (đề bài yêu cầu ghi tác giả và nguồn bên ngoài nếu có): dòng `Authors:` gồm họ tên đầy đủ kèm MSSV của người viết hoặc sửa (lấy từ file hướng dẫn agent cá nhân), dòng `External source:` ghi `none` hoặc dòng `Adapted from:` kèm tên nguồn, URL, ngày truy cập và dòng `Changes:` mô tả phần Nhóm đã thay đổi so với nguồn;
+    - giữ đóng băng `src/v0/` hoàn toàn tuần tự: không tự ý sửa thuật toán hay tham số `V0`, không đưa OpenMP, `std::thread`, `std::async`, `std::execution`, intrinsics SIMD hay cờ `-fopenmp` vào `src/v0/`;
+    - trong `src/` chỉ dùng thư viện chuẩn C/C++, `stb`, CUDA Runtime API cơ bản và intrinsics phần cứng (`__popc`, `__shfl_*`, phép toán atomic...) kèm nhãn NVTX khi profiling; không dùng các thư viện thuật toán đóng gói sẵn như `Thrust`, `CUB`, `cuBLAS`, `cuSOLVER`, `NPP` khi chưa được cả Nhóm thống nhất và giảng viên cho phép;
+    - dùng một gốc `-Isrc` (thêm `-Itests` cho test) và ghi rõ thư mục con trong mọi lệnh `#include` nội bộ (ví dụ `#include "common/common.h"`);
     - mọi yếu tố ngẫu nhiên dùng seed cố định;
     - ảnh debug và log chi tiết nằm ngoài vùng đo thời gian;
-    - build bằng `nvcc -arch=sm_75`.
+    - build bằng `nvcc -arch=sm_75` (qua `scripts/build.py` và `tests/run_tests.py`).
 4. Code hoặc ý tưởng lấy từ bên ngoài phải ghi nguồn ở đầu file và trong `docs/report/references.md`.
 5. Xử lý lỗi ở nguyên nhân gốc. Không vô hiệu hóa test, không bỏ qua cảnh báo quan trọng, không nới lỏng điều kiện kiểm tra để cho qua.
 6. Báo tiến độ ngắn gọn khi việc kéo dài, khi cần quyết định hoặc khi gặp trở ngại. Không tuyên bố đã xong khi chưa kiểm chứng.
 7. Không bịa đặt kết quả, số đo, trạng thái test hoặc mức độ hoàn thành. Luôn phân biệt rõ điều đã kiểm chứng, điều suy luận và điều chưa kiểm tra được.
 8. Không tiết lộ bí mật như token hay mật khẩu, không ghi chúng vào code, output hoặc commit.
-9. **Chia nhỏ phần việc thành nhiều file, hàm và module.** Không gộp toàn bộ vào một file hay một hàm lớn. Module hóa stage và task của mình ở mức nhỏ nhất có thể, mỗi đơn vị làm một việc rõ ràng, để agent dễ đọc, dễ sửa, dễ viết test và kiểm chứng riêng từng phần, và dễ khoanh vùng khi debug. Vẫn giữ cấu trúc file đặt phẳng trong `src/` và tên file theo mục 9 của `docs/midterm-plan.md`; không tạo thêm file ngoài phạm vi task mà chưa hỏi theo mục 2.
+9. **Chia nhỏ phần việc thành nhiều file, hàm và module.** Không gộp toàn bộ vào một file hay một hàm lớn. Module hóa stage và task của mình ở mức nhỏ nhất có thể, mỗi đơn vị làm một việc rõ ràng, để agent dễ đọc, dễ sửa, dễ viết test và kiểm chứng riêng từng phần, và dễ khoanh vùng khi debug. Đặt file đúng cấu trúc thư mục con trong `src/` (`src/common/`, `src/v0/`, `src/v1/`, `src/v2/`, `src/v3/`) và `tests/` (`tests/v0/`, `tests/gpu/`, `tests/support/`, `tests/python/`, `tests/tools/`) theo `docs/final-plan.md`, `src/README.md` và `tests/README.md` (ở `v2/`, `v3/` chỉ tạo file cho stage/module có thay đổi, các stage giữ nguyên gọi lại hàm phiên bản trước); không tạo thêm file ngoài phạm vi task mà chưa hỏi theo mục 2.
 
 ## 5. Kiểm chứng và nghiệm thu
 
@@ -89,11 +90,11 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 3. Môi trường kiểm chứng chính thức là **Google Colab với GPU Tesla T4**. Nếu agent không chạy được trên Colab T4, phải nói rõ kết quả chưa được kiểm chứng trên môi trường này, đồng thời đưa cho người dùng lệnh cụ thể và output mong đợi để người dùng tự chạy.
 4. Rà soát lại **toàn bộ** thay đổi trước khi bàn giao:
     - diff chỉ chứa thay đổi thuộc task; không có file tạm, output sinh tự động ngoài ý muốn hay bí mật;
-    - không có cấu trúc bị cấm trong V0 (tìm bằng `grep` các từ khóa như `omp`, `thread`, `async`, `execution`, `immintrin`);
+    - không có cấu trúc bị cấm trong `src/v0/` (tìm bằng `grep` các từ khóa như `omp`, `thread`, `async`, `execution`, `immintrin`) và không dùng thư viện GPU ngoài phạm vi cho phép (`thrust`, `cub`, `cublas`, `cusolver`, `npp`) trong `src/`;
     - mọi file mới hoặc đã sửa, trừ notebook, có comment tác giả và nguồn;
-    - tài liệu liên quan (tài liệu thiết kế stage, `docs/interface.md`) đã được cập nhật nếu hành vi hoặc interface thay đổi;
+    - tài liệu liên quan (tài liệu thiết kế stage, `docs/interface.md`) đã được cập nhật nếu hành vi, ngưỡng kiểm chứng hoặc contract thay đổi;
     - `git diff --check` không báo lỗi.
-5. Đối chiếu từng tiêu chí xong của task trong `docs/task-board.md` và mục "Tiêu chí hoàn thành một task" trong `docs/midterm-plan.md`. Tiêu chí nào chưa đạt phải được nêu rõ.
+5. Đối chiếu từng tiêu chí xong của task trong `docs/task-board.md` và mục "Tiêu chí hoàn thành một task" trong `docs/final-plan.md` (hoặc `docs/archive/midterm-plan.md` với V0). Tiêu chí nào chưa đạt phải được nêu rõ.
 6. Không sửa lỗi không liên quan nếu việc sửa có thể làm tăng phạm vi hoặc rủi ro. Ghi nhận ngắn gọn để người dùng quyết định.
 
 ## 6. Sau khi thực hiện
@@ -105,7 +106,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - tiêu chí nghiệm thu nào đã đạt, tiêu chí nào chưa;
     - trạng thái working tree.
 2. Chỉ commit, push hoặc tạo pull request khi người dùng yêu cầu. Khi làm thì tuân thủ:
-    - commit message bằng tiếng Anh theo Conventional Commits, dùng mã task làm scope, ví dụ `feat(p1-t05): add RANSAC hypothesis loop`;
+    - commit message bằng tiếng Anh theo Conventional Commits, dùng mã task làm scope, ví dụ `feat(p5-t10): implement basic CUDA Hamming matcher`;
     - không thêm dòng `Co-Authored-By` của AI vào commit message, không thêm dòng ghi công AI (như "Generated with Claude Code") vào mô tả pull request;
     - chỉ stage các file thuộc task và xem lại nội dung đã stage trước khi commit;
     - sau khi commit, kiểm tra bằng `git show --check --oneline HEAD`;
@@ -117,7 +118,7 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 
 ## 7. Quy ước tài liệu và ngôn ngữ
 
-1. Nội dung báo cáo, markdown trong notebook, tài liệu `.md`, phần giải thích lựa chọn và phân tích kết quả viết bằng **tiếng Việt**. Giữ nguyên thuật ngữ tiếng Anh khi không nên dịch hoặc bản dịch không phổ biến (keypoint, descriptor, homography, kernel, thread, warp, block, speedup...).
+1. Nội dung báo cáo, markdown trong notebook, tài liệu `.md`, phần giải thích lựa chọn và phân tích kết quả viết bằng **tiếng Việt**. Giữ nguyên thuật ngữ tiếng Anh khi không nên dịch hoặc bản dịch không phổ biến (keypoint, descriptor, homography, kernel, thread, warp, block, speedup, contract...).
 2. Tên file, tên thư mục, tên nhánh, code, tên biến, tên hàm, comment trong code và commit message viết bằng **tiếng Anh**. Ngoại lệ là tên riêng như tên thành viên và tên địa điểm chụp; khi dùng trong tên file hoặc thư mục thì viết không dấu.
 3. Không dùng blockquote Markdown (dòng bắt đầu bằng `>`). Mọi sơ đồ trong Markdown viết bằng Mermaid trong code fence `mermaid`.
 4. Gọi thành viên bằng tên, không dùng ký hiệu chữ cái thay cho tên.

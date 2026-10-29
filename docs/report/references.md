@@ -18,7 +18,7 @@ Người tổng hợp: Đế (23120232). Ngày truy cập các nguồn dưới �
 | Nguồn | Dùng cho phần nào | Phạm vi đã đọc/kiểm chứng |
 |---|---|---|
 | [Đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md), [đề giữa kỳ](../specs/CSC14120_2026_Final%20Project_MidTerm.md) | Yêu cầu pipeline, sequential, GPU, fairness, synthetic và báo cáo | Đọc bản Markdown local; repo không có PDF gốc để đối chiếu |
-| [Kế hoạch Nhóm](../midterm-plan.md), [bảng công việc](../task-board.md), [interface](../interface.md), [common.h](../../src/common.h) | Phạm vi task, thư viện, quy ước dữ liệu và nghiệm thu | Đọc local; P0-T04 chưa ghi hoàn thành |
+| [Kế hoạch Nhóm](../archive/midterm-plan.md), [bảng công việc](../task-board.md), [interface](../interface.md), [common.h](../../src/common.h) | Phạm vi task, thư viện, quy ước dữ liệu và nghiệm thu | Đọc local; P0-T04 chưa ghi hoàn thành |
 | [Lowe, D. G. (2004). Distinctive Image Features from Scale-Invariant Keypoints](https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf), IJCV 60(2), 91–110 | S4: ý tưởng ratio test, nguồn ngưỡng khảo sát | Đọc mục 7.1–7.2 qua PDF tác giả; thí nghiệm dùng SIFT, không chuyển kết luận chất lượng sang binary descriptor |
 | [OpenCV 4.13.0: Feature Matching](https://docs.opencv.org/4.13.0/dc/dc3/tutorial_py_matcher.html) | S4: Hamming/L2, exact search, ratio và cross-check | Đọc tài liệu chính thức; không thêm OpenCV vào chương trình |
 | [OpenCV 4.13.0: BFMatcher, create](https://docs.opencv.org/4.13.0/d3/da1/classcv_1_1BFMatcher.html) | S4: Hamming cho ORB/BRISK/BRIEF; cross-check là alternative cho ratio, không bắt buộc | Đọc trực tiếp mục create; phân biệt Hamming và Hamming2 cho ORB WTA_K=3/4 |

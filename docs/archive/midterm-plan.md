@@ -7,9 +7,9 @@
 
 Tài liệu đi kèm:
 
-- [Bảng công việc](task-board.md): danh sách task theo giai đoạn, người phụ trách, hạn và trạng thái.
-- [Dataset](dataset.md): quy định chụp ảnh và chuẩn bị dữ liệu.
-- [Đề giữa kỳ](specs/CSC14120_2026_Final%20Project_MidTerm.md) và [đề cuối kỳ](specs/CSC14120_2026_Final%20Project.md): bản chép nguyên văn từ PDF của môn học.
+- [Bảng công việc giữa kỳ](midterm-task-board.md): danh sách task theo giai đoạn, người phụ trách, hạn và trạng thái.
+- [Dataset](../dataset.md): quy định chụp ảnh và chuẩn bị dữ liệu.
+- [Đề giữa kỳ](../specs/CSC14120_2026_Final%20Project_MidTerm.md) và [đề cuối kỳ](../specs/CSC14120_2026_Final%20Project.md): bản chép nguyên văn từ PDF của môn học.
 
 Quy ước ngày: mọi hạn ghi theo dạng `dd/mm (thứ)` của năm 2026.
 
@@ -50,7 +50,7 @@ Cột "Phần việc chung" chỉ ghi các phần việc chung đã có task đ�
 
 ## 3. Các giai đoạn
 
-Kế hoạch được lập **cuốn chiếu**: chỉ giai đoạn hiện tại có nội dung và hạn chi tiết. Khi một giai đoạn hoàn thành, nhóm lập kế hoạch chi tiết cho giai đoạn kế tiếp và cập nhật vào [bảng công việc](task-board.md). Nội dung và hạn có thể điều chỉnh liên tục cho phù hợp với tiến độ thực tế. Mốc cố định duy nhất là 23/10.
+Kế hoạch được lập **cuốn chiếu**: chỉ giai đoạn hiện tại có nội dung và hạn chi tiết. Khi một giai đoạn hoàn thành, nhóm lập kế hoạch chi tiết cho giai đoạn kế tiếp và cập nhật vào [bảng công việc](midterm-task-board.md). Nội dung và hạn có thể điều chỉnh liên tục cho phù hợp với tiến độ thực tế. Mốc cố định duy nhất là 23/10.
 
 ```mermaid
 flowchart LR
@@ -199,7 +199,7 @@ Trước khi kết thúc P0, `docs/interface.md` và `common.h` phải chốt t�
 
 1. Repo GitHub **private**, cả 4 người là collaborator. Không đưa code cho nhóm khác.
 2. `main` luôn build được.
-3. **Mã task** có dạng `P<số giai đoạn>-T<số thứ tự>`, ví dụ `P0-T03`, được ghi trong [bảng công việc](task-board.md).
+3. **Mã task** có dạng `P<số giai đoạn>-T<số thứ tự>`, ví dụ `P0-T03`, được ghi trong [bảng công việc](midterm-task-board.md).
 4. **Nhánh và pull request theo loại thay đổi.** Tên thành viên trong tên nhánh dùng `tuan`, `thanh`, `chuong`, `de`.
 
     | Loại thay đổi | Cách làm |
@@ -255,7 +255,7 @@ Task viết báo cáo được coi là xong khi bản nháp đã nằm trong `do
 
 ## 15. Checklist trước khi nộp
 
-Đối chiếu lại toàn bộ yêu cầu trong [đề giữa kỳ](specs/CSC14120_2026_Final%20Project_MidTerm.md), bổ sung thêm:
+Đối chiếu lại toàn bộ yêu cầu trong [đề giữa kỳ](../specs/CSC14120_2026_Final%20Project_MidTerm.md), bổ sung thêm:
 
 - [ ] Bảng thành viên có đủ họ tên và MSSV.
 - [ ] Notebook có mục tài liệu tham khảo.

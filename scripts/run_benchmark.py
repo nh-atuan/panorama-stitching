@@ -2,7 +2,7 @@
 # Authors: Tran Huu Kim Thanh (23120166)
 # External source: none
 
-"""Run the official V0 benchmark: 3 sites x 3 sizes (docs/midterm-plan.md, section 12).
+"""Run the official V0 benchmark: 3 sites x 3 sizes (docs/archive/midterm-plan.md, section 12).
 
 Each configuration calls stitch once with --runs N. stitch does its own untimed warm-up
 and prints one CSV block (N runs, Average, Minimum); this script never times anything
@@ -19,7 +19,7 @@ Output layout in --out (the handoff layout of docs/notebook-guide.md):
     environment.json             GPU, CPU, time, commands and stitch SHA-256
 
 Do not run any other heavy cell in the same Colab session while this script runs
-(docs/midterm-plan.md, section 12.6).
+(docs/archive/midterm-plan.md, section 12.6).
 
 Example:
     python scripts/run_benchmark.py --stitch build/stitch --dataset dataset --runs 5 --out results/benchmark

@@ -1,11 +1,11 @@
 // Authors: Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
 // External source: none
 
-#include "common.h"
-#include "cuda_utils.cuh"
+#include "common/common.h"
+#include "common/cuda_utils.cuh"
 #include "versions.h"
-#include "stb_image.h"
-#include "stb_image_write.h"
+#include "common/stb_image.h"
+#include "common/stb_image_write.h"
 
 #include <algorithm>
 #include <cerrno>

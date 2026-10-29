@@ -4,8 +4,8 @@
 #ifndef GROUP16_VERSIONS_H
 #define GROUP16_VERSIONS_H
 
-#include "v0_config.h"
-#include "v0_pipeline.h"
+#include "common/v0_config.h"
+#include "v0/v0_pipeline.h"
 
 namespace panorama {
 

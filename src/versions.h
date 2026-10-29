@@ -10,9 +10,14 @@
 namespace panorama {
 
 // Versions accepted by --version. V0 is the sequential pipeline in v0_pipeline.cpp;
-// CUDA versions are added here as they become ready.
+// V1 currently exposes infrastructure stubs only, with an explicit CLI warning.
+// Host-only builds retain V0 support without CUDA headers or a GPU driver.
 inline bool is_supported_version(int version) {
+#ifdef __CUDACC__
+    return version == 0 || version == 1;
+#else
     return version == 0;
+#endif
 }
 
 }  // namespace panorama

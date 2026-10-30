@@ -40,7 +40,9 @@ ErrorCode v1_match(DeviceWorkspace&, const Config&, cudaStream_t) {
 ErrorCode v1_homography(DeviceWorkspace&, const Config&, cudaStream_t) {
     return ErrorCode::Success;
 }
-ErrorCode v1_warp_blend(DeviceWorkspace& workspace, const Config&, cudaStream_t stream) {
+// Keep the CLI scaffold separate from the real, independently tested S6 module.
+// P6 replaces this call after S1-S5 can supply a valid Device homography.
+ErrorCode v1_scaffold_warp_blend(DeviceWorkspace& workspace, const Config&, cudaStream_t stream) {
     // Infrastructure smoke output only: copy A, without estimating H or stitching B.
     CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_canvas, workspace.canvas.image.stride,
                                 workspace.d_imageA, workspace.imageA.stride,
@@ -418,7 +420,7 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
     if (measure) events.h2d_stop.record(stream);
     typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
     const StageFunction stages[] = {v1_preprocess, v1_detect, v1_describe,
-                                   v1_match, v1_homography, v1_warp_blend};
+                                   v1_match, v1_homography, v1_scaffold_warp_blend};
     for (std::size_t i = 0; i < kStageCount; ++i) {
         if (measure) events.stage_start[i].record(stream);
         check_stage(stages[i](workspace, config, stream), static_cast<Stage>(i));

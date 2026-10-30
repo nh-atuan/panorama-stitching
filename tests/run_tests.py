@@ -107,6 +107,7 @@ PYTHON_SUITES = [
     "test_run_benchmark.py",
     "test_plot_benchmark.py",
     "test_midterm_notebook.py",
+    "test_profiling_scripts.py",
 ]
 
 

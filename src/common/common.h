@@ -96,10 +96,12 @@ constexpr std::size_t kStageCount = 6;
 
 struct TimingStats {
     // Entries follow Stage order. S1-S3 each include both images A and B.
+    // V0: CPU stage elapsed; V1: CUDA event spans (CSV S1_V1_ms..S6_V1_ms).
+    // A stage span can include copies; do not equate its sum with kernel busy time.
     double stage_ms[kStageCount] = {};
     double total_kernel_ms = 0.0;
-    double host_to_device_ms = 0.0;
-    double device_to_host_ms = 0.0;
+    double h2d_ms = 0.0;
+    double d2h_ms = 0.0;
     double end_to_end_ms = 0.0;
 };
 
@@ -122,6 +124,50 @@ enum class ErrorCode : std::uint32_t {
     CudaFailure = 15
 };
 
+// Device-written metadata. Counts are separate from allocated capacities.
+struct DeviceCounts {
+    std::uint32_t keypointsA = 0, keypointsB = 0;
+    std::uint32_t descriptorsA = 0, descriptorsB = 0;
+    std::uint32_t matches = 0;
+    ErrorCode status = ErrorCode::Success;
+};
+
+struct DeviceCanvasInfo {
+    std::int32_t width = 0, height = 0;
+    std::int32_t offset_x = 0, offset_y = 0;
+    std::size_t stride = 0;  // Bytes; RGB interleaved.
+    ErrorCode status = ErrorCode::Success;
+};
+
+// Borrowed Device pointers, owned exclusively by the Host dispatcher in main.cu.
+// Never free these in a stage or copy a Host image pointer into a Device view.
+// The workspace itself is Host-side launch metadata; pass individual views to kernels.
+struct DeviceWorkspace {
+    std::uint8_t* d_imageA = nullptr;
+    std::uint8_t* d_imageB = nullptr;
+    float* d_grayA = nullptr;
+    float* d_grayB = nullptr;
+    Keypoint* d_keypointsA = nullptr;
+    Keypoint* d_keypointsB = nullptr;
+    Descriptor* d_descriptorsA = nullptr;
+    Descriptor* d_descriptorsB = nullptr;
+    Match* d_matches = nullptr;
+    Homography* d_homography = nullptr;
+    std::uint8_t* d_canvas = nullptr;
+    DeviceCounts* d_counts = nullptr;
+    DeviceCanvasInfo* d_canvas_info = nullptr;
+    std::uint8_t* d_scratch = nullptr;
+
+    // Alias views: data points to the matching d_* allocation, not Host pixels.
+    Image imageA, imageB;
+    GrayImage grayA, grayB;
+    Panorama canvas;
+    std::size_t keypoint_capacityA = 0, keypoint_capacityB = 0;
+    std::size_t descriptor_capacityA = 0, descriptor_capacityB = 0;
+    std::size_t match_capacity = 0;
+    std::size_t canvas_capacity_bytes = 0, scratch_capacity_bytes = 0;
+};
+
 // Host and device exchange plain data, never CliOptions or STL containers.
 #define GROUP16_ASSERT_TRANSFER_TYPE(Type) \
     static_assert(std::is_standard_layout<Type>::value, #Type " must have standard layout"); \
@@ -136,6 +182,9 @@ GROUP16_ASSERT_TRANSFER_TYPE(Homography);
 GROUP16_ASSERT_TRANSFER_TYPE(Panorama);
 GROUP16_ASSERT_TRANSFER_TYPE(Config);
 GROUP16_ASSERT_TRANSFER_TYPE(TimingStats);
+GROUP16_ASSERT_TRANSFER_TYPE(DeviceCounts);
+GROUP16_ASSERT_TRANSFER_TYPE(DeviceCanvasInfo);
+GROUP16_ASSERT_TRANSFER_TYPE(DeviceWorkspace);
 
 #undef GROUP16_ASSERT_TRANSFER_TYPE
 

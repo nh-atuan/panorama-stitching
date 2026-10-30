@@ -486,7 +486,7 @@ V0 làm bốn việc trong vùng đo: nghịch đảo H và tính canvas (chi ph
 - Pixel không có nguồn B hợp lệ thoát sớm và giữ giá trị A hoặc nền, như V0. Warp nằm trên biên footprint của B sẽ bị divergence.
 - Đọc 4 mẫu của B là gather theo phép chiếu nên không coalesce hoàn toàn; các thread kề nhau đọc vùng nguồn gần nhau nên L1/L2 cache giúp được một phần.
 - V1 giữ `double` như V0 để kết quả giống V0. Trên T4 (compute capability 7.5), throughput phép cộng, nhân, FMA 64 bit chỉ là 2 kết quả mỗi chu kỳ mỗi multiprocessor, so với 64 cho 32 bit [R10, mục 12.1.1, bảng 5]. Đây là rủi ro hiệu năng chính của S6 trên T4. Đổi sang `float` là đổi phương pháp tính, phải cả Nhóm quyết định và áp dụng cho cả V0.
-- Panorama ở site2 large khoảng 114 MB RGB. Chép output về Host để ghi file nằm ngoài vùng đo theo quy định đo thời gian, nhưng vẫn cần ghi lại riêng khi so sánh end-to-end.
+- Panorama ở site2 large khoảng 114 MB RGB. Chép output về Host (D2H) phải được đo riêng bằng CUDA events và nằm trong end-to-end; chỉ việc ghi file ảnh trên ổ đĩa nằm ngoài phép đo. Quy ước GPU dùng chung được cập nhật ở mục 11 của [interface](../interface.md).
 
 ### 6.3. Hướng tối ưu V2/V3 và rủi ro
 

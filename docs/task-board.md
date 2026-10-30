@@ -127,8 +127,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Xây dựng hạ tầng GPU dùng chung trong <code>src/common/cuda_utils.cuh</code>, thiết kế contract workspace Device-resident cho V1, mở rộng báo cáo timing CSV trong <code>src/main.cu</code> và cập nhật <a href="interface.md">interface</a></td>
       <td>P5-T02</td>
       <td>Merge vào <code>main</code> qua pull request file dùng chung; build sạch bằng <code>nvcc -arch=sm_75</code> và chạy đúng <code>--version 0</code> trên Colab T4</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>30/10: triển khai trên <code>chuong/shared-gpu-contract</code>: CUDA error/memory/event helpers, Device workspace, dispatcher V1 stub và CSV mở rộng. Build cục bộ WSL bằng nvcc 12.6, <code>-arch=sm_75</code>, chạy trên GTX 1650; V0 default 5 runs có PNG khớp từng byte baseline, V1 kiểm tra H2D/D2H và output copy A. Chờ nghiệm thu Colab T4 và merge PR; chưa đánh dấu hoàn tất.</td>
     </tr>
     <tr>
       <td>P5-T13</td>

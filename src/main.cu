@@ -20,11 +20,43 @@
 #include <new>
 #include <stdexcept>
 
+#ifdef __CUDACC__
+namespace panorama {
+
+// Temporary V1 entry points. Replace these stubs with stage implementations in
+// src/v1/; all operations must use the borrowed workspace and the supplied stream.
+ErrorCode v1_preprocess(DeviceWorkspace&, const Config&, cudaStream_t) {
+    return ErrorCode::Success;
+}
+ErrorCode v1_detect(DeviceWorkspace&, const Config&, cudaStream_t) {
+    return ErrorCode::Success;
+}
+ErrorCode v1_describe(DeviceWorkspace&, const Config&, cudaStream_t) {
+    return ErrorCode::Success;
+}
+ErrorCode v1_match(DeviceWorkspace&, const Config&, cudaStream_t) {
+    return ErrorCode::Success;
+}
+ErrorCode v1_homography(DeviceWorkspace&, const Config&, cudaStream_t) {
+    return ErrorCode::Success;
+}
+ErrorCode v1_warp_blend(DeviceWorkspace& workspace, const Config&, cudaStream_t stream) {
+    // Infrastructure smoke output only: copy A, without estimating H or stitching B.
+    CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_canvas, workspace.canvas.image.stride,
+                                workspace.d_imageA, workspace.imageA.stride,
+                                static_cast<std::size_t>(workspace.imageA.width) * 3,
+                                workspace.imageA.height, cudaMemcpyDeviceToDevice, stream));
+    return ErrorCode::Success;
+}
+
+}  // namespace panorama
+#endif
+
 namespace {
 
 const char* const kUsage =
     "Usage: ./stitch <left_image> <right_image> <output_image> "
-    "--version 0 [--runs N] [--debug]";
+    "--version <0|1> [--runs N] [--debug] (V1: CUDA infrastructure stubs only)";
 
 class ProgramError : public std::runtime_error {
 public:
@@ -127,7 +159,9 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     }
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
-             "supported versions: 0.", panorama::ErrorCode::UnsupportedVersion);
+             "supported versions in this build: " +
+             std::string(panorama::is_supported_version(1) ? "0, 1 (stubs)." : "0."),
+             panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
 }
@@ -225,6 +259,8 @@ struct TimingSummary {
             minimum.stage_ms[stage] = std::numeric_limits<double>::max();
         }
         minimum.end_to_end_ms = std::numeric_limits<double>::max();
+        minimum.h2d_ms = minimum.d2h_ms = minimum.total_kernel_ms =
+            std::numeric_limits<double>::max();
     }
     void add(const TimingStats& timing) {
         ++count;
@@ -234,13 +270,25 @@ struct TimingSummary {
         }
         average.end_to_end_ms += (timing.end_to_end_ms - average.end_to_end_ms) / count;
         minimum.end_to_end_ms = std::min(minimum.end_to_end_ms, timing.end_to_end_ms);
+        const double values[] = {timing.h2d_ms, timing.d2h_ms, timing.total_kernel_ms};
+        double* averages[] = {&average.h2d_ms, &average.d2h_ms, &average.total_kernel_ms};
+        double* minima[] = {&minimum.h2d_ms, &minimum.d2h_ms, &minimum.total_kernel_ms};
+        for (int i = 0; i < 3; ++i) {
+            *averages[i] += (values[i] - *averages[i]) / count;
+            *minima[i] = std::min(*minima[i], values[i]);
+        }
     }
 };
 
-void print_timing(const std::string& label, const TimingStats& timing) {
+void print_timing(const std::string& label, const TimingStats& timing, bool gpu = false) {
     std::cout << label;
     for (std::size_t stage = 0; stage < kStageCount; ++stage) std::cout << ',' << timing.stage_ms[stage];
-    std::cout << ',' << timing.end_to_end_ms << '\n';
+    std::cout << ',' << timing.end_to_end_ms;
+    if (gpu) {
+        std::cout << ',' << timing.h2d_ms << ',' << timing.d2h_ms
+                  << ',' << timing.total_kernel_ms;
+    }
+    std::cout << '\n';
 }
 
 void check_stage(ErrorCode status, Stage stage) {
@@ -275,6 +323,185 @@ void print_diagnostics(const Image& left, const Image& right, const Config& conf
     log.precision(precision);
 }
 
+#ifdef __CUDACC__
+// Owns each allocation once. Alias image views in DeviceWorkspace are never freed.
+struct OwnedDeviceWorkspace {
+    DeviceWorkspace view;
+    OwnedDeviceWorkspace() = default;
+    OwnedDeviceWorkspace(const OwnedDeviceWorkspace&) = delete;
+    OwnedDeviceWorkspace& operator=(const OwnedDeviceWorkspace&) = delete;
+    ~OwnedDeviceWorkspace() {
+        device_free(view.d_scratch);
+        device_free(view.d_canvas_info);
+        device_free(view.d_counts);
+        device_free(view.d_canvas);
+        device_free(view.d_homography);
+        device_free(view.d_matches);
+        device_free(view.d_descriptorsB);
+        device_free(view.d_descriptorsA);
+        device_free(view.d_keypointsB);
+        device_free(view.d_keypointsA);
+        device_free(view.d_grayB);
+        device_free(view.d_grayA);
+        device_free(view.d_imageB);
+        device_free(view.d_imageA);
+    }
+};
+
+void prepare_device_workspace(const Image& left, const Image& right, const Config& config,
+                              DeviceWorkspace& workspace) {
+    const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
+    const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
+    const std::size_t features = static_cast<std::size_t>(config.max_keypoints);
+    device_allocate(workspace.d_imageA, bytes_a);
+    device_allocate(workspace.d_imageB, bytes_b);
+    workspace.imageA = left;
+    workspace.imageB = right;
+    workspace.imageA.data = workspace.d_imageA;
+    workspace.imageB.data = workspace.d_imageB;
+    device_allocate(workspace.d_grayA, static_cast<std::size_t>(left.width) * left.height);
+    device_allocate(workspace.d_grayB, static_cast<std::size_t>(right.width) * right.height);
+    workspace.grayA.data = workspace.d_grayA;
+    workspace.grayA.width = left.width;
+    workspace.grayA.height = left.height;
+    workspace.grayA.channels = 1;
+    workspace.grayA.stride = static_cast<std::size_t>(left.width) * sizeof(float);
+    workspace.grayB.data = workspace.d_grayB;
+    workspace.grayB.width = right.width;
+    workspace.grayB.height = right.height;
+    workspace.grayB.channels = 1;
+    workspace.grayB.stride = static_cast<std::size_t>(right.width) * sizeof(float);
+    device_allocate(workspace.d_keypointsA, features);
+    device_allocate(workspace.d_keypointsB, features);
+    device_allocate(workspace.d_descriptorsA, features);
+    device_allocate(workspace.d_descriptorsB, features);
+    device_allocate(workspace.d_matches, features);
+    device_allocate(workspace.d_homography, 1);
+    device_allocate(workspace.d_counts, 1);
+    device_allocate(workspace.d_canvas_info, 1);
+    CUDA_CHECK(cudaMemset(workspace.d_counts, 0, sizeof(DeviceCounts)));
+    CUDA_CHECK(cudaMemset(workspace.d_canvas_info, 0, sizeof(DeviceCanvasInfo)));
+    workspace.keypoint_capacityA = workspace.keypoint_capacityB = features;
+    workspace.descriptor_capacityA = workspace.descriptor_capacityB = features;
+    workspace.match_capacity = features;
+    // The stub has A's canvas. Real S6 must publish its computed geometry first;
+    // the Host owner then checks the budget and reserves the required capacity.
+    device_allocate(workspace.d_canvas, bytes_a);
+    workspace.canvas_capacity_bytes = bytes_a;
+    workspace.canvas.image = workspace.imageA;
+    workspace.canvas.image.data = workspace.d_canvas;
+}
+
+struct V1Events {
+    CudaEvent h2d_start, h2d_stop, d2h_start, d2h_stop;
+    CudaEvent stage_start[kStageCount], stage_stop[kStageCount];
+};
+
+TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
+                        const std::uint8_t* host_a, const std::uint8_t* host_b,
+                        std::uint8_t* host_output, cudaStream_t stream,
+                        V1Events& events, bool measure) {
+    using Clock = std::chrono::high_resolution_clock;
+    Clock::time_point start;
+    // Chrono measures synchronized Host-observed end-to-end only, never kernels.
+    // The caller drains the stream before entry; completion is awaited below.
+    if (measure) start = Clock::now();
+    if (measure) events.h2d_start.record(stream);
+    CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_imageA, workspace.imageA.stride,
+                                host_a, workspace.imageA.stride,
+                                static_cast<std::size_t>(workspace.imageA.width) * 3,
+                                workspace.imageA.height, cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_imageB, workspace.imageB.stride,
+                                host_b, workspace.imageB.stride,
+                                static_cast<std::size_t>(workspace.imageB.width) * 3,
+                                workspace.imageB.height, cudaMemcpyHostToDevice, stream));
+    if (measure) events.h2d_stop.record(stream);
+    typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
+    const StageFunction stages[] = {v1_preprocess, v1_detect, v1_describe,
+                                   v1_match, v1_homography, v1_warp_blend};
+    for (std::size_t i = 0; i < kStageCount; ++i) {
+        if (measure) events.stage_start[i].record(stream);
+        check_stage(stages[i](workspace, config, stream), static_cast<Stage>(i));
+        CUDA_CHECK(cudaGetLastError());  // Catch immediate launch errors as kernels arrive.
+        if (measure) events.stage_stop[i].record(stream);
+    }
+    if (measure) events.d2h_start.record(stream);
+    CUDA_CHECK(cudaMemcpy2DAsync(host_output, workspace.canvas.image.stride,
+                                workspace.d_canvas, workspace.canvas.image.stride,
+                                static_cast<std::size_t>(workspace.canvas.image.width) * 3,
+                                workspace.canvas.image.height, cudaMemcpyDeviceToHost, stream));
+    if (measure) {
+        events.d2h_stop.record(stream);
+        events.d2h_stop.synchronize();  // One wait after all stages and final D2H.
+    } else {
+        CUDA_CHECK(cudaStreamSynchronize(stream));
+    }
+    TimingStats timing;
+    if (measure) {
+        timing.end_to_end_ms = std::chrono::duration<double, std::milli>(Clock::now() - start).count();
+        timing.h2d_ms = events.h2d_stop.elapsed_since(events.h2d_start);
+        timing.d2h_ms = events.d2h_stop.elapsed_since(events.d2h_start);
+        for (std::size_t i = 0; i < kStageCount; ++i) {
+            timing.stage_ms[i] = events.stage_stop[i].elapsed_since(events.stage_start[i]);
+        }
+        // No compute kernels exist in these stubs. S6's D2D copy is not a kernel.
+        // Real stages must supply kernel-only event measurements before this can
+        // report nonzero total_kernel_ms; do not substitute the sum of stage spans.
+        timing.total_kernel_ms = 0.0;
+    }
+    return timing;
+}
+
+int run_v1(const CliOptions& options, OutputFormat format, const Image& left,
+           const Image& right, const Config& config) {
+    std::cerr << "Warning: V1 is an infrastructure scaffold with six stubs. "
+                 "Output copies image A; timings are not stitching benchmarks.\n";
+    int device = 0;
+    cudaDeviceProp properties;
+    CUDA_CHECK(cudaGetDevice(&device));
+    CUDA_CHECK(cudaGetDeviceProperties(&properties, device));
+    if (options.debug) {
+        std::cerr << "[debug] GPU=" << properties.name << " version=1 (stubs) runs="
+                  << options.runs << " seed=" << config.seed << '\n'
+                  << "[debug] Config: ";
+        write_config(std::cerr, config);
+        std::cerr << "\n[debug] One warm-up (not timed): S1 S2 S3 S4 S5 S6 stubs.\n";
+    }
+    // Declaration order ensures stream completion before pinned/device buffers die,
+    // including exceptions during a partially queued run.
+    OwnedDeviceWorkspace owner;
+    prepare_device_workspace(left, right, config, owner.view);
+    const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
+    const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
+    PinnedBuffer<std::uint8_t> input_a(bytes_a), input_b(bytes_b), output(bytes_a);
+    std::copy(left.data, left.data + bytes_a, input_a.get());
+    std::copy(right.data, right.data + bytes_b, input_b.get());
+    CudaStream stream;
+    V1Events events;
+    run_v1_once(owner.view, config, input_a.get(), input_b.get(), output.get(),
+                stream.get(), events, false);
+    TimingSummary summary;
+    std::cout.imbue(std::locale::classic());
+    std::cout << std::fixed << std::setprecision(9)
+              << "Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,"
+                 "Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
+    for (int index = 0; index < options.runs; ++index) {
+        const TimingStats timing = run_v1_once(owner.view, config, input_a.get(), input_b.get(),
+                                               output.get(), stream.get(), events, true);
+        summary.add(timing);
+        print_timing(std::to_string(index + 1), timing, true);
+    }
+    Image result = owner.view.canvas.image;
+    result.data = output.get();
+    save_image(options.output_image, format, result);  // Disk I/O is outside timing.
+    print_timing("Average", summary.average, true);
+    print_timing("Minimum", summary.minimum, true);
+    std::cout.flush();
+    if (!std::cout) throw std::runtime_error("Cannot write benchmark CSV to stdout.");
+    return EXIT_SUCCESS;
+}
+#endif  // __CUDACC__
+
 int run(int argc, char** argv) {
     const panorama::CliOptions options = parse_cli(argc, argv);
     const OutputFormat format = output_format(options.output_image);
@@ -285,6 +512,9 @@ int run(int argc, char** argv) {
     if (make_v0_config(left.view.width, left.view.height, config) != ErrorCode::Success) {
         fail("Cannot build the V0 configuration.", ErrorCode::InvalidConfig);
     }
+#ifdef __CUDACC__
+    if (options.version == 1) return run_v1(options, format, left.view, right.view, config);
+#endif
     V0Workspace workspace;
     Stage stage = Stage::Preprocess;
     const ErrorCode prepared = v0_prepare(left.view, right.view, config, workspace);
@@ -355,6 +585,10 @@ int main(int argc, char** argv) {
         std::cerr << "Error: [" << error_name(error.code) << "] " << error.what() << '\n';
         if (error.code == ErrorCode::InvalidArgument || error.code == ErrorCode::UnknownOption ||
             error.code == ErrorCode::UnsupportedVersion) std::cerr << kUsage << '\n';
+#ifdef __CUDACC__
+    } catch (const panorama::CudaError&) {
+        // CUDA_CHECK has reported the call; all stack-owned resources are now released.
+#endif
     } catch (const std::bad_alloc&) {
         std::cerr << "Error: [AllocationFailed] Cannot allocate pipeline buffers.\n";
     } catch (const std::exception& error) {

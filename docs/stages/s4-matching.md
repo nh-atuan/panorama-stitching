@@ -2,9 +2,9 @@
 
 # S4 - Matching
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 21/10/2026; Đế viết mapping GPU P3-T08 từ benchmark scalar ngày 20/10. Tuấn (23120185) đã bổ sung kết quả Colab T4 ngày 18/10.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 31/10/2026; implementation V1 và kiểm chứng P5-T10 nằm ở mục 11. Tuấn (23120185) đã bổ sung kết quả V0 trên Colab T4 ngày 18/10.
 
-Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
+Task: P0-T11 (phương pháp, đầu vào/đầu ra), P1-T11 (tham số, thuật toán, trường hợp biên), P5-T10 (V1 và kiểm chứng).
 
 **Trạng thái: đã cài V0 và gộp file ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Ngày 18/10/2026 bản trên `main` đạt 66 checks S4 trên Colab T4 bằng nvcc và chạy trong pipeline V0 trên cả 4 cặp của dataset (mục 5, 7). Interface đã chốt ở P0-T04.
 

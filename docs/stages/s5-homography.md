@@ -2,9 +2,9 @@
 
 # S5 - Homography estimation
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 21/10/2026; Đế viết mapping GPU P3-T08 từ benchmark scalar ngày 20/10. Tuấn (23120185) đã bổ sung kết quả Colab T4 ngày 18/10.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 31/10/2026; implementation V1 và kiểm chứng P5-T11 nằm ở mục 11. Tuấn (23120185) đã bổ sung kết quả V0 trên Colab T4 ngày 18/10.
 
-Task: P0-T11 (method, input/output, synthetic/metric) và phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên).
+Task: P0-T11 (method, input/output, synthetic/metric), phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên), P5-T11 (V1 và kiểm chứng).
 
 **Trạng thái: đã cài V0 S5 và gộp file ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. Ngày 18/10/2026 bản trên `main` đạt toàn bộ 7 suites trên Colab T4 bằng nvcc, chạy trong pipeline V0 trên cả 4 cặp của dataset, và có sai số trên cặp synthetic ở mục 5.5. Ngưỡng sai số chung chốt ở P1-T01.
 

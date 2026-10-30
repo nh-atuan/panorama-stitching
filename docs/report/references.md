@@ -1,3 +1,5 @@
+<!-- Authors: Le Thuong De (23120232). External source: none. -->
+
 # Nguồn tham khảo báo cáo
 
 ## S1 - Tuấn
@@ -50,6 +52,16 @@ Tra cứu có mục tiêu, không phải khảo sát đầy đủ mọi công b�
 | [NVIDIA CUDA Math API 13.0 — Integer Intrinsics](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-math-api/cuda_math_api/group__CUDA__MATH__INTRINSIC__INT.html) | S4: `__popc` trên word 32 bit ở Device | Mục khai báo và ý nghĩa `__popc` |
 | [NVIDIA CUDA C++ Best Practices Guide 13.0](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html) | S4/S5: profiling, bố trí bộ nhớ, truyền Host–Device, timing và giới hạn Amdahl | Các mục Assess, Timing, Memory Optimizations và Data Transfer; mapping block/thread và prefix deterministic là thiết kế của nhóm |
 | Benchmark V0 scalar ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv`, CSV/log từng site và `environment.json` | Căn cứ hiệu năng cho mapping S4/S5 | Đối chiếu chín hàng average với 45 lần đo gốc; các file kết quả được lưu riêng, không commit vào repo |
+
+### Bổ sung cho P5-T09, P5-T10, P5-T11
+
+Đế cập nhật ngày 31/10/2026. Core hình học, DLT, sampler và MSAC V1 được chuyển từ implementation V0 của Nhóm sang buffer Device; giữ các nguồn ý tưởng đã ghi ở trên. V0 không đổi.
+
+| Nguồn | Dùng cho phần nào | Phạm vi đã kiểm chứng |
+|---|---|---|
+| [NVIDIA NVTX](https://nvidia.github.io/NVTX/) | Header NVTX v3 và push/pop range trong `src/v1/common/v1_nvtx.cuh` | Đọc tài liệu C/C++; wrapper do Nhóm viết, report nsys có nhãn S4/S5 |
+| [Nsight Systems User Guide](https://docs.nvidia.com/nsight-systems/UserGuide/index.html) | Thu thập CUDA/NVTX và xuất thống kê kernel/copy/range | Lệnh profile/stats chạy được trên Colab T4 với Nsight Systems 2025.3.1 |
+| [Nsight Compute CLI](https://docs.nvidia.com/nsight-compute/NsightComputeCli/index.html) | Lọc kernel, giới hạn launch, export/import report CSV | Lệnh thu thập và xuất report của S4/S5 chạy được trên Colab T4 với Nsight Compute 2025.3.1 |
 
 ## S2/S3 - Thành
 

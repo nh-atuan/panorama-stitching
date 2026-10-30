@@ -1,8 +1,10 @@
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185). External source: none. -->
+
 # S4 - Matching
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 21/10/2026; Đế viết mapping GPU P3-T08 từ benchmark scalar ngày 20/10. Tuấn (23120185) đã bổ sung kết quả Colab T4 ngày 18/10.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 31/10/2026; implementation V1 và kiểm chứng P5-T10 nằm ở mục 11. Tuấn (23120185) đã bổ sung kết quả V0 trên Colab T4 ngày 18/10.
 
-Task: P0-T11 (phương pháp, đầu vào/đầu ra) và P1-T11 (tham số, thuật toán, trường hợp biên).
+Task: P0-T11 (phương pháp, đầu vào/đầu ra), P1-T11 (tham số, thuật toán, trường hợp biên), P5-T10 (V1 và kiểm chứng).
 
 **Trạng thái: đã cài V0 và gộp file ngày 13/10/2026.** Dùng nhất quán method đã chốt từ V0 đến Final, chỉ tối ưu implementation. Ngày 18/10/2026 bản trên `main` đạt 66 checks S4 trên Colab T4 bằng nvcc và chạy trong pipeline V0 trên cả 4 cặp của dataset (mục 5, 7). Interface đã chốt ở P0-T04.
 
@@ -277,3 +279,17 @@ Nguồn OpenCV cung cấp mô tả để đối chiếu, không phải phụ thu
 | 13/10/2026 | Gộp view/config vào feature_support.h/.cpp, giữ implementation S4 riêng | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |
 | 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và kết quả trên dataset | Nghiệm thu P1-T12 |
 | 21/10/2026 | Giữ phương pháp, tham số và implementation V0 scalar; bổ sung mục 6 cho P3-T08 | Mapping V1 dự kiến và hướng tối ưu dựa trên benchmark ngày 20/10; chưa cài CUDA hoặc công bố speedup |
+
+## 11. Cài đặt V1 trong P5-T10
+
+Mã nguồn nằm trong `src/v1/s4/`, test trong `tests/gpu/test_gpu_s4_match.cu`. `v1_match()` giữ nguyên contract `DeviceWorkspace`, `Config`, `cudaStream_t`; `common.h` không đổi. Mỗi block xử lý một descriptor A với 128 thread mặc định. Kernel dùng `__popc`, reduction top-two theo `(distance,indexB)`, ratio nguyên `5*d1 < 4*d2`, prefix tuần tự trên Device và scatter có thứ tự. Không cấp phát trong stage, không copy descriptor hoặc match về Host.
+
+Caller cấp scratch theo `v1_match_scratch_bytes(descriptor_capacityA)`. Capacity là dung lượng thực, không phải số phần tử hợp lệ; kernel kiểm tra counts trước khi đọc dữ liệu. Return code của hàm bao phản ánh cấu hình, workspace và launch; lỗi thuật toán được ghi vào `d_counts->status`. Caller phải chờ stream/event và đọc status trước khi dùng output. Khi lọc được ít hơn bốn match hoặc output thiếu capacity, `matches` bằng 0 và không scatter kết quả một phần.
+
+Test ngày 31/10/2026 trên Colab Tesla T4, CUDA 13.0.88: `PASS GPU S4: 2387 checks`. Đối chiếu top-two bằng reference vét cạn độc lập và toàn bộ match list bằng V0. Có input rỗng, chỉ một B, ties, ratio đúng ranh giới, nhiều A chọn cùng B, tail 127/128/129, block 32/64/128/256, thiếu scratch và counts vượt capacity. Compute Sanitizer memcheck báo 0 lỗi. Nhãn NVTX gồm `S4.match`, `S4.nearest_two`, `S4.prefix`, `S4.scatter`.
+
+```bash
+python3 tests/run_tests.py --group gpu --suite gpu_s4 --compiler nvcc --require-t4
+```
+
+Sáu cặp synthetic từ ảnh nguồn đã kiểm tra SHA-256 đạt so sánh match chính xác giữa V0 và V1 trong `tool_gpu_s45`. Driver dùng V0 cho S1–S3/S6, GPU cho S4/S5; đây là kiểm chứng hai stage. Chương trình `stitch --version 1` vẫn là scaffold của P5-T12. Việc nối đủ sáu stage Device-resident và benchmark chính thức thuộc P6.

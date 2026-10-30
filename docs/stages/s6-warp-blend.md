@@ -614,7 +614,21 @@ Test nhận thêm ảnh thật và 9 hệ số H B→A: `./build/test_gpu_s6 A.j
 | Hồi quy V0 | Cùng môi trường, g++ 13 cho suite warp/pipeline; nvcc cho CLI | 2 suite / 16.141 checks đạt; CLI default 5 runs giữ CSV 8 cột, PNG khớp byte baseline ngay cả khi ẩn GPU |
 | Compute Sanitizer | WSL/WDDM trên máy local | Chưa chạy được target: debugger interface chưa bật, tool báo device not supported; không coi đây là memcheck đạt |
 
-Log và ảnh kiểm tra local ở `build/p5_t13/`, không commit output thực nghiệm. Cần chạy lại test và memcheck trên Colab T4 trước nghiệm thu; chưa có số đo speedup S6 chính thức. Dispatcher `stitch --version 1` vẫn gọi `v1_scaffold_warp_blend` để giữ pipeline scaffold chạy được khi S1–S5 còn stub. S6 thật được kiểm chứng độc lập ở P5; P6 sẽ nối hàm thật khi upstream cung cấp H hợp lệ và mở rộng pinned output theo canvas động.
+Log và ảnh kiểm tra local ở `build/p5_t13/`, không commit output thực nghiệm. Lượt Colab T4 bổ sung ngày 30/10 đã đạt như mục 7.2; chưa có số đo speedup S6 chính thức. Dispatcher `stitch --version 1` vẫn gọi `v1_scaffold_warp_blend` để giữ pipeline scaffold chạy được khi S1–S5 còn stub. S6 thật được kiểm chứng độc lập ở P5; P6 sẽ nối hàm thật khi upstream cung cấp H hợp lệ và mở rộng pinned output theo canvas động.
+
+### 7.2. Nghiệm thu Colab Tesla T4 — 30/10/2026
+
+Notebook `Group16_S6_CUDA_Verification.ipynb` và gói `group16-s6-569cc1abce-evidence` xác nhận tất cả 10 gate đạt. Môi trường: Tesla T4, driver 580.82.07, nvcc 13.0.88, target `sm_75`. Source snapshot SHA-256: `6bbcf3595c3631d8df91a906bc88f781046a5dad1b2ac305c00dc97c6390fb28`.
+
+| Kiểm tra | Kết quả T4 |
+|---|---|
+| Build và hồi quy V0 | 13 suite / 45.256 checks đạt; CLI mặc định 5 runs, CSV/PNG hợp lệ |
+| S6 fixture/oracle | 709 checks, 66 đối chiếu V0/V1; max RGB error 0, ngưỡng giữ nguyên 1 |
+| 4 cặp thật × 3 độ phân giải | 12/12 khớp canvas/offset và mọi kênh RGB trên cùng H; max RGB error 0 |
+| Memcheck fixtures | Target PASS; 0 errors, 0 bytes leak |
+| Memcheck site2/large | Target PASS; 0 errors, 0 bytes leak |
+
+Đã đối chiếu 78 file source/script/test theo manifest, chín hệ số H của từng case và log gốc. Memcheck chỉ bao phủ hai target nêu trên, không phải mọi case thật. Kết quả xác nhận correctness của renderer trên input đã thử; không chứng minh H là ground truth, không bảo đảm hết ghosting và không phải số đo speedup. Phần kỹ thuật P5-T13 sẵn sàng review; trạng thái task chỉ Xong sau merge PR. Phân tích đầy đủ và provenance nằm trong [báo cáo nghiệm thu T4](../report/p5-s6-cuda-verification.md).
 
 ## 8. Trường hợp biên và rủi ro
 

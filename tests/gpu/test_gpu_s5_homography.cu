@@ -2,13 +2,58 @@
 // External source: none
 #include "gpu/s45_test_support.cuh"
 #include "v1/s5/v1_homography.h"
+#include "v1/s5/v1_homography_math.cuh"
 #include "v0/v0_homography.h"
+#include "v0/v0_homography_internal.h"
 #include <cmath>
 #include <iomanip>
 #include <limits>
 using namespace panorama;
 using namespace gpu_test;
 namespace {
+__global__ void sample_fixture(int* output) {
+    const int i=static_cast<int>(blockIdx.x*blockDim.x+threadIdx.x);
+    if(i>=8000)return;
+    const int counts[4]={4,5,9,37};
+    homography_gpu::Array<std::int32_t,4> sample;
+    homography_gpu::uniform_sample4(16,i%2000,counts[i/2000],sample);
+    for(int k=0;k<4;++k)output[4*i+k]=sample[k];
+}
+__global__ void scoring_fixture(double* output) {
+    using namespace homography_gpu;
+    Matrix3 h={{1,0,0,0,1,0,0,0,1}};
+    Correspondence points[4];
+    const double errors[4]={3,2,4,0};
+    for(int i=0;i<4;++i){points[i].a=Point2(errors[i],0);points[i].b=Point2(0,0);}
+    std::uint8_t storage[4];Buffer<std::uint8_t> mask(storage,4);
+    ModelScore score=evaluate_msac(h,Buffer<Correspondence>(points,4),3.0,1e-6,mask);
+    output[0]=score.loss;output[1]=score.inliers;
+    for(int i=0;i<4;++i)output[2+i]=storage[i];
+    h[6]=1;h[8]=0;
+    score=evaluate_msac(h,Buffer<Correspondence>(points,4),3.0,1e-6,mask);
+    output[6]=score.loss;output[7]=score.inliers;
+    for(int i=0;i<4;++i)output[8+i]=storage[i];
+}
+void check_device_primitives() {
+    DeviceBuffer<int> samples(32000);DeviceBuffer<double> scores(12);Stream stream;
+    sample_fixture<<<63,128,0,stream.value>>>(samples.data);
+    scoring_fixture<<<1,1,0,stream.value>>>(scores.data);
+    cuda(cudaPeekAtLastError());stream.wait();
+    const auto actual=samples.read(32000);
+    const int counts[4]={4,5,9,37};
+    for(int group=0;group<4;++group)for(int id=0;id<2000;++id) {
+        std::array<std::int32_t,4> expected;
+        require(homography_detail::uniform_sample4(16,id,counts[group],expected),"CPU sampler fixture");
+        bool equal=true;for(int k=0;k<4;++k)equal&=actual[4*(group*2000+id)+k]==expected[k];
+        require(equal,"all per-ID sample tuples agree");
+    }
+    const auto result=scores.read(12);
+    require(result[0]==22.0 && result[1]==2.0,"strict MSAC boundary and truncated loss");
+    const int expected[4]={0,1,0,1};
+    for(int i=0;i<4;++i)require(result[2+i]==expected[i],"MSAC threshold mask");
+    require(result[6]==36.0 && result[7]==0.0,"horizon projections are capped outliers");
+    for(int i=0;i<4;++i)require(result[8+i]==0.0,"horizon mask");
+}
 struct Fixture {
     std::vector<Keypoint> a,b;
     std::vector<Match> matches;
@@ -93,6 +138,7 @@ void compare(const Fixture& f,int batch) {
 int main() {
     try {
         print_gpu();cuda(cudaDeviceSetLimit(cudaLimitStackSize,32768));
+        check_device_primitives();
         for(int batch:{1,7,32}){compare(Fixture(),batch);compare(Fixture(56,false),batch);}
         compare(Fixture(3,false),7);
         Fixture minimal(4,false);

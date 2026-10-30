@@ -2,6 +2,7 @@
 // External source: none
 // Device batching and prefix replay implement the team's S5 stage design.
 #include "v1/s5/v1_homography_workspace.cuh"
+#include "v1/common/v1_nvtx.cuh"
 #include <cmath>
 #include <limits>
 
@@ -162,6 +163,7 @@ const std::uint8_t* v1_homography_inlier_mask(const DeviceWorkspace& w,int batch
     std::size_t bytes=0;return homography_gpu::layout(w.d_scratch,w.match_capacity,batch,bytes).mask;
 }
 ErrorCode v1_homography_with_batch_size(DeviceWorkspace& w,const Config& c,cudaStream_t stream,int batch) {
+    V1NvtxRange stage("S5.homography");
     if(c.ransac_iters<=0 || c.ransac_iters>feature_policy::kMaxIterations ||
        !std::isfinite(c.ransac_threshold) || c.ransac_threshold<=0 ||
        !std::isfinite(c.homography_epsilon) || c.homography_epsilon<=0) return ErrorCode::InvalidConfig;
@@ -176,10 +178,19 @@ ErrorCode v1_homography_with_batch_size(DeviceWorkspace& w,const Config& c,cudaS
     if(w.match_capacity)gather_points<<<static_cast<unsigned>((w.match_capacity+127)/128),128,0,stream>>>(w,s);
     for(int first=0;first<c.ransac_iters;first+=batch) {
         const int computed=std::min(batch,c.ransac_iters-first);
-        compute_hypotheses<<<computed,128,0,stream>>>(w,s,c,first);
-        commit_prefix<<<1,1,0,stream>>>(w,s,c,first,computed);
+        {
+            V1NvtxRange range("S5.fit_score");
+            compute_hypotheses<<<computed,128,0,stream>>>(w,s,c,first);
+        }
+        {
+            V1NvtxRange range("S5.commit_prefix");
+            commit_prefix<<<1,1,0,stream>>>(w,s,c,first,computed);
+        }
     }
-    refit_homography<<<1,1,0,stream>>>(w,s,c);
+    {
+        V1NvtxRange range("S5.refit");
+        refit_homography<<<1,1,0,stream>>>(w,s,c);
+    }
     return cudaPeekAtLastError()==cudaSuccess?ErrorCode::Success:ErrorCode::CudaFailure;
 }
 ErrorCode v1_homography(DeviceWorkspace& w,const Config& c,cudaStream_t stream) {

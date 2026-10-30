@@ -4,6 +4,7 @@
 
 #include "v1/s4/v1_match.h"
 #include "v1/s4/v1_match_internal.cuh"
+#include "v1/common/v1_nvtx.cuh"
 #include "common/feature_support.h"
 #include <cmath>
 #include <limits>
@@ -78,6 +79,7 @@ std::size_t v1_match_scratch_bytes(std::size_t capacity) {
 }
 
 ErrorCode v1_match_with_block_size(DeviceWorkspace& w, const Config& config, cudaStream_t stream, int threads) {
+    V1NvtxRange stage("S4.match");
     if (!std::isfinite(config.match_ratio_threshold) || config.match_ratio_threshold != feature_policy::kRatio ||
         config.match_cross_check != 0u) return ErrorCode::InvalidConfig;
     if (threads < 32 || threads > 256 || (threads & (threads - 1))) return ErrorCode::InvalidArgument;
@@ -93,9 +95,18 @@ ErrorCode v1_match_with_block_size(DeviceWorkspace& w, const Config& config, cud
     std::uint32_t* prefix = bytes ? reinterpret_cast<std::uint32_t*>(pairs + w.descriptor_capacityA) : nullptr;
     validate_matching<<<1, 1, 0, stream>>>(w);
     if (w.descriptor_capacityA) {
-        nearest_two<<<static_cast<unsigned>(w.descriptor_capacityA), threads, 0, stream>>>(w, pairs);
-        prefix_matching<<<1, 1, 0, stream>>>(w, pairs, prefix);
-        scatter_matching<<<static_cast<unsigned>((w.descriptor_capacityA + threads - 1) / threads), threads, 0, stream>>>(w, pairs, prefix);
+        {
+            V1NvtxRange range("S4.nearest_two");
+            nearest_two<<<static_cast<unsigned>(w.descriptor_capacityA), threads, 0, stream>>>(w, pairs);
+        }
+        {
+            V1NvtxRange range("S4.prefix");
+            prefix_matching<<<1, 1, 0, stream>>>(w, pairs, prefix);
+        }
+        {
+            V1NvtxRange range("S4.scatter");
+            scatter_matching<<<static_cast<unsigned>((w.descriptor_capacityA + threads - 1) / threads), threads, 0, stream>>>(w, pairs, prefix);
+        }
     }
     return cudaPeekAtLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;
 }

@@ -237,7 +237,7 @@ Quy tắc:
 
 P5-T12 cung cấp **luồng thử hạ tầng V1 với sáu hàm stub**, không thực hiện FAST, BRIEF, matching, RANSAC hay warping thật. S1–S5 trả về ngay; S6 chỉ copy ảnh A từ Device sang canvas Device để kiểm tra đường D2H và ghi ảnh. Khi chọn `--version 1`, chương trình luôn cảnh báo trên stderr rằng output là bản sao A và số đo không phải benchmark ghép ảnh. Không đưa kết quả stub vào bảng speedup hay dùng nó để nghiệm thu sáu stage GPU.
 
-`main.cu` sở hữu bộ nhớ thông qua `OwnedDeviceWorkspace`. `DeviceWorkspace` trong `common/common.h` chỉ giữ **con trỏ mượn**, metadata và capacity. Stage không được `cudaFree`, thay con trỏ bằng vùng cấp phát riêng hoặc giữ con trỏ sau khi workspace bị hủy. Các alias `imageA.data`, `imageB.data`, `grayA.data`, `grayB.data`, `canvas.image.data` cùng trỏ tới các allocation `d_*`; chỉ giải phóng allocation gốc một lần.
+`main.cu` sở hữu bộ nhớ thông qua `OwnedDeviceWorkspace`. `DeviceWorkspace` trong `common/common.h` chỉ giữ **con trỏ mượn**, metadata và capacity. Các kernel/stage không được giải phóng input hoặc giữ con trỏ sau khi workspace bị hủy. Ngoại lệ được chốt ở P5-T13: Host entry point S6 được quản lý allocation output `d_canvas` thay mặt owner theo kích thước H tính được; owner vẫn chịu trách nhiệm giải phóng cuối cùng. Các alias `imageA.data`, `imageB.data`, `grayA.data`, `grayB.data`, `canvas.image.data` cùng trỏ tới allocation gốc; chỉ giải phóng allocation gốc một lần.
 
 | Buffer | Kiểu dữ liệu / dung lượng | Bên ghi và bên đọc khi có stage thật |
 |---|---|---|
@@ -250,13 +250,14 @@ P5-T12 cung cấp **luồng thử hạ tầng V1 với sáu hàm stub**, không 
 | `d_counts` | Một `DeviceCounts` | S2/S3/S4 cập nhật số phần tử hợp lệ và trạng thái; stage sau đọc |
 | `d_canvas_info` | Một `DeviceCanvasInfo`: width, height, stride, offsets, status | Setup S6 ghi; Host đọc metadata nhỏ để kiểm tra/cấp phát |
 | `d_canvas` | RGB panorama; `canvas_capacity_bytes` | S6 ghi; Host copy D2H |
+| `d_panorama` | Alias của `d_canvas` khi S6 thật enqueue thành công; không sở hữu bộ nhớ | Caller chờ stream/event rồi dùng để D2H; không free alias |
 | `d_scratch` | Byte scratch; `scratch_capacity_bytes` | Chủ stage khai báo nhu cầu; Host owner cấp phát trước khi sử dụng |
 
 Counts là số phần tử hợp lệ, không phải capacity. S3 phải giữ keypoint/descriptor cùng chỉ số sau compaction; cập nhật counts tương ứng. Với cặp keypoint/descriptor đã mô tả, số phần tử của hai mảng phải khớp. Mỗi stage phải kiểm tra capacity trước khi ghi; báo trạng thái lỗi thay vì ghi vượt mảng. Gray ảnh A và B có thể khác kích thước. Scratch chưa được cấp phát trong scaffold, nên con trỏ là null và capacity bằng 0.
 
 Luồng **Device-resident**: hai ảnh gốc H2D ở đầu mỗi lượt chạy; S1 → S6 truyền con trỏ Device, không copy các mảng trung gian về Host; panorama D2H ở cuối. Chỉ counts, status, kích thước canvas hoặc metadata nhỏ được đọc về Host khi cần điều phối. Workspace là metadata launch trên Host, không tự copy toàn bộ workspace rồi dereference trên Device.
 
-Scaffold cấp canvas bằng kích thước A vì output thử là A. Khi tích hợp S6 thật, phải tách setup/render: kernel setup công bố `DeviceCanvasInfo`, Host đợi metadata, kiểm tra overflow/giới hạn canvas và cấp hoặc mở rộng buffer, cập nhật cả `d_canvas`, alias `canvas` và capacity, rồi mới launch render. Không giả định capacity của scaffold đủ cho panorama thật. Chi phí điều phối/cấp phát canvas phụ thuộc H và copy metadata phải nằm trong end-to-end của lượt chạy; không giấu chúng trong warm-up. Đây là phần tích hợp tiếp theo, chưa phải khả năng của stub hiện tại.
+Scaffold cấp canvas bằng kích thước A vì output thử là A. Module S6 thật trong `src/v1/v1_warp_blend.cu` đã tách setup/render: kernel setup công bố `DeviceCanvasInfo`, Host đợi metadata nhỏ cùng inverse H, kiểm tra overflow/giới hạn canvas rồi thay allocation output, cập nhật `d_canvas`, `d_panorama`, alias `canvas` và capacity. Không giả định capacity của scaffold đủ cho panorama thật. Chi phí điều phối/cấp phát canvas phụ thuộc H và copy metadata phải nằm trong end-to-end của lượt chạy; không giấu chúng trong warm-up. Nối module thật vào dispatcher và mở rộng pinned output theo canvas động thuộc P6.
 
 ### 11.2. Contract hàm và stream
 
@@ -268,10 +269,12 @@ ErrorCode v1_detect(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_describe(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_match(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_homography(DeviceWorkspace&, const Config&, cudaStream_t);
-ErrorCode v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t);
+ErrorCode v1_scaffold_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t);
 ```
 
 Stage enqueue công việc trên stream được truyền vào và trả `ErrorCode`. Không ghi log trong vùng đo. Lỗi launch được kiểm tra ngay; lỗi bất đồng bộ được phát hiện khi chờ event/stream. Nếu kernel ghi lỗi thuật toán vào `d_counts->status` hoặc `d_canvas_info->status`, bên điều phối phải đọc và xử lý trước khi dùng output; scaffold chưa kiểm chứng lỗi thuật toán vì chưa có kernel thuật toán. Khi thay stub bằng implementation trong `src/v1/`, phải xóa định nghĩa stub tương ứng để tránh trùng symbol và bổ sung header công khai cho stage.
+
+S6 thật có API `v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t)` trong [`v1/v1_warp_blend.h`](../src/v1/v1_warp_blend.h), được kiểm thử độc lập bằng dữ liệu V0 ở P5. CLI vẫn gọi hàm scaffold đã đổi tên để không dùng H chưa được S5 stub tính. S6 thật chờ metadata setup, nhưng không chờ render sau cùng: `Success` nghĩa là enqueue thành công; caller phải chờ stream/event trước D2H hoặc free. Lỗi config/geometry không công bố panorama; allocation cũ còn giữ trong `d_canvas` vẫn thuộc owner. Chi tiết tolerance và test ở [S6 mục 7.1](stages/s6-warp-blend.md#71-cài-đặt-và-kiểm-chứng-v1--p5-t13).
 
 V1 scaffold dùng một stream non-blocking, các stage thực hiện theo thứ tự. Không đặt synchronize thừa giữa sáu stage. Khi dùng thêm stream trong tương lai, chủ stage phải nối dependency bằng event trước khi stage sau đọc dữ liệu; event kết thúc stage phải bao phủ mọi nhánh.
 

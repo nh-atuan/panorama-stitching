@@ -135,8 +135,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S6</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S6 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s6-warp-blend.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>30/10, nhánh <code>chuong/p5</code>: cài S6 CUDA setup/canvas/copy/gather, giữ inverse warping + bilinear + average 50/50. Local WSL/GTX 1650, nvcc 12.6 target sm_75: 709 checks (có oracle tính tay và custom assert), 66 đối chiếu V0/V1 và 12 cặp/kích thước thật đạt, max RGB error 0 (ngưỡng 1). CLI tổng vẫn scaffold; chờ test/memcheck Colab T4 và merge PR. Chi tiết ở tài liệu S6 mục 6.2 và 7.1.</td>
     </tr>
   </tbody>
 </table>

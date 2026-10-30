@@ -96,12 +96,18 @@ WINDOWS_CUSTOM_NEW_SUITES = {
     "pipeline",
 }
 
+GPU_SUITES = {
+    "gpu_s4": ["src/common/feature_support.cpp", "src/v0/v0_match.cpp", "src/v1/s4/v1_match.cu", "tests/gpu/test_gpu_s4_match.cu"],
+    "gpu_s5": [*HOMOGRAPHY, "src/v1/s5/v1_homography.cu", "tests/gpu/test_gpu_s5_homography.cu"],
+}
+
 PYTHON_SUITES = [
     "test_dataset_scripts.py",
     "test_synthetic_scripts.py",
     "test_run_benchmark.py",
     "test_plot_benchmark.py",
     "test_midterm_notebook.py",
+    "test_profiling_scripts.py",
 ]
 
 
@@ -153,7 +159,7 @@ def run_v0_group(args, base_env):
 
     build_rel = Path("build") / "tests_v0"
     (ROOT / build_rel).mkdir(parents=True, exist_ok=True)
-    selected = args.suite or list(V0_SUITES.keys())
+    selected = [name for name in (args.suite or V0_SUITES) if name in V0_SUITES]
     total_checks = 0
 
     for name in selected:
@@ -220,6 +226,30 @@ def run_python_group(base_env):
     print(f"PASS python suites: {len(PYTHON_SUITES)}, total tests: {total_tests}", flush=True)
 
 
+def run_gpu_group(args, environment):
+    compiler = shutil.which(args.compiler)
+    if not compiler or Path(compiler).stem.lower() != "nvcc":
+        raise RuntimeError("GPU suites require nvcc -arch=sm_75")
+    if args.sanitizers:
+        raise RuntimeError("Use compute-sanitizer for GPU suites")
+    gpu = run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], environment)
+    if args.require_t4 and not re.search(r"\bT4\b", gpu):
+        raise RuntimeError("Official verification requires Tesla T4")
+    build = ROOT / "build/tests_gpu"
+    build.mkdir(parents=True, exist_ok=True)
+    selected = [name for name in (args.suite or GPU_SUITES) if name in GPU_SUITES]
+    for name in selected:
+        binary = build / name
+        print(f"Build/run [gpu]: {name}", flush=True)
+        run([compiler, "-arch=sm_75", "-std=c++11", "-O2", "--fmad=false",
+             "-Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off", "-Isrc", "-Itests",
+             *GPU_SUITES[name], *(["-ldl"] if sys.platform != "win32" else []), "-o", str(binary)], environment)
+        output = run([str(binary)], environment)
+        if not re.search(r"^PASS GPU S[45]: \d+ checks", output, re.MULTILINE):
+            raise RuntimeError(f"GPU suite {name} did not report PASS")
+    print(f"PASS gpu suites: {len(selected)}", flush=True)
+
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -230,17 +260,17 @@ def main():
     parser.add_argument("--compiler", default="nvcc", help="nvcc, g++, or clang++ path")
     parser.add_argument(
         "--group",
-        choices=("all", "v0", "python"),
+        choices=("all", "v0", "gpu", "python"),
         default="all",
         help="select test group to run (default: all)",
     )
-    parser.add_argument("--suite", choices=tuple(V0_SUITES.keys()), action="append", help="run selected V0 suites")
+    parser.add_argument("--suite", choices=tuple(V0_SUITES)+tuple(GPU_SUITES), action="append", help="run selected C++/CUDA suites")
     parser.add_argument("--require-t4", action="store_true", help="verify Tesla T4 before official build")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
     args = parser.parse_args()
 
-    if args.suite and args.group == "python":
-        raise RuntimeError("--suite filters C++ V0 suites and cannot be combined with --group python")
+    if args.suite and (args.group == "python" or (args.group == "v0" and any(n in GPU_SUITES for n in args.suite)) or (args.group == "gpu" and any(n in V0_SUITES for n in args.suite))):
+        raise RuntimeError("Selected --suite does not belong to --group")
 
     print("Validation: Colab T4 required" if args.require_t4 else "Validation: local, not official Colab T4")
     print(f"Host: {platform.platform()}, CPU: {platform.processor() or 'unknown'}", flush=True)
@@ -252,11 +282,14 @@ def main():
 
     base_env = dict(os.environ)
     base_env["PYTHONUTF8"] = "1"
-    run_v0 = args.group in {"all", "v0"}
+    run_v0 = args.group in {"all", "v0"} and (not args.suite or any(n in V0_SUITES for n in args.suite))
+    run_gpu = args.group in {"all", "gpu"} and (not args.suite or any(n in GPU_SUITES for n in args.suite))
     run_py = args.group in {"all", "python"} and not args.suite
 
     if run_v0:
         run_v0_group(args, base_env)
+    if run_gpu:
+        run_gpu_group(args, base_env)
     if run_py:
         run_python_group(base_env)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Authors: Nguyen Ho Anh Tuan (23120185)
+# Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185)
 # External source: none
 
 """Cross-platform builder for the stitch binary and developer tools in tests/tools/."""
@@ -57,6 +57,12 @@ TOOL_TARGETS = {
 }
 
 
+TOOL_TARGETS["tool_gpu_s45"] = [
+    *TOOL_TARGETS["tool_pipeline_trace"][:-1],
+    "src/v1/s4/v1_match.cu", "src/v1/s5/v1_homography.cu",
+    "tests/tools/tool_gpu_s45.cu",
+]
+
 def discover_stitch_sources():
     """Return ordered relative paths of all translation units for stitch (excluding stb_impl.cpp)."""
     sources = ["src/main.cu"]
@@ -70,7 +76,7 @@ def discover_stitch_sources():
     for folder in subdirs:
         if not folder.is_dir():
             continue
-        for path in sorted(folder.iterdir()):
+        for path in sorted(folder.rglob("*")):
             if path.is_file() and path.suffix in {".cpp", ".cu"}:
                 rel = path.relative_to(ROOT).as_posix()
                 if rel != STB_SOURCE:
@@ -165,6 +171,7 @@ def main():
             "-Isrc",
             *stitch_sources,
             STB_SOURCE,
+            *(["-ldl"] if sys.platform != "win32" else []),
             "-o",
             (out_dir / "stitch").as_posix(),
         ]
@@ -195,6 +202,8 @@ def main():
     obj_ext = ".obj" if (is_nvcc and sys.platform == "win32") else ".o"
     bin_ext = ".exe" if sys.platform == "win32" else ""
     link_extra = ["-static"] if (not is_nvcc and sys.platform == "win32") else []
+    if is_nvcc and sys.platform != "win32":
+        link_extra += ["-ldl"]
 
     stb_obj = (out_arg / f"stb_impl{obj_ext}").as_posix()
     run(

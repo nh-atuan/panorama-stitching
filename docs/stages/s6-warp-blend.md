@@ -477,8 +477,8 @@ V0 làm bốn việc trong vùng đo: nghịch đảo H và tính canvas (chi ph
 
 | Bước | Công việc trên GPU | Ghi chú |
 |---|---|---|
-| Setup | Một kernel một thread: chuẩn hóa H, nghịch đảo bằng scaled partial pivoting, kiểm tra điều kiện, chiếu bốn góc B, tính canvas và offset. Dùng cùng code `double` như V0 dưới dạng hàm `__host__ __device__` | Host phải đọc lại kích thước canvas để cấp phát output; đây là một điểm đồng bộ, được đo trong S6 |
-| Xóa canvas | `cudaMemset` buffer output về 0 | Giống `new uint8_t[bytes]()` của V0 |
+| Setup | Một kernel một thread: chuẩn hóa H, nghịch đảo bằng scaled partial pivoting, kiểm tra điều kiện, chiếu bốn góc B, tính canvas và offset. Bản Device giữ thuật toán `double` và thứ tự phép toán V0, dùng các phép RN tường minh ở nơi cần tránh contraction [R12] | Host đọc metadata nhỏ trên đúng stream rồi đồng bộ để cấp phát output; điểm đồng bộ và allocation thuộc S6 |
+| Xóa canvas | `cudaMemsetAsync` buffer output về 0 trên stream của stage | Giống nền đen của `new uint8_t[bytes]()` ở V0; render chạy sau memset theo thứ tự stream |
 | Chép A | Một thread cho một pixel A, ghi 3 byte vào canvas tại `(x + offset_x, y + offset_y)` | A đã nằm trên Device từ S1 |
 | Gather B và blend | Grid 2D phủ canvas, một thread cho một pixel canvas: chiếu `(xa, ya)` bằng `H⁻¹` với cùng thứ tự `fma` như V0, kiểm tra validity, bilinear 4 mẫu của B, blend 50/50 với giá trị A đã có, làm tròn half-up rồi ghi | Mỗi pixel canvas chỉ do một thread ghi, không cần atomic |
 
@@ -487,6 +487,21 @@ V0 làm bốn việc trong vùng đo: nghịch đảo H và tính canvas (chi ph
 - Đọc 4 mẫu của B là gather theo phép chiếu nên không coalesce hoàn toàn; các thread kề nhau đọc vùng nguồn gần nhau nên L1/L2 cache giúp được một phần.
 - V1 giữ `double` như V0 để kết quả giống V0. Trên T4 (compute capability 7.5), throughput phép cộng, nhân, FMA 64 bit chỉ là 2 kết quả mỗi chu kỳ mỗi multiprocessor, so với 64 cho 32 bit [R10, mục 12.1.1, bảng 5]. Đây là rủi ro hiệu năng chính của S6 trên T4. Đổi sang `float` là đổi phương pháp tính, phải cả Nhóm quyết định và áp dụng cho cả V0.
 - Panorama ở site2 large khoảng 114 MB RGB. Chép output về Host (D2H) phải được đo riêng bằng CUDA events và nằm trong end-to-end; chỉ việc ghi file ảnh trên ổ đĩa nằm ngoài phép đo. Quy ước GPU dùng chung được cập nhật ở mục 11 của [interface](../interface.md).
+
+Output của S6 **ở lại Device**: `d_panorama` và `canvas.image.data` cùng trỏ tới allocation `d_canvas` của workspace. S6 không copy pixel panorama về Host; chỉ metadata nhỏ được đọc để điều phối. Host entry point S6 quản lý việc thay canvas theo kích thước mới, còn owner workspace giải phóng allocation cuối cùng đúng một lần theo contract P5-T12/P5-T13. Caller phải chờ stream/event trước khi đọc output hoặc thực hiện D2H.
+
+Các metric và ngưỡng sau được dùng cho test V0/GPU, không điều chỉnh theo kết quả chạy:
+
+| Metric / điều kiện | Ngưỡng nghiệm thu | Cách kiểm tra |
+|---|---|---|
+| `ErrorCode` | Khớp chính xác | So V0/V1 và so với mã lỗi mong đợi ở các fixture lỗi độc lập |
+| Canvas width/height, offset X/Y, stride | Khớp chính xác | Đối chiếu V0; fixture đơn giản có đáp án hình học tính tay |
+| Sai số màu `max_abs_rgb` | ≤ `Tols::max_channel_error = 1` mức màu 8 bit | Duyệt mọi pixel/kênh trên cùng canvas, cùng input và cùng H |
+| Giá trị màu ở fixture giải tích | Khớp chính xác | Bốn vùng A/B/overlap/nền; bilinear phân số; pixel đen/trắng cho 128 |
+| Tái lập và bảo toàn input | Khớp từng byte | Chạy lặp cùng input/H; so cả dữ liệu và padding của input trước/sau |
+| Output khi lỗi/OOM | Không công bố panorama hợp lệ | `d_panorama` và `canvas.image.data` phải null; allocation còn giữ không mất owner |
+
+Test dùng `GROUP16_REQUIRE`, theo quy ước `require()` ném lỗi và đếm checks của các test V0, có thêm file/dòng và biểu thức khi thất bại. Test OOM dùng linker wrapper của CUDA allocation, không dùng helper CPU thay thế global `new`. Khung ảnh thật bắt buộc có H hợp lệ và so được pixel output; hai bản cùng trả lỗi không được coi là một ca so ảnh thành công. Các ngưỡng trên kiểm chứng riêng renderer S6, không thay cho ngưỡng sai số ước lượng H của S5.
 
 ### 6.3. Hướng tối ưu V2/V3 và rủi ro
 
@@ -512,21 +527,24 @@ Kết quả local ngày 13/10: 194 assertions đạt, gồm geometry/pixel và l
 
 ```bash
 g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror -O2 -I src \
-    src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o build/test_v0_warp_blend
+    src/v0/v0_warp_blend.cpp tests/v0/test_v0_warp_blend.cpp -o build/test_v0_warp_blend
 ./build/test_v0_warp_blend
 ```
 
 Lệnh trên Colab T4 từ gốc repo, in `nvidia-smi` trước; output test kỳ vọng `PASS: 194 assertions ...`:
 
 ```bash
-nvcc -arch=sm_75 -std=c++11 -O2 -Xcompiler=-Wall,-Wextra,-Werror -I src \n    src/v0_warp_blend.cpp tests/test_v0_warp_blend.cpp -o build/test_s6
+nvcc -arch=sm_75 -std=c++11 -O2 --fmad=false \
+    -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off -Isrc \
+    src/v0/v0_warp_blend.cpp tests/v0/test_v0_warp_blend.cpp -o build/test_s6
 ./build/test_s6
 ```
 
 Panorama trên dataset, từ gốc repo sau khi build `stitch` (lặp cho `site1`, `site2`, `site3`, `challenge` và `small`, `medium`, `large`):
 
 ```bash
-./stitch dataset/site1/small_left.jpg dataset/site1/small_right.jpg results/site1_small_pano.jpg \n    --version 0 --runs 1 --debug
+./build/stitch dataset/site1/small_left.jpg dataset/site1/small_right.jpg results/site1_small_pano.jpg \
+    --version 0 --runs 1 --debug
 ```
 
 | Ngày | Môi trường | Lệnh | Kết quả |
@@ -553,6 +571,64 @@ Trước khi gọi, đặt `config.homography_epsilon=1e-6f` và `config.max_can
 | Dataset thật | Ba cặp chuẩn và cặp khó đã chuẩn bị | Lưu panorama/crop, ghi giới hạn; không mặc định đạt |
 
 Đáp án synthetic phải tính độc lập với hàm đang kiểm thử. Công cụ sai số homography toàn pipeline thuộc phần phối hợp với Đế; không thay bằng việc S6 chạy đúng với H cho sẵn. Các test CPU/GPU sau này so dimensions/offset/validity trước, rồi mới so màu; metric và tolerance chốt trước khi công bố kết quả.
+
+### 7.1. Cài đặt và kiểm chứng V1 — P5-T13
+
+Implementation nằm trong [`src/v1/v1_warp_blend.cu`](../../src/v1/v1_warp_blend.cu), API ở header cùng tên. Hàm `v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t)` giữ nguyên inverse warping, bilinear tự tính và average 50/50 của V0. Không có feather, texture interpolation hay thư viện thuật toán ngoài. H lưu `float[9]`, nhưng chuẩn hóa, inversion, phép chiếu và nội suy vẫn dùng `double`.
+
+Trình tự thực thi:
+
+1. `setup_kernel<<<1,1>>>` chuẩn hóa H, Gauss–Jordan với scaled pivot, kiểm tra condition và horizon, rồi tính canvas theo `floor/ceil + 1`. Metadata gồm geometry, status và nghịch đảo 3×3.
+2. Host đọc metadata nhỏ bằng `cudaMemcpyAsync` trên stream được truyền vào rồi `cudaStreamSynchronize`. Cách này bảo đảm chờ đúng producer khi H được stage trước ghi trên non-default stream; không dùng copy mặc định rồi giả định nó đã chờ mọi stream. `d_canvas_info` giữ metadata hình học trên Device.
+3. Host kiểm tra lại giới hạn 10.000 pixel/chiều, tối đa 100 triệu pixel, `config.max_canvas_pixels`, overflow byte và bộ nhớ trống. Host entry point giải phóng canvas cũ, cấp canvas mới bằng `cudaMalloc`, rồi enqueue memset nền đen. Nếu allocation thất bại, trả `AllocationFailed` và không công bố output.
+4. Kernel copy A dùng grid 2D, block 32×8, một thread/pixel, có xét stride nguồn.
+5. Kernel gather B cũng dùng block 32×8, một thread/pixel canvas. Áp dụng inverse H, snap trong `1e-6` pixel trước kiểm tra biên, clamp láng giềng tại hàng/cột cuối, giữ màu nội suy ở double. Kiểm tra A phủ pixel bằng tọa độ; RGB đen vẫn hợp lệ. Clamp `[0,255]` rồi `floor(value + 0.5)` đúng một lần khi ghi.
+6. Khi enqueue thành công, cập nhật `workspace.canvas` và `d_panorama = d_canvas`. Không copy panorama về Host; caller chờ event/stream rồi thực hiện D2H. `Success` ở đây xác nhận enqueue thành công; lỗi thực thi bất đồng bộ được caller phát hiện khi chờ.
+
+**Ownership:** Host entry point S6 được phép quản lý allocation output thay mặt owner workspace theo yêu cầu P5-T13; các kernel không cấp phát/giải phóng. Caller chỉ `cudaFree(d_canvas)` một lần, không free các alias `d_panorama` hoặc `canvas.image.data`. Khi lỗi geometry/config, output views bị xóa, allocation cũ nếu còn vẫn thuộc owner; khi lỗi sau enqueue render, stage chờ stream và dọn canvas mới trước khi trả lỗi. Caller không sửa/free buffer hoặc dùng workspace trên stream khác khi công việc cũ chưa hoàn tất.
+
+**Ngưỡng kiểm chứng chốt trước chạy:** ErrorCode, kích thước canvas và offset phải khớp V0; sai số tuyệt đối lớn nhất trên mọi kênh RGB không quá **1 mức màu 8 bit**. Các fixture có đáp án độc lập kiểm tra blend pixel đen/trắng ra 128, bốn vùng phủ nguồn, pixel biên, padding, hình học và trạng thái lỗi. Ngưỡng màu này khác ngưỡng sai số homography của S5; không dùng test render để kết luận GPU đã ước lượng đúng H.
+
+Test được đặt tại [`tests/gpu/test_gpu_s6_warp_blend.cu`](../../tests/gpu/test_gpu_s6_warp_blend.cu). Khung test GPU P5-T04 chưa có trong runner hiện tại, nên chạy trực tiếp trên Linux/Colab; `--wrap=cudaMalloc` phục vụ giả lập OOM, không thay allocator production:
+
+```bash
+mkdir -p build
+nvcc -arch=sm_75 -std=c++11 -O2 -Isrc -c src/common/stb_impl.cpp -o build/stb_impl.o
+nvcc -arch=sm_75 -std=c++11 -O2 --fmad=false \
+  -Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off,-fno-tree-vectorize,-fno-tree-slp-vectorize \
+  -Isrc src/v1/v1_warp_blend.cu src/v0/v0_warp_blend.cpp \
+  tests/gpu/test_gpu_s6_warp_blend.cu build/stb_impl.o \
+  -Xlinker=--wrap=cudaMalloc -o build/test_gpu_s6
+./build/test_gpu_s6
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 ./build/test_gpu_s6
+```
+
+Test nhận thêm ảnh thật và 9 hệ số H B→A: `./build/test_gpu_s6 A.jpg B.jpg h00 h01 h02 h10 h11 h12 h20 h21 h22`. Cùng một H phải được dùng cho cả V0 và V1. Không dùng homography khác nhau để đánh giá sai số riêng của S6.
+
+| Kiểm tra ngày 30/10/2026 | Môi trường | Kết quả |
+|---|---|---|
+| Build chương trình bằng `scripts/build.py`, target `sm_75` | WSL Ubuntu, GTX 1650, nvcc 12.6.85 | Đạt, không trùng symbol với scaffold |
+| Bộ test S6, gồm padded RGB, 1×1, tịnh tiến, projective, scale/sign H, singular/horizon, OOM, ownership và các oracle giải tích độc lập | Cùng môi trường | 709 checks, 66 đối chiếu V0/V1; max RGB error = 0, ngưỡng = 1 |
+| Kiểm tra contraction | Cùng môi trường, build test lại với `--fmad=true` | 709 checks đạt, max RGB error = 0; không thay đổi ngưỡng nghiệm thu |
+| 4 cặp thật × 3 kích thước, H lấy từ V0 chạy mới trên cùng input | Cùng môi trường | 12/12 khớp canvas và offset; max RGB error = 0. Mỗi invocation chạy cả suite synthetic và so pixel của một cặp thật |
+| Hồi quy V0 | Cùng môi trường, g++ 13 cho suite warp/pipeline; nvcc cho CLI | 2 suite / 16.141 checks đạt; CLI default 5 runs giữ CSV 8 cột, PNG khớp byte baseline ngay cả khi ẩn GPU |
+| Compute Sanitizer | WSL/WDDM trên máy local | Chưa chạy được target: debugger interface chưa bật, tool báo device not supported; không coi đây là memcheck đạt |
+
+Log và ảnh kiểm tra local ở `build/p5_t13/`, không commit output thực nghiệm. Lượt Colab T4 bổ sung ngày 30/10 đã đạt như mục 7.2; chưa có số đo speedup S6 chính thức. Dispatcher `stitch --version 1` vẫn gọi `v1_scaffold_warp_blend` để giữ pipeline scaffold chạy được khi S1–S5 còn stub. S6 thật được kiểm chứng độc lập ở P5; P6 sẽ nối hàm thật khi upstream cung cấp H hợp lệ và mở rộng pinned output theo canvas động.
+
+### 7.2. Nghiệm thu Colab Tesla T4 — 30/10/2026
+
+Notebook `Group16_S6_CUDA_Verification.ipynb` và gói `group16-s6-569cc1abce-evidence` xác nhận tất cả 10 gate đạt. Môi trường: Tesla T4, driver 580.82.07, nvcc 13.0.88, target `sm_75`. Source snapshot SHA-256: `6bbcf3595c3631d8df91a906bc88f781046a5dad1b2ac305c00dc97c6390fb28`.
+
+| Kiểm tra | Kết quả T4 |
+|---|---|
+| Build và hồi quy V0 | 13 suite / 45.256 checks đạt; CLI mặc định 5 runs, CSV/PNG hợp lệ |
+| S6 fixture/oracle | 709 checks, 66 đối chiếu V0/V1; max RGB error 0, ngưỡng giữ nguyên 1 |
+| 4 cặp thật × 3 độ phân giải | 12/12 khớp canvas/offset và mọi kênh RGB trên cùng H; max RGB error 0 |
+| Memcheck fixtures | Target PASS; 0 errors, 0 bytes leak |
+| Memcheck site2/large | Target PASS; 0 errors, 0 bytes leak |
+
+Đã đối chiếu 78 file source/script/test theo manifest, chín hệ số H của từng case và log gốc. Memcheck chỉ bao phủ hai target nêu trên, không phải mọi case thật. Kết quả xác nhận correctness của renderer trên input đã thử; không chứng minh H là ground truth, không bảo đảm hết ghosting và không phải số đo speedup. Phần kỹ thuật P5-T13 sẵn sàng review; trạng thái task chỉ Xong sau merge PR. Phân tích đầy đủ và provenance nằm trong [báo cáo nghiệm thu T4](../report/p5-s6-cuda-verification.md).
 
 ## 8. Trường hợp biên và rủi ro
 
@@ -604,6 +680,7 @@ Nhận xét chất lượng/hiệu năng từ paper được giữ trong bối c
 | R9 | NVIDIA. *CUDA C Programming Guide*, CUDA 12.5, mục 15.1–15.2. [Texture fetching](https://docs.nvidia.com/cuda/archive/12.5.0/cuda-c-programming-guide/index.html#texture-fetching). 12/10/2026 | Đọc quy tắc point/linear filtering, half-texel và độ chính xác weights. Phiên bản toolkit thực tế trên Colab cần in khi triển khai |
 | R10 | NVIDIA. *CUDA C++ Best Practices Guide*, CUDA 13.0. [HTML](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html). 21/10/2026 | Mục 12.1.1 (bảng 5, throughput phép tính 32 bit và 64 bit theo compute capability), 10.1.1–10.1.2 (pinned memory, chồng truyền dữ liệu với tính toán), 9.1.2 (CUDA events); dùng cho mục 6 |
 | R11 | Benchmark V0 ngày 20/10/2026: `results/p3-t04/benchmark/summary.csv` và log `--debug` trên nhánh `thanh/p3-results`. 21/10/2026 | Thời gian, tỷ trọng S6 và kích thước canvas ở mục 6.1 |
+| R12 | NVIDIA, [CUDA Math API — Double Precision Intrinsics](https://docs.nvidia.com/cuda/cuda-math-api/cuda_math_api/group__CUDA__MATH__INTRINSIC__DOUBLE.html), [CUDA Runtime — Memory Management](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY.html). 30/10/2026 | Kiểm tra round-to-nearest-even và tính chất không tự gộp phép cộng/trừ/nhân RN, cùng semantics allocation/copy. V1 chuyển thuật toán từ V0 của nhóm; không sao chép code ngoài |
 
 ### 9.2. Trích dẫn chưa dùng làm căn cứ trực tiếp
 
@@ -620,3 +697,4 @@ Lượt 12/10 chọn phương pháp sơ bộ; 13/10 chốt tham số và cài b�
 | 13/10/2026 | Bản cài chuyển feather sang average 50/50; S6 cấp phát output và caller nhận ownership khi thành công | Yêu cầu coding mới của Chương; các phiên bản so sánh sau này phải cùng phương pháp |
 | 18/10/2026 | Không đổi tham số. Tuấn ghi kết quả Colab T4 và panorama trên dataset | Nghiệm thu P1-T17 |
 | 21/10/2026 | Không đổi tham số. Viết mục 6 dựa trên benchmark V0 ngày 20/10 | P3-T10 |
+| 30/10/2026 | Không đổi phương pháp/tham số; bổ sung module S6 CUDA, alias output và kiểm thử đối chiếu V0 | P5-T13, chờ nghiệm thu Colab T4 |

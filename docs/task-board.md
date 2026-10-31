@@ -127,16 +127,16 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Xây dựng hạ tầng GPU dùng chung trong <code>src/common/cuda_utils.cuh</code>, thiết kế contract workspace Device-resident cho V1, mở rộng báo cáo timing CSV trong <code>src/main.cu</code> và cập nhật <a href="interface.md">interface</a></td>
       <td>P5-T02</td>
       <td>Merge vào <code>main</code> qua pull request file dùng chung; build sạch bằng <code>nvcc -arch=sm_75</code> và chạy đúng <code>--version 0</code> trên Colab T4</td>
-      <td>Đang làm</td>
-      <td>30/10: triển khai trên <code>chuong/shared-gpu-contract</code>: CUDA error/memory/event helpers, Device workspace, dispatcher V1 stub và CSV mở rộng. Build cục bộ WSL bằng nvcc 12.6, <code>-arch=sm_75</code>, chạy trên GTX 1650; V0 default 5 runs có PNG khớp từng byte baseline, V1 kiểm tra H2D/D2H và output copy A. Chờ nghiệm thu Colab T4 và merge PR; chưa đánh dấu hoàn tất.</td>
+      <td>Xong</td>
+      <td>Đã merge PR #22. Colab Tesla T4 ngày 30/10, nvcc 13.0.88, target sm_75: build đạt, 13 suite V0 / 45.256 checks và CLI mặc định 5 runs đạt. Source/evidence đã đối chiếu hash; hạ tầng V1 vẫn là scaffold, timing toàn pipeline GPU thuộc P6. Xem <a href="report/p5-s6-cuda-verification.md">báo cáo nghiệm thu T4</a>.</td>
     </tr>
     <tr>
       <td>P5-T13</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S6</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S6 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s6-warp-blend.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>30/10, <code>chuong/p5</code>: code và kiểm chứng Colab Tesla T4 đạt với nvcc 13.0.88, sm_75. Suite 709 checks / 66 đối chiếu; 12/12 case thật cùng H khớp, max RGB error 0 (ngưỡng 1). Memcheck fixtures và site2/large: 0 errors, 0 bytes leak. Đã cập nhật thiết kế, notebook tái lập và <a href="report/p5-s6-cuda-verification.md">báo cáo bằng chứng</a>. Chờ review/merge vào main; CLI tích hợp thuộc P6.</td>
     </tr>
   </tbody>
 </table>

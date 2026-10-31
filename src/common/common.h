@@ -140,7 +140,8 @@ struct DeviceCanvasInfo {
 };
 
 // Borrowed Device pointers, owned exclusively by the Host dispatcher in main.cu.
-// Never free these in a stage or copy a Host image pointer into a Device view.
+// Stages never free inputs or put Host pointers in Device views. The S6 Host
+// entry point may replace the owner-managed output allocation (d_canvas).
 // The workspace itself is Host-side launch metadata; pass individual views to kernels.
 struct DeviceWorkspace {
     std::uint8_t* d_imageA = nullptr;
@@ -154,6 +155,8 @@ struct DeviceWorkspace {
     Match* d_matches = nullptr;
     Homography* d_homography = nullptr;
     std::uint8_t* d_canvas = nullptr;
+    // Non-owning output alias. Free d_canvas only, never free this a second time.
+    std::uint8_t* d_panorama = nullptr;
     DeviceCounts* d_counts = nullptr;
     DeviceCanvasInfo* d_canvas_info = nullptr;
     std::uint8_t* d_scratch = nullptr;

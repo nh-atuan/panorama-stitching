@@ -94,7 +94,7 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Đánh giá lại kho dữ liệu ảnh, đề xuất phương án chọn lại cặp chuẩn <code>site2</code> và cặp khó <code>challenge</code> phục vụ phân tích thất bại kèm lập luận, cập nhật <a href="dataset.md">dataset</a> và bộ <code>dataset/</code> trên Drive chung sau khi nhóm chốt</td>
       <td></td>
       <td>Lập luận và kết quả cập nhật trong <a href="dataset.md">dataset</a>; bộ <code>dataset/</code> kèm <code>manifest.csv</code> đã kiểm tra và upload lên Drive chung</td>
-      <td>Đang làm</td>
+      <td>Xong</td>
       <td>02/11: Đế chọn site2 <code>thanh-standard2</code>, challenge <code>de-challenge1</code>; review và kết quả V0 CPU ở <a href="dataset.md#61-review-và-lựa-chọn-của-đế-cho-p5-t08">dataset mục 6.1</a>. Còn xác minh tiêu chí ảnh, thống nhất với cả Nhóm và cập nhật dataset/manifest trên Drive; chưa nghiệm thu Colab T4.</td>
     </tr>
     <tr>

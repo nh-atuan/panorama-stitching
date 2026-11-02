@@ -1,4 +1,4 @@
-<!-- Authors: Nguyen Ho Anh Tuan (23120185). External source: none. -->
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185). External source: none. -->
 
 # Bảng công việc
 
@@ -94,32 +94,32 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Đánh giá lại kho dữ liệu ảnh, đề xuất phương án chọn lại cặp chuẩn <code>site2</code> và cặp khó <code>challenge</code> phục vụ phân tích thất bại kèm lập luận, cập nhật <a href="dataset.md">dataset</a> và bộ <code>dataset/</code> trên Drive chung sau khi nhóm chốt</td>
       <td></td>
       <td>Lập luận và kết quả cập nhật trong <a href="dataset.md">dataset</a>; bộ <code>dataset/</code> kèm <code>manifest.csv</code> đã kiểm tra và upload lên Drive chung</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>02/11: Đế chọn site2 <code>thanh-standard2</code>, challenge <code>de-challenge1</code>; review và kết quả V0 CPU ở <a href="dataset.md#61-review-và-lựa-chọn-của-đế-cho-p5-t08">dataset mục 6.1</a>. Còn xác minh tiêu chí ảnh, thống nhất với cả Nhóm và cập nhật dataset/manifest trên Drive; chưa nghiệm thu Colab T4.</td>
     </tr>
     <tr>
       <td>P5-T09</td>
       <td>Xây dựng công cụ chạy gom batch thu thập bằng chứng profiling (<code>nsys</code>, <code>ncu</code>) và kiểm chứng sai số homography đa phiên bản trên bộ cặp synthetic</td>
       <td>P5-T12</td>
       <td>Script kèm kiểm thử chạy đạt trên Colab T4, xuất được kết quả profiling và sai số synthetic theo phiên bản</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>31/10: đã hoàn tất code và kiểm thử; công cụ batch profiling/synthetic trên <code>de/shared-p5-tools</code>, commit <code>7781024</code>; 20 test Python mới đạt trên Colab T4, nsys/ncu xuất report và NVTX cho S4/S5. Đã kiểm chứng 12 lượt synthetic theo scope S4/S5. hướng dẫn ở <code>docs/profiling.md</code>.</td>
     </tr>
     <tr>
       <td>P5-T10</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S4</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S4 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s4-matching.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s4/</code> trên <code>de/p5</code>, commit <code>deafa78</code>; 2387 checks trên Colab T4, memcheck 0 lỗi, match khớp V0 trên sáu cặp synthetic. NVTX ở commit <code>ebfd446</code>.</td>
     </tr>
     <tr>
       <td>P5-T11</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S5</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S5 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s5-homography.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s5/</code> trên <code>de/p5</code>, commit <code>a0fa80f</code>, test biên <code>427ee94</code>; 16521 checks trên Colab T4, memcheck 0 lỗi. Driver <code>ed001e0</code> đối chiếu prefix/mask và H trên sáu cặp synthetic, đạt ngưỡng CPU–GPU và ground truth.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>

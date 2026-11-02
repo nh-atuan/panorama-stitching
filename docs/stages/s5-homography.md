@@ -1,8 +1,10 @@
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185). External source: none. -->
+
 # S5 - Homography estimation
 
-Người phụ trách: Đế (23120232). Cập nhật lần cuối: 21/10/2026; Đế viết mapping GPU P3-T08 từ benchmark scalar ngày 20/10. Tuấn (23120185) đã bổ sung kết quả Colab T4 ngày 18/10.
+Người phụ trách: Đế (23120232). Cập nhật lần cuối: 31/10/2026; implementation V1 và kiểm chứng P5-T11 nằm ở mục 11. Tuấn (23120185) đã bổ sung kết quả V0 trên Colab T4 ngày 18/10.
 
-Task: P0-T11 (method, input/output, synthetic/metric) và phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên).
+Task: P0-T11 (method, input/output, synthetic/metric), phần thiết kế P1-T13 (tham số, thuật toán, trường hợp biên), P5-T11 (V1 và kiểm chứng).
 
 **Trạng thái: đã cài V0 S5 và gộp file ngày 13/10/2026**, giữ method đã chốt từ V0 đến Final. Ngày 18/10/2026 bản trên `main` đạt toàn bộ 7 suites trên Colab T4 bằng nvcc, chạy trong pipeline V0 trên cả 4 cặp của dataset, và có sai số trên cặp synthetic ở mục 5.5. Ngưỡng sai số chung chốt ở P1-T01.
 
@@ -512,3 +514,25 @@ Nguồn bổ sung: [OpenCV USAC](https://docs.opencv.org/4.13.0/de/d3e/tutorial_
 | 13/10/2026 | Gộp toàn bộ implementation S5 vào v0_homography.cpp, giữ một header helper cho unit tests | Thân hàm và test assertions giữ nguyên; 7 suites/5673 assertions local đạt, bản sau gộp cần chạy lại Colab |
 | 18/10/2026 | Không đổi tham số. Tuấn cài công cụ synthetic, ghi sai số và kết quả Colab T4 | Nghiệm thu P1-T14, P1-T15 |
 | 21/10/2026 | Giữ phương pháp, tham số và implementation V0 scalar; bổ sung mục 6 cho P3-T08 | Mapping V1 dự kiến và hướng tối ưu dựa trên benchmark ngày 20/10; chưa cài CUDA hoặc công bố speedup |
+
+## 11. Cài đặt V1 trong P5-T11
+
+Mã nguồn nằm trong `src/v1/s5/`: geometry, DLT, sampling, scoring, layout scratch và kernel điều phối được tách thành module riêng. V0 được giữ nguyên. Bản Device chuyển core toán của Nhóm sang buffer do caller cấp phát, giữ nguồn tham khảo đã ghi cho V0.
+
+Mặc định một block 128 thread xử lý một hypothesis, batch 32 hypothesis liên tiếp. Thread 0 sinh mẫu và giải normalized DLT double; các thread tính residual, rồi cộng theo cây nhị phân với leaves theo thứ tự match và zero padding. Kernel commit duyệt ID tăng dần và dừng ở đúng prefix V0. Các batch sau điểm dừng thoát sớm trên Device; chi phí launch vẫn nằm trong S5. Diagnostics tách `attempts` đã xét và `computed_hypotheses` thực sự đã tính, gồm phần speculative của batch cuối.
+
+Refit chạy trên Device với đúng một lần reclassify và chỉ fit lần hai khi mask đổi. H float32 được kiểm tra sau cast trước khi bàn giao. Lỗi dữ liệu/thuật toán ghi vào `d_counts->status`, H để zero khi thất bại. Sampling, fitting, model selection và stopping chạy trên GPU.
+
+Caller cấp scratch theo `v1_homography_scratch_bytes(match_capacity)`, căn chỉnh 16 byte; giữ buffer tới khi stream hoàn tất. Có thể dùng chung scratch S4/S5 bằng dung lượng lớn hơn vì hai stage chạy nối tiếp trên cùng stream. Diagnostics và mask là con trỏ mượn trong scratch, chỉ đọc sau synchronization và trước khi dùng lại buffer. Các test và driver đặt `cudaLimitStackSize` bằng 32768 byte trước phép đo để hỗ trợ cây tổng đệ quy; stage không thay cấu hình Device toàn cục.
+
+Test ngày 31/10/2026 trên Colab Tesla T4, CUDA 13.0.88: `PASS GPU S5: 16521 checks`. Batch 1/7/32 cho cùng sample hash, logical prefix, best ID, adaptive budget, refit policy, mask và H float32 trên các fixture đã chạy; Max sai khác phép chiếu bằng 0 px ở cả bảy fixture thành công. Có ca ít hơn bốn match, mẫu tối thiểu, điểm thẳng hàng, index sai/thứ tự sai, NaN và thiếu scratch. Memcheck báo 0 lỗi. Nhãn NVTX gồm `S5.homography`, `S5.fit_score`, `S5.commit_prefix`, `S5.refit`.
+
+```bash
+python3 tests/run_tests.py --group gpu --suite gpu_s5 --compiler nvcc --require-t4
+```
+
+Ngưỡng CPU–GPU do Đế xác nhận ngày 31/10/2026: RMSE ≤ 0,0001 px, Max ≤ 0,001 px trên lưới 20×20 của ảnh B. Match, sampler, prefix và mask vẫn phải khớp chính xác. Ngưỡng so với ground truth giữ nguyên RMSE ≤ 0,5 px và Max ≤ 1 px.
+
+`tool_gpu_s45` chạy V0 S1–S3/S6 và chọn V0/V1 cho S4/S5. Trên sáu cặp synthetic chính thức, cả 12 lượt theo hai version đều đạt ground truth; RMSE lớn nhất 0,100222 px, Max lớn nhất 0,209020 px. Match, prefix và mask khớp chính xác; Max sai khác phép chiếu CPU–GPU lớn nhất 2,955858e-12 px. Kết quả này không thay cho nghiệm thu pipeline CUDA sáu stage của P6.
+
+Bộ test bổ sung kiểm tra trực tiếp 8.000 tuple sample (ID 0–1999 với số match 4/5/9/37), so từng tuple với sampler V0. Fixture MSAC kiểm tra đúng ranh giới 3 px, loss bị chặn và phép chiếu qua horizon. Các trường hợp này chạy trên Device; tổng 16.521 checks là số assertion, không phải số ảnh hoặc số ca độc lập.

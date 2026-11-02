@@ -1,4 +1,4 @@
-<!-- Authors: Nguyen Ho Anh Tuan (23120185) -->
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185) -->
 <!-- External source: none -->
 
 # Cấu trúc và hướng dẫn chạy `tests/`
@@ -58,3 +58,16 @@ python tests/run_tests.py --list
   ./build/tool_pipeline_trace dataset/site1/small_left.jpg dataset/site1/small_right.jpg build/trace_site1
   ```
 
+## 5. Kiểm chứng S4/S5 GPU và công cụ P5-T09
+
+```bash
+python3 tests/run_tests.py --group gpu --compiler nvcc --require-t4
+python3 tests/run_tests.py --suite gpu_s4 --suite gpu_s5 --compiler nvcc --require-t4
+python3 scripts/build.py --target tools --tool tool_gpu_s45 --compiler nvcc --require-t4
+compute-sanitizer --tool memcheck --error-exitcode 99 build/tests_gpu/gpu_s4
+compute-sanitizer --tool memcheck --error-exitcode 99 build/tests_gpu/gpu_s5
+```
+
+`gpu_s4`, `gpu_s5` đăng ký danh sách source riêng. `--group all` bao gồm V0, GPU và Python; test Python mới là `test_profiling_scripts.py`. Phần đăng ký này phục vụ S4/S5, phần mở rộng GPU tổng quát của P5-T04 vẫn do Thành phụ trách.
+
+`tool_gpu_s45` là driver kiểm chứng từ ảnh với S1–S3/S6 trên CPU. Driver kiểm tra match, prefix, mask và H với V0 ngoài vùng CUDA events. Xem [hướng dẫn profiling](../docs/profiling.md) cho cách chạy batch và lưu bằng chứng.

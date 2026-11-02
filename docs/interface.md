@@ -1,3 +1,5 @@
+<!-- Authors: Le Thuong De (23120232). External source: none. -->
+
 # Interface chung của pipeline Panorama Stitching
 
 Người soạn: Chương (23120195). Cập nhật: 30/10/2026, P5-T12: contract Device workspace và luồng V1 stub. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026.
@@ -317,3 +319,13 @@ Kiểm tra cục bộ ngày 30/10/2026: WSL Ubuntu, GTX 1650, nvcc 12.6.85, targ
 Căn cứ API: [NVIDIA CUDA Runtime — Event Management](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__EVENT.html), [Memory Management](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY.html), [CUDA Programming Guide — Asynchronous Execution](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/asynchronous-execution.html). Code helper do nhóm viết; các tài liệu này được dùng để kiểm tra semantics của API.
 
 Nghiệm thu bổ sung ngày 30/10/2026 trên Colab Tesla T4, nvcc 13.0.88, target `sm_75`: build chương trình đạt, 13 suite V0 / 45.256 checks và CLI mặc định năm lượt đo đạt. S6 CUDA độc lập đạt fixture, 12 case cùng H và memcheck; xem [báo cáo nghiệm thu](report/p5-s6-cuda-verification.md). Các phép đo H2D/D2H/kernel và end-to-end của pipeline GPU tích hợp vẫn thuộc P6; không dùng kết quả correctness này làm số đo speedup.
+
+### 11.6. Entry point S4/S5 sau P5
+
+Hai API thật nằm trong `src/v1/s4/v1_match.h` và `src/v1/s5/v1_homography.h`, giữ chữ ký `ErrorCode(DeviceWorkspace&, const Config&, cudaStream_t)`. `DeviceWorkspace`, `DeviceCounts` và các kiểu truyền dữ liệu không thay đổi.
+
+Caller sở hữu scratch, cấp phát theo `v1_match_scratch_bytes()` và `v1_homography_scratch_bytes()`; S4/S5 có thể dùng chung buffer bằng dung lượng lớn hơn khi chạy nối tiếp trên cùng stream. S5 yêu cầu căn chỉnh 16 byte. Stage không giải phóng hoặc thay con trỏ workspace. Return code phản ánh lỗi Host/launch; caller phải đợi stream/event và kiểm tra `d_counts->status` để nhận lỗi thuật toán.
+
+Scaffold trong `main.cu` giữ hai hàm riêng `v1_stub_match`, `v1_stub_homography` trong bảng điều phối. Vì S1–S3 chưa phát sinh feature, chương trình chính chưa gọi hai API thật và vẫn cảnh báo sáu stub. Cách đặt tên này cho phép link module S4/S5 mà không trùng symbol, đồng thời giữ smoke test hạ tầng của P5-T12. Việc đổi bảng điều phối sang sáu stage thật thuộc P6.
+
+S5 cung cấp diagnostics và inlier mask dưới dạng con trỏ Device mượn trong scratch. Chỉ đọc sau khi stream hoàn tất và trước khi scratch được dùng lại. Không chuyển STL container qua Device. Ngưỡng so H CPU–GPU do Đế xác nhận ngày 31/10/2026: RMSE ≤ 0,0001 px, Max ≤ 0,001 px trên lưới 20×20 của ảnh B; match, sample prefix và mask phải khớp chính xác. Ngưỡng ground truth giữ RMSE ≤ 0,5 px và Max ≤ 1 px.

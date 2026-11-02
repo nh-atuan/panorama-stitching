@@ -1,3 +1,5 @@
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195). External source: none. -->
+
 # Dataset: quy định chụp ảnh và chuẩn bị dữ liệu
 
 Người điều phối: chưa phân công. Hạn của các việc liên quan nằm trong [bảng công việc](task-board.md).
@@ -118,7 +120,7 @@ Site slug là tên địa điểm viết thường, không dấu, nối bằng g
 | chuong-challenge1 | Chương | ky-tuc-xa | khó | Cảnh đêm (chính); chênh sáng, người/xe chuyển động và motion blur (kèm theo) | 07/10/2026 18:01:27 | vivo iQOO Neo10 | 4096×2304 |
 | de-standard1 | Đế | mai-an-coffee | chuẩn | | Không có EXIF | Không có EXIF | 4032×3024 |
 | de-standard2 | Đế | mai-an-coffee | chuẩn | | Không có EXIF | Không có EXIF | 4032×3024 |
-| de-challenge1 | Đế | mai-an-coffee | khó | | Không có EXIF | Không có EXIF | 4032×3024 |
+| de-challenge1 | Đế | mai-an-coffee | khó | Họa tiết lặp ở trần và lan can; cần phân tích ảnh hưởng đến matching | Không có EXIF | Không có EXIF | 4032×3024 |
 
 Mã cặp có dạng `<tên thành viên>-<loại cặp><số>[-b<k>]`, tương ứng với tên file ở mục 4, ví dụ `tuan-standard1-b1` gồm `tuan/standard1_left_b1.jpg` và `tuan/standard1_right_b1.jpg`.
 
@@ -152,6 +154,15 @@ python scripts/check_pairs.py --raw raw --out results/check_pairs.md
 
 Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân giữ phần mở rộng của file, còn `gdown` 5.2.2 trên Colab lưu file của Thành và Đế không có phần mở rộng. Bảng trên dùng bản tải bằng `gdown` 6.1.
 
+**Kiểm tra bổ sung cho P5-T08:** ngày 02/11, Đế chạy lại `scripts/check_pairs.py` trên bản tải về của 13 cặp chính, giữ tên file nhận được khi tải. Kết quả dưới đây bổ sung cho hai cặp được Đế chọn ở mục 6.1; bảng ngày 18/10 ở trên là kết quả lịch sử. `de-challenge1` tương ứng với `de-challenge?` trong output mới vì tên gốc thiếu số thứ tự.
+
+| Mã cặp | Đạt? | Ghi chú kiểm tra ngày 02/11 |
+|---|---|---|
+| thanh-standard2 | Chưa đạt | Đạt: JPEG, ảnh ngang, cùng kích thước 4096×3072, crop 16:9 còn 4096×2304, camera chính 1x theo EXIF, cùng thiết bị, chụp liền nhau, không có GPS, độ nét theo ngưỡng của script. Chưa đạt: bản tải về có tên `standard2_left`, `standard2_right`, thiếu `.jpg`. Cần review: chồng lấn ước lượng 68% bằng dịch ngang (tương quan 0.34), vượt khoảng 30–50%; đứng yên xoay máy, ít parallax và các tiêu chí thủ công ở mục 3 |
+| de-challenge1 | Chưa đạt | Đạt: JPEG, ảnh ngang, cùng kích thước 4032×3024, crop 16:9 còn 4032×2268, không có GPS trong bản tải về. Chưa đạt: tên `challenge_left`, `challenge_right` thiếu số thứ tự và `.jpg`. Cần review: không có EXIF để xác minh camera, cùng thiết bị và thời điểm chụp; độ nét 278 so với ngưỡng tương đối 900; chồng lấn ước lượng 47% không tin cậy (tương quan 0.12); đứng yên xoay máy và các tiêu chí thủ công ở mục 3 |
+
+Kết quả chi tiết được lưu cục bộ ở `results/p5-t08-review/check_pairs-20261102.md`. Bản sao dùng để chạy V0 được chuẩn hóa tên thành `.jpg`, giữ nguyên nội dung ảnh; chưa đổi tên file nguồn trên Drive. Việc chuẩn hóa bản sao không làm tiêu chí tên file của bản tải về tự chuyển thành `Đạt`.
+
 ## 6. Cách chọn ảnh
 
 1. **Phạm vi:** chỉ xét các cặp chính do từng thành viên chụp, tức các cặp không có hậu tố `_b<k>` ở mục 4. Các cặp backup không được đưa vào kiểm tra hoặc xếp ưu tiên trong bước chọn ảnh này.
@@ -164,18 +175,18 @@ Ghi chú khi tải: bản `gdown` 6.1 ở máy cá nhân giữ phần mở rộn
 | chuẩn | 1 | thanh-standard1 | Thứ tự do script đề xuất ngày 18/10: không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 40% | |
 | chuẩn | 2 | thanh-standard3 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 37% | |
 | chuẩn | 3 | thanh-standard4 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 56% | |
-| chuẩn | 4 | thanh-standard2 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 68% | |
+| chuẩn | 4 | thanh-standard2 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 68% | Đế, 02/11: chọn thay site2 theo chất lượng panorama và kết quả V0 ở mục 6.1; giữ yêu cầu xác minh overlap, chưa xác nhận đạt toàn bộ tiêu chí |
 | chuẩn | 5 | chuong-standard1 | Không có tiêu chí chưa đạt, 3 cần review; chồng lấn ước lượng 74% | |
 | chuẩn | 6 | tuan-standard1 | Không có tiêu chí chưa đạt, 4 cần review; chồng lấn ước lượng 28% | |
 | chuẩn | 7 | tuan-standard2 | Không có tiêu chí chưa đạt, 5 cần review; chồng lấn ước lượng 56% | |
 | chuẩn | 8 | de-standard1 | 1 chưa đạt (tên file), 5 cần review; chồng lấn ước lượng 57% | |
 | chuẩn | 9 | de-standard2 | 1 chưa đạt (tên file), 6 cần review; chồng lấn ước lượng 62% | |
-| khó | 1 | thanh-challenge1 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 58% | |
-| khó | 2 | chuong-challenge1 | Không có tiêu chí chưa đạt, 3 cần review; chồng lấn ước lượng 80% | |
-| khó | 3 | tuan-challenge1 | Không có tiêu chí chưa đạt, 5 cần review; ít texture có chủ đích | |
-| khó | 4 | de-challenge (thiếu số) | 1 chưa đạt (tên file), 6 cần review; chồng lấn ước lượng 47% | |
+| khó | 1 | thanh-challenge1 | Không có tiêu chí chưa đạt, 2 cần review; chồng lấn ước lượng 58% | Đế, 02/11: không chọn; small/medium xuất được panorama, large báo `InvalidCanvas`; riêng lỗi canvas chưa chứng minh chuyển động gây ghép sai |
+| khó | 2 | chuong-challenge1 | Không có tiêu chí chưa đạt, 3 cần review; chồng lấn ước lượng 80% | Đế, 02/11: không chọn; V0 vẫn xuất panorama cả ba kích thước, chưa tạo ca thất bại rõ cần thay ở P5 |
+| khó | 3 | tuan-challenge1 | Không có tiêu chí chưa đạt, 5 cần review; ít texture có chủ đích | Đế, 02/11: không chọn; vùng chung gần như chỉ có tường trắng, quá ít thông tin để làm ca challenge mong muốn |
+| khó | 4 | de-challenge (thiếu số) | 1 chưa đạt (tên file), 6 cần review; chồng lấn ước lượng 47% | Đế, 02/11: chọn làm challenge (`de-challenge1`); có các cấu trúc chung nhận ra được và ca ghép lệch/H không dùng được ở mục 6.1; còn các mục cần xử lý ở mục 5.3 |
 
-Thứ tự trên do script xếp: cặp có tiêu chí chưa đạt xếp cuối, sau đó ít tiêu chí chưa đạt hoặc chưa kiểm tra được hơn, chồng lấn ước lượng gần 40% hơn, độ nét cao hơn. Script không biết cặp nào chụp ở địa điểm nào, nên thứ tự này chưa tính yêu cầu 3 địa điểm khác nhau. Cột review để trống cho từng thành viên điền.
+Thứ tự trên do script xếp ngày 18/10: cặp có tiêu chí chưa đạt xếp cuối, sau đó ít tiêu chí chưa đạt hoặc chưa kiểm tra được hơn, chồng lấn ước lượng gần 40% hơn, độ nét cao hơn. Script không biết cặp nào chụp ở địa điểm nào, nên thứ tự này chưa tính yêu cầu 3 địa điểm khác nhau. Cột review ghi ý kiến của người thực hiện; phần Đế bổ sung ngày 02/11 không thay cho xác nhận của các thành viên còn lại.
 
 Để hỗ trợ review, Tuấn chạy thử pipeline V0 (nhánh `tuan/shared-v0-pipeline`) ngày 18/10 trên cả 13 cặp chính ở 3 kích thước. Ảnh của Đế được đổi tên thành `.jpg` trên bản sao để chạy, ảnh trên Drive giữ nguyên. Đây là kết quả chạy thử, không phải kết luận review:
 
@@ -194,6 +205,64 @@ Thứ tự trên do script xếp: cặp có tiêu chí chưa đạt xếp cuối
 | chuong-challenge1 | 440 / 391 / 289 | Ra panorama ở cả 3 kích thước |
 | tuan-challenge1 | 5 / 6 / 6 | Thất bại ở S6 ở cả 3 kích thước, đúng với yếu tố ít texture |
 | de-challenge (thiếu số) | 17 / 8 / 8 | Small ra panorama nhưng lệch; medium, large thất bại ở S6 |
+
+### 6.1 Review và lựa chọn của Đế cho P5-T08
+
+Ngày 02/11, Đế chọn **`site2 = thanh-standard2`** và **`challenge = de-challenge1`** sau khi chạy V0 trên 13 cặp chính ở ba kích thước và xem ảnh đầu vào, panorama, ảnh matches. Lựa chọn này được ghi lại để báo lại cho cả Nhóm cùng quyết định; các tiêu chí chưa xác minh ở mục 5.3 vẫn giữ trạng thái tương ứng. Chưa cập nhật bộ ảnh và manifest trên Drive.
+
+| Vai trò | Cặp chọn | Lý do chọn |
+|---|---|---|
+| Cặp chuẩn site2 | thanh-standard2 | Cảnh đường ngoài trời có nhiều chi tiết ở mép nhà, tường và dãy xe; khác địa điểm nhà thờ của site1 và Mai An của site3. V0 xuất panorama ở cả ba kích thước, với 465/423/270 inlier. Khi xem ảnh, bóng đôi giảm rõ so với `tuan-standard2` ở site2 cũ. Crop 4K vẫn có lệch nhỏ ở xe/biển số và phần phải méo phối cảnh; chưa coi là ảnh ghép hoàn hảo |
+| Cặp khó challenge | de-challenge1 | Hai ảnh cùng thấy ô thông gió, dầm trần, đèn và lan can; có các chi tiết chung rõ hơn vùng tường trắng của `tuan-challenge1`. Họa tiết lặp ở trần/lan can là yếu tố chính được chọn để phân tích matching. Small xuất panorama nhưng trần và lan can lệch/bóng đôi; medium/large có H không dùng được, tạo ca thất bại cụ thể để phân tích chuỗi matching → H → kiểm tra canvas. Chưa khẳng định họa tiết lặp là nguyên nhân duy nhất; góc nhìn và độ nét có thể cùng ảnh hưởng |
+
+**Cấu hình kiểm tra.** Đế chạy V0 trên CPU cục bộ, biên dịch bằng clang++ 23.1.3 với C++11/O2, tắt FMA contraction và auto-vectorization. Cấu hình ảnh và số lượt lấy từ `Group16_Midterm.ipynb`: small 1280×720, medium 1920×1080, large 3840×2160; yêu cầu 5 lượt đo sau một warm-up. Giữ nguyên Gaussian sigma=1/radius=3, FAST threshold=0.05, tối đa 2000 keypoint, match ratio=0.8, cross-check tắt, seed=16, RANSAC tối đa 2000 hypothesis và các giới hạn S6. Threshold RANSAC do `make_v0_config` tính theo kích thước, lần lượt 2/3/6 px. Không thay phương pháp hay tham số V0 theo từng cặp.
+
+| Cặp | Kích thước | Matches | Inlier | Lượt đo hoàn tất | Kết quả |
+|---|---|---|---|---|---|
+| thanh-standard2 | small, 1280×720 | 635 | 465 | 5 | Xuất panorama 2558×1440 |
+| thanh-standard2 | medium, 1920×1080 | 599 | 423 | 5 | Xuất panorama 3818×2154 |
+| thanh-standard2 | large, 3840×2160 | 494 | 270 | 5 | Xuất panorama 7676×4348 |
+| de-challenge1 | small, 1280×720 | 114 | 17 | 5 | Xuất panorama 2835×1551, quan sát thấy trần/lan can ghép lệch |
+| de-challenge1 | medium, 1920×1080 | 140 | 8 | 0 | Warm-up thất bại: S6 `NumericalFailure` |
+| de-challenge1 | large, 3840×2160 | 227 | 8 | 0 | Warm-up thất bại: S6 `NumericalFailure` |
+
+Các ca lỗi dừng ngay warm-up; sau đó Đế chạy công cụ trace không đo thời gian để lấy matches, inlier, H và ảnh trung gian. Không tính trace vào 5 lượt benchmark. Toàn bộ lần đánh giá có 39 cấu hình: 25 cấu hình hoàn tất đủ 5 lượt, 14 cấu hình dừng ở warm-up. Kết quả này chưa được kiểm chứng trên Colab T4 và không dùng làm số đo benchmark T4 chính thức.
+
+Ở `de-challenge1` medium/large, mẫu số phép chiếu `q(x,y)=h20*x+h21*y+h22` đổi dấu giữa các góc ảnh B. Ví dụ medium: `q(0,0)=0.000677859`, `q(1919,1079)` xấp xỉ `-0.000421031`, theo H in trong trace. Vì vậy có đường `q=0` cắt miền ảnh; phép chiếu không tạo được canvas hữu hạn bao trùm ảnh. S6 phát hiện và trả `NumericalFailure` trước khi blend. S5 trả thành công với 8 inlier không bảo đảm H dùng được trên toàn ảnh. Ở small không có đổi dấu nên chương trình vẫn xuất ảnh, nhưng panorama lệch cho thấy việc xuất được ảnh chưa đủ để xác nhận ghép đúng. Không sửa điều kiện S6 để ép ca này chạy qua.
+
+So với các cặp khó khác, `chuong-challenge1` vẫn ghép được ở cả ba cỡ; `tuan-challenge1` thiếu thông tin chung do tường trắng, chỉ còn 5/6/6 inlier. `thanh-challenge1` nhẹ hơn cặp Đế, có 123/94/39 inlier; small/medium xuất được panorama còn large bị giới hạn chiều canvas 10.000 px. Đế chọn cặp trần để phân tích H không phù hợp với ảnh, thay vì chỉ dùng ca vượt giới hạn canvas. Đề không yêu cầu challenge phải ghép thành công hoặc phải thất bại ở cả ba kích thước.
+
+**Các tiêu chí cần xử lý trước khi nghiệm thu bộ ảnh.** Với `thanh-standard2`, diện tích chung ước tính từ H trên lưới 480×270 vào khoảng 58% ở cả ba cỡ, còn phép tìm dịch ngang của script cho 68%. Hai cách ước lượng khác nhau đều chưa hỗ trợ việc xác nhận đạt 30–50%. Với `de-challenge1`, script ước lượng 47% nhưng tương quan chỉ 0.12; H ở small cho khoảng 52% diện tích chung nhưng panorama đã lệch, nên không dùng số này làm bằng chứng đạt overlap. Cần xác minh bằng mốc chung trên ảnh và thông tin cách chụp; nếu không đạt phải báo lại cho cả Nhóm để cùng quyết định, không bỏ qua yêu cầu của đề. Các mục camera/cách chụp, độ nét và tên file cần xử lý theo bảng ở mục 5.3.
+
+Bằng chứng cục bộ nằm trong `results/p5-t08-review/`: `raw-manifest.json` ghi tên gốc và SHA-256, `prepared-manifest.csv` ghi crop/resize và hash ảnh đầu vào, `review-results.json`/`.csv` ghi kết quả 39 cấu hình, `execution-environment.json` ghi cấu hình notebook và hash binary. Thư mục `runs/<mã cặp>/<kích thước>/` chứa command, exit code, stdout/stderr và ảnh đầu ra hoặc trace. Đây là dữ liệu thực nghiệm ngoài Git; các bảng trên là phần tổng hợp để review.
+
+Khi có Colab T4, sau khi đặt cùng bộ ảnh đã chuẩn bị ở `results/p5-t08-review/prepared/`, chạy từ gốc repo để đối chiếu hai cặp ở cả ba cấu hình:
+
+```bash
+python scripts/build.py --target stitch --require-t4
+```
+
+```python
+from pathlib import Path
+import subprocess
+
+review = Path("results/p5-t08-review")
+for pair in ("thanh-standard2", "de-challenge1"):
+    for size in ("small", "medium", "large"):
+        output = review / "colab-t4" / pair / size
+        output.mkdir(parents=True, exist_ok=True)
+        result = subprocess.run([
+            str(Path("build/stitch").resolve()),
+            str(review / "prepared" / pair / f"{size}_left.jpg"),
+            str(review / "prepared" / pair / f"{size}_right.jpg"),
+            str(output / "panorama.png"), "--version", "0", "--runs", "5", "--debug",
+        ], capture_output=True, text=True)
+        (output / "run.stdout").write_text(result.stdout)
+        (output / "run.stderr").write_text(result.stderr)
+        print(pair, size, result.returncode)
+```
+
+Output mong đợi để đối chiếu: `thanh-standard2` xuất panorama và đủ 5 lượt ở mỗi cỡ; `de-challenge1` xuất ảnh small bị lệch, medium/large báo S6 `NumericalFailure`. Nếu kết quả khác, kiểm tra log thay vì điều chỉnh tham số để ép khớp CPU.
 
 ## 7. Chuẩn bị dataset
 
@@ -214,6 +283,8 @@ python scripts/prepare_dataset.py --raw raw --out dataset \
 Ngày 16/10 script chạy được trên Colab với các cặp `tuan-standard1`, `tuan-standard2`, `tuan-challenge1` làm ảnh mẫu (khung cắt `0 777 8160 5367`, 18 ảnh đúng kích thước, không còn EXIF), và báo lỗi đúng với `chuong-standard1` (khung cắt 2560×1440). Đây chỉ là lần chạy thử, chưa phải lựa chọn cặp của P1-T05.
 
 ## 8. Kết quả cuối cùng
+
+### 8.1 Bộ giữa kỳ đã chuẩn bị và upload
 
 Cả Nhóm chốt bộ cặp dưới đây ngày 18/10, dựa trên thứ tự đề xuất và kết quả chạy thử V0 ở mục 6.
 
@@ -242,3 +313,23 @@ python scripts/prepare_dataset.py --raw raw --out dataset \
 Script ghi ra 24 ảnh (4 cặp × 3 kích thước × 2 ảnh) và `dataset/manifest.csv`. Đã kiểm tra mọi ảnh có đúng kích thước 1280×720, 1920×1080 hoặc 3840×2160, là JPEG RGB, không còn EXIF, và SHA-256 trong manifest khớp với file.
 
 Link `dataset/` trên Drive chung: https://drive.google.com/drive/folders/1HOvnly1k1QHOsV17qLzSAG4ihszNzCqO?usp=sharing. Ngày 18/10 đã tải lại thư mục này mà không đăng nhập, cả 25 file trùng SHA-256 với bản tạo ra ở trên.
+
+### 8.2 Lựa chọn của Đế cho P5-T08
+
+Ngày 02/11, Đế chốt hai cặp thay thế dưới đây; lý do và kết quả review ở mục 6.1. Site1 và site3 giữ cặp giữa kỳ để duy trì ba địa điểm chuẩn khác nhau. Đây là lựa chọn của Đế để báo lại cho cả Nhóm cùng quyết định; bộ `dataset/` và manifest trên Drive ở mục 8.1 chưa được thay bằng phương án này.
+
+| Vai trò | Site | Địa điểm | Loại | Người chụp | Cặp chọn | Trạng thái |
+|---|---|---|---|---|---|---|
+| Site 1 | site1 | Nhà thờ (`nha-tho`), ngoài trời | chuẩn | Thành | thanh-standard1 | Giữ cặp giữa kỳ |
+| Site 2 | site2 | Đường ngoài trời (`duong-ngoai-troi`) | chuẩn | Thành | thanh-standard2 | Đế chọn thay `tuan-standard2`; còn tiêu chí cần xử lý ở mục 5.3 và 6.1 |
+| Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), trong nhà | chuẩn | Đế | de-standard2 | Giữ cặp giữa kỳ |
+| Cặp khó | challenge | Tiệm cà phê Mai An (`mai-an-coffee`), trong nhà | khó: họa tiết lặp ở trần/lan can | Đế | de-challenge1 | Đế chọn thay `chuong-challenge1`; còn tiêu chí cần xử lý ở mục 5.3 và 6.1 |
+
+Khung cắt của hai cặp thay thế đã dùng trong lượt đánh giá, áp dụng giống nhau cho ảnh trái/phải:
+
+| Site | Cặp | Khung cắt (x0 y0 x1 y1) | Kích thước sau cắt |
+|---|---|---|---|
+| site2 | thanh-standard2 | `0 384 4096 2688` | 4096×2304 |
+| challenge | de-challenge1 | `0 378 4032 2646` | 4032×2268 |
+
+P5-T08 chưa hoàn tất: cần giải quyết các tiêu chí còn mở, báo lại cho cả Nhóm để cùng quyết định, chuẩn hóa tên nguồn, tạo và kiểm tra bộ `dataset/manifest.csv` theo mục 7 rồi cập nhật Drive. Việc ghi lựa chọn vào tài liệu không xác nhận các tiêu chí còn mở đã đạt và không xác nhận bộ ảnh mới đã upload.

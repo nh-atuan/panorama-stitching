@@ -1,4 +1,4 @@
-<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185) -->
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166) -->
 <!-- External source: none -->
 
 # Cấu trúc và hướng dẫn chạy `tests/`
@@ -10,10 +10,10 @@ Thư mục `tests/` chứa toàn bộ bài kiểm thử tự động (C++/CUDA v
 ```text
 tests/
 ├── run_tests.py     # Trình chạy kiểm thử thống nhất cho cả C++/CUDA và Python
-├── support/         # Header và hàm tiện ích dùng chung giữa các bài test (feature_test_support.h)
-├── v0/              # 13 suite C++ kiểm thử đơn vị và tích hợp cho từng stage S1-S6 và V0 pipeline
-├── gpu/             # Các suite .cu đối chiếu kết quả GPU (V1, V2, V3) với V0 (thêm khi làm GPU)
-├── python/          # 5 suite Python unittest kiểm thử scripts/ và cấu trúc notebook
+├── support/         # Header dùng chung: feature_test_support.h, v0_reference.h, gpu_compare.h
+├── v0/              # 14 suite C++: 13 suite cho S1-S6 và V0 pipeline, 1 suite cho tiện ích tham chiếu
+├── gpu/             # Các suite .cu đối chiếu kết quả GPU (V1, V2, V3) với V0
+├── python/          # 7 suite Python unittest kiểm thử scripts/, runner và cấu trúc notebook
 └── tools/           # Công cụ CLI sinh bảng hằng và xuất ảnh/trace trung gian để debug
 ```
 
@@ -22,6 +22,7 @@ tests/
 - **Đường dẫn `#include`:** trình biên dịch test luôn nhận hai cờ `-Isrc -Itests`. Ghi rõ thư mục con trong mọi lệnh `#include`, ví dụ `#include "common/common.h"`, `#include "v0/v0_match.h"`, `#include "support/feature_test_support.h"`.
 - **Tách file test GPU theo stage:** khi viết test trong `tests/gpu/`, mỗi thành viên đặt bài test vào file riêng của stage mình phụ trách (ví dụ `test_gpu_s1_preprocess.cu`, `test_gpu_s2_detect.cu`..., `test_gpu_pipeline.cu`) để tránh xung đột khi merge song song và tái sử dụng xuyên suốt từ `V1` sang `V3`.
 - **Đăng ký suite vào `tests/run_tests.py`:** mỗi suite C++/CUDA khai báo rõ danh sách file nguồn tối thiểu cần liên kết trong `tests/run_tests.py`, không dùng wildcard gom toàn bộ `src/` để tránh kéo theo các phiên bản không liên quan.
+- **Dòng PASS:** suite C++/CUDA in `PASS: <n> checks` hoặc `PASS <tên>: <n> checks` khi đạt; runner đọc số này để cộng tổng, thiếu dòng này thì suite bị tính là lỗi.
 - **Test Python:** đặt file dạng `test_*.py` trong `tests/python/` và xác định thư mục gốc repo bằng `ROOT = Path(__file__).resolve().parents[2]`.
 - **Tính tái lập và comment đầu file:** mọi dữ liệu thử có yếu tố ngẫu nhiên phải cố định seed; mọi file test mới hoặc chỉnh sửa phải có comment `Authors:` và `External source:` ở đầu file.
 
@@ -33,14 +34,17 @@ Thực thi từ thư mục gốc của repo:
 # Chạy đầy đủ toàn bộ kiểm thử chính thức trên Google Colab Tesla T4 (trước khi mở PR)
 python3 tests/run_tests.py --compiler nvcc --require-t4
 
-# Chạy toàn bộ 13 suite C++ V0 kèm AddressSanitizer + UBSan trên Linux 64-bit
+# Chạy toàn bộ suite C++ V0 kèm AddressSanitizer + UBSan trên Linux 64-bit
 python3 tests/run_tests.py --compiler g++ --group v0 --sanitizers
 
 # Chạy nhanh một hoặc vài suite cụ thể trong lúc sửa code
 python tests/run_tests.py --compiler g++ --suite preprocess --suite pipeline
 
-# Chỉ chạy 5 suite kiểm thử Python (dataset, synthetic, benchmark, plot, notebook)
+# Chỉ chạy các suite kiểm thử Python
 python tests/run_tests.py --group python
+
+# Chạy V0 và Python ở máy không có nvcc; nhóm GPU được bỏ qua kèm thông báo
+python tests/run_tests.py --compiler g++
 
 # Liệt kê danh sách các suite hiện có
 python tests/run_tests.py --list
@@ -68,6 +72,19 @@ compute-sanitizer --tool memcheck --error-exitcode 99 build/tests_gpu/gpu_s4
 compute-sanitizer --tool memcheck --error-exitcode 99 build/tests_gpu/gpu_s5
 ```
 
-`gpu_s4`, `gpu_s5` đăng ký danh sách source riêng. `--group all` bao gồm V0, GPU và Python; test Python mới là `test_profiling_scripts.py`. Phần đăng ký này phục vụ S4/S5, phần mở rộng GPU tổng quát của P5-T04 vẫn do Thành phụ trách.
+`gpu_s4`, `gpu_s5` đăng ký danh sách source riêng. `--group all` bao gồm V0, GPU và Python; test Python mới là `test_profiling_scripts.py`.
 
 `tool_gpu_s45` là driver kiểm chứng từ ảnh với S1–S3/S6 trên CPU. Driver kiểm tra match, prefix, mask và H với V0 ngoài vùng CUDA events. Xem [hướng dẫn profiling](../docs/profiling.md) cho cách chạy batch và lưu bằng chứng.
+
+## 6. Viết suite GPU mới
+
+Khai báo suite trong `GPU_SUITES` của `tests/run_tests.py`. Suite cần thêm cờ link khai báo ở `GPU_LINK_FLAGS`, suite đọc ảnh bằng stb thêm tên vào `GPU_STB_SUITES`.
+
+Hai header trong `tests/support/` dùng để đối chiếu với V0, chỉ chạy trên Host:
+
+| Header | Nội dung |
+|---|---|
+| `v0_reference.h` | `compute_v0_features` chạy V0 S1 đến S3 và giữ gray, keypoint, descriptor; `make_test_image` tạo ảnh có seed; `load_rgb_image` đọc ảnh thật |
+| `gpu_compare.h` | `keypoint_mismatch`, `descriptor_mismatch`, `float_array_mismatch` so từng bit hoặc theo ngưỡng; trả chuỗi rỗng khi khớp, ngược lại mô tả phần tử lệch đầu tiên |
+
+Không include `feature_test_support.h` trong suite GPU vì header đó thay global `new`. Bộ đệm Device và stream dùng lại namespace `gpu_test` trong `tests/gpu/s45_test_support.cuh`.

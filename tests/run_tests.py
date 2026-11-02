@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185)
+# Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166)
 # External source: none
 
 """Unified test runner for C++/CUDA suites (V0 and future GPU stages) and Python script tests."""
@@ -81,6 +81,7 @@ V0_SUITES = {
         "tests/v0/test_v0_config.cpp",
     ],
     "pipeline": [*V0_ALL_SOURCES, "tests/v0/test_v0_pipeline.cpp"],
+    "reference_support": [*V0_ALL_SOURCES, "tests/v0/test_v0_reference_support.cpp"],
 }
 
 # Suites defining custom global operator new/new[] for OOM fault injection;
@@ -99,7 +100,24 @@ WINDOWS_CUSTOM_NEW_SUITES = {
 GPU_SUITES = {
     "gpu_s4": ["src/common/feature_support.cpp", "src/v0/v0_match.cpp", "src/v1/s4/v1_match.cu", "tests/gpu/test_gpu_s4_match.cu"],
     "gpu_s5": [*HOMOGRAPHY, "src/v1/s5/v1_homography.cu", "tests/gpu/test_gpu_s5_homography.cu"],
+    "gpu_s6": ["src/v0/v0_warp_blend.cpp", "src/v1/v1_warp_blend.cu", "tests/gpu/test_gpu_s6_warp_blend.cu"],
+    "gpu_reference": [*V0_ALL_SOURCES, "tests/gpu/test_gpu_reference.cu"],
 }
+# Link options a suite needs in addition to its sources.
+GPU_LINK_FLAGS = {"gpu_s6": ["-Xlinker=--wrap=cudaMalloc"]}
+# Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
+GPU_STB_SUITES = {"gpu_s6", "gpu_reference"}
+STB_SOURCE = "src/common/stb_impl.cpp"
+
+GPU_COMPILE_FLAGS = [
+    "-arch=sm_75",
+    "-std=c++11",
+    "-O2",
+    "--fmad=false",
+]
+GPU_HOST_FLAGS = "-ffp-contract=off,-fno-tree-vectorize,-fno-tree-slp-vectorize"
+
+PASS_PATTERN = re.compile(r"^PASS(?: [^:\n]+)?: (\d+) (?:checks|assertions)", re.MULTILINE)
 
 PYTHON_SUITES = [
     "test_dataset_scripts.py",
@@ -108,7 +126,47 @@ PYTHON_SUITES = [
     "test_plot_benchmark.py",
     "test_midterm_notebook.py",
     "test_profiling_scripts.py",
+    "test_run_tests.py",
 ]
+
+
+def parse_pass_count(output):
+    """Return the check count of a suite's PASS line, or None if the suite reported no PASS."""
+    match = PASS_PATTERN.search(output)
+    return int(match.group(1)) if match else None
+
+
+def is_nvcc(compiler_name):
+    located = shutil.which(compiler_name)
+    return Path(located or compiler_name).stem.lower() == "nvcc"
+
+
+def gpu_stb_command(compiler, stb_object):
+    return [compiler, *GPU_COMPILE_FLAGS, f"-Xcompiler={GPU_HOST_FLAGS}", "-Isrc", "-c", STB_SOURCE,
+            "-o", str(stb_object)]
+
+
+def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.platform):
+    """Compile line of one GPU suite; V0 sources get the same host flags as the official build."""
+    return [
+        compiler,
+        *GPU_COMPILE_FLAGS,
+        f"-Xcompiler=-Wall,-Wextra,-Werror,{GPU_HOST_FLAGS}",
+        "-Isrc",
+        "-Itests",
+        *GPU_SUITES[name],
+        *([str(stb_object)] if name in GPU_STB_SUITES else []),
+        *GPU_LINK_FLAGS.get(name, []),
+        *(["-ldl"] if platform_name != "win32" else []),
+        "-o",
+        str(binary),
+    ]
+
+
+def list_suites():
+    lines = ["v0:", *(f"  {name}" for name in V0_SUITES), "gpu:", *(f"  {name}" for name in GPU_SUITES),
+             "python:", *(f"  {name}" for name in PYTHON_SUITES)]
+    return "\n".join(lines)
 
 
 def run(command, environment):
@@ -203,10 +261,10 @@ def run_v0_group(args, base_env):
             environment,
         )
         output = run([str(binary_abs)], environment)
-        match = re.search(r"^PASS(?: [^:\n]+)?: (\d+) (?:checks|assertions)", output, re.MULTILINE)
-        if not match:
+        count = parse_pass_count(output)
+        if count is None:
             raise RuntimeError(f"Suite {name} did not report a PASS count")
-        total_checks += int(match.group(1))
+        total_checks += count
 
     print(f"PASS v0 suites: {len(selected)}, total checks: {total_checks}", flush=True)
 
@@ -238,19 +296,23 @@ def run_gpu_group(args, environment):
     build = ROOT / "build/tests_gpu"
     build.mkdir(parents=True, exist_ok=True)
     selected = [name for name in (args.suite or GPU_SUITES) if name in GPU_SUITES]
+    stb_object = build / "stb_impl.o"
+    if GPU_STB_SUITES.intersection(selected):
+        run(gpu_stb_command(compiler, stb_object), environment)
+    total_checks = 0
     for name in selected:
         binary = build / name
         print(f"Build/run [gpu]: {name}", flush=True)
-        run([compiler, "-arch=sm_75", "-std=c++11", "-O2", "--fmad=false",
-             "-Xcompiler=-Wall,-Wextra,-Werror,-ffp-contract=off", "-Isrc", "-Itests",
-             *GPU_SUITES[name], *(["-ldl"] if sys.platform != "win32" else []), "-o", str(binary)], environment)
+        run(gpu_suite_command(compiler, name, binary, stb_object), environment)
         output = run([str(binary)], environment)
-        if not re.search(r"^PASS GPU S[45]: \d+ checks", output, re.MULTILINE):
-            raise RuntimeError(f"GPU suite {name} did not report PASS")
-    print(f"PASS gpu suites: {len(selected)}", flush=True)
+        count = parse_pass_count(output)
+        if count is None:
+            raise RuntimeError(f"GPU suite {name} did not report a PASS count")
+        total_checks += count
+    print(f"PASS gpu suites: {len(selected)}, total checks: {total_checks}", flush=True)
 
 
-def main():
+def main(argv=None):
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if hasattr(sys.stderr, "reconfigure"):
@@ -267,7 +329,12 @@ def main():
     parser.add_argument("--suite", choices=tuple(V0_SUITES)+tuple(GPU_SUITES), action="append", help="run selected C++/CUDA suites")
     parser.add_argument("--require-t4", action="store_true", help="verify Tesla T4 before official build")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
-    args = parser.parse_args()
+    parser.add_argument("--list", action="store_true", help="list the available suites and exit")
+    args = parser.parse_args(argv)
+
+    if args.list:
+        print(list_suites())
+        return
 
     if args.suite and (args.group == "python" or (args.group == "v0" and any(n in GPU_SUITES for n in args.suite)) or (args.group == "gpu" and any(n in V0_SUITES for n in args.suite))):
         raise RuntimeError("Selected --suite does not belong to --group")
@@ -288,7 +355,10 @@ def main():
 
     if run_v0:
         run_v0_group(args, base_env)
-    if run_gpu:
+    if run_gpu and args.group == "all" and not args.suite and not is_nvcc(args.compiler):
+        # An explicit --group gpu or --suite gpu_* still fails without nvcc.
+        print(f"Skip gpu suites: they need nvcc, got {args.compiler}. GPU code was not tested.", flush=True)
+    elif run_gpu:
         run_gpu_group(args, base_env)
     if run_py:
         run_python_group(base_env)

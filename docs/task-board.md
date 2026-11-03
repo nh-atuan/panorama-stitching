@@ -2,7 +2,7 @@
 
 # Bảng công việc
 
-Quy tắc chung nằm trong [kế hoạch cuối kỳ](final-plan.md) (mốc hoàn thành **27/11 (Thứ 6)**). Bảng công việc và kế hoạch giữa kỳ (các giai đoạn P0–P4) được lưu trữ tại [kế hoạch giữa kỳ](archive/midterm-plan.md) và [bảng công việc giữa kỳ](archive/midterm-task-board.md).
+Quy tắc chung nằm trong [kế hoạch cuối kỳ](final-plan.md) (mốc hoàn thành **03/12 (Thứ 5)**). Bảng công việc và kế hoạch giữa kỳ (các giai đoạn P0–P4) được lưu trữ tại [kế hoạch giữa kỳ](archive/midterm-plan.md) và [bảng công việc giữa kỳ](archive/midterm-task-board.md).
 
 Kế hoạch được lập cuốn chiếu: chỉ giai đoạn hiện tại có task chi tiết; giai đoạn kế tiếp được lập khi giai đoạn trước hoàn thành. Hạn được ghi cho cả giai đoạn; mọi task trong giai đoạn phải xong trước hạn đó.
 
@@ -141,6 +141,74 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
   </tbody>
 </table>
 
+## P6 - Ghép pipeline, benchmark và profiling V1
+
+Hạn của giai đoạn: **08/11 (Chủ nhật)**.
+
+Giai đoạn P6 tập trung nối trọn vẹn 6 stage V1 thành pipeline `v1_pipeline` hoàn chỉnh theo kiến trúc `Device-resident`, kiểm thử tích hợp end-to-end, chạy bộ benchmark chính thức V0 vs V1 trên Google Colab GPU Tesla T4 và thu thập bằng chứng profiling Nsight (`nsys`, `ncu`) để chỉ ra bottleneck dẫn đường cho tối ưu V2 (P7).
+
+Các công việc được tách độc lập để làm song song ngay từ đầu giai đoạn: Thành chạy trước baseline V0 và chuẩn bị biểu đồ; Đế chạy trước Nsight Compute (`ncu`) trên các kernel riêng lẻ; Tuấn mở rộng runner kiểm thử tích hợp CLI; Chương nối `v1_pipeline` trong `src/main.cu`. Sau khi merge pipeline, Thành chạy đo nốt V1, Tuấn kiểm tra an toàn bộ nhớ và Đế thu thập Nsight Systems (`nsys`) toàn pipeline, phân tích ca thất bại `challenge` để chốt bài toán tối ưu V2.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Chương</td>
+      <td>P6-T01</td>
+      <td>Ghép nối <code>v1_pipeline</code> hoàn chỉnh và quản lý bộ nhớ <code>DeviceWorkspace</code> trong CLI</td>
+      <td>P5-T01</td>
+      <td>Thay thế các stub trong <code>src/main.cu</code> bằng 6 stage thật; tính <code>max_scratch</code> cấp phát một lần cho <code>d_scratch</code>; quản lý cấp phát canvas linh hoạt cho S6 theo ma trận H; xử lý an toàn mã lỗi biên (<code>DegenerateHomography</code>, <code>TooFewKeypoints</code>). Lệnh <code>./stitch ... --version 1</code> chạy trọn vẹn 6 stage trên GPU và xuất ảnh panorama đạt chuẩn.</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>chuong/p6</code></td>
+    </tr>
+    <tr>
+      <td>Tuấn</td>
+      <td>P6-T02</td>
+      <td>Bổ sung target kiểm tra tích hợp V1 vào test runner và kiểm tra an toàn bộ nhớ</td>
+      <td>P6-T01</td>
+      <td>Mở rộng <code>tests/run_tests.py</code> hỗ trợ target/suite kiểm tra tích hợp CLI V1 trên ảnh synthetic và ảnh dataset; kiểm chứng H và kích thước canvas; chạy <code>compute-sanitizer</code> trên Colab T4 nghiệm thu 0 lỗi rò rỉ bộ nhớ.</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>tuan/p6</code></td>
+    </tr>
+    <tr>
+      <td>Thành</td>
+      <td>P6-T03</td>
+      <td>Chạy bộ benchmark chính thức V0 vs V1 trên Colab T4 và vẽ biểu đồ speedup</td>
+      <td>P6-T01</td>
+      <td>Đo trước baseline V0 trên 4 cặp ảnh dataset ở 3 độ phân giải (5 runs + warm-up); đo V1 khi có bản build pipeline; xuất đầy đủ CSV <code>&lt;out&gt;/v&lt;k&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> theo schema 11 cột; chạy <code>scripts/plot_benchmark.py</code> tạo biểu đồ so sánh speedup V1/V0.</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>thanh/p6</code>; đo V0 độc lập ngay từ ngày đầu.</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Đế</td>
+      <td>P6-T04</td>
+      <td>Thu thập số liệu Nsight Compute (<code>ncu</code>) đo sâu các kernel V1 riêng lẻ</td>
+      <td>P5-T09</td>
+      <td>Chạy <code>scripts/run_profiling.py</code> trên Colab T4 thu thập metric chi tiết (Memory Bandwidth, Occupancy, Warp Stalls) cho từng kernel stage từ S1 đến S6 thông qua các test suite GPU độc lập.</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>de/p6</code>; chạy độc lập ngay từ ngày đầu.</td>
+    </tr>
+    <tr>
+      <td>P6-T05</td>
+      <td>Thu thập Nsight Systems toàn pipeline, phân tích ca lỗi <code>challenge</code> và viết báo cáo bottleneck V1</td>
+      <td>P6-T01, P6-T03, P6-T04</td>
+      <td>Chạy <code>nsys</code> lấy timeline NVTX toàn pipeline; phân tích cơ chế thất bại trên cặp <code>de-challenge1</code>; đối chiếu số liệu benchmark và profiling để xác định chính xác hotspot của V1; viết tài liệu đề xuất bài toán tối ưu cho V2 (P7) và soạn cuốn chiếu mục V1 vào <code>docs/report/</code>.</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>de/p6</code></td>
+    </tr>
+  </tbody>
+</table>
+
 ## Quyết định đã chốt
 
 Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình làm.
@@ -157,3 +225,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 03/11 | Tuấn và cả Nhóm đồng ý để Thành làm thay P5-T03 (V1 cho S1); dòng `Authors:` ghi Thành. Tuấn vẫn phụ trách tài liệu S1 và xem lại phần V1 khi review |
 | 03/11 | Nhóm trưởng chốt bộ dataset cuối kỳ: site1 `thanh-standard1`, site2 `thanh-standard2` (thay `tuan-standard2` để triệt tiêu bóng ma parallax, chấp nhận overlap ~58% của cảnh đường ngoài trời), site3 `de-standard2`, challenge `de-challenge1` (thay `chuong-challenge1` để tạo ca thất bại thực sự do hoa văn lặp trần/lan can). Tiến hành chạy `prepare_dataset.py` và cập nhật Drive chung |
 | 03/11 | Nhóm trưởng chốt layout output của công cụ benchmark đa phiên bản (P5-T05): dùng cấu trúc phân cấp `<out>/v<k>/<site>/<size>.csv` cho bài nộp cuối kỳ (`Group16_Final.ipynb`); không ràng buộc tương thích ngược với notebook giữa kỳ |
+| 03/11 | Chốt kế hoạch Phase 6 (hạn 08/11): thu hẹp còn 5 ngày để giữ nhịp tiến độ; thiết kế các task độc lập tối đa ngay từ đầu phase (Thành chạy trước benchmark V0, Đế chạy trước NCU các kernel stage, Tuấn viết target runner test tích hợp, Chương ghép `v1_pipeline`); Đế phụ trách thu thập NSYS toàn pipeline, phân tích ca lỗi `challenge` và chốt báo cáo bottleneck V1/đề xuất V2. Cập nhật mốc nộp bài cuối kỳ sang 03/12 (Thứ 5) |

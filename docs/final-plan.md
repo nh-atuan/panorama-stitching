@@ -3,7 +3,7 @@
 # Kế hoạch thực hiện bài nộp cuối kỳ CSC14120
 
 **Bài nộp:** Final Submission - Parallel CUDA Versions, Report, Slides and Presentation Video.
-**Hạn:** 27/11 (Thứ 6). Mọi phần việc phải hoàn thành trước ngày này.
+**Hạn:** 03/12 (Thứ 5). Mọi phần việc phải hoàn thành trước ngày này.
 
 Tài liệu đi kèm:
 
@@ -16,7 +16,7 @@ Quy ước ngày: mọi hạn ghi theo dạng `dd/mm (Thứ n)` hoặc `dd/mm (C
 
 ## 1. Mục tiêu và sản phẩm nộp
 
-Đến hạn 27/11 (Thứ 6), nhóm hoàn thành trọn bộ sản phẩm theo mục 5 của đề cuối kỳ:
+Đến hạn 03/12 (Thứ 5), nhóm hoàn thành trọn bộ sản phẩm theo mục 5 của đề cuối kỳ:
 
 1. **Mã nguồn đa phiên bản (`src/`):** tối thiểu 4 phiên bản của cùng pipeline ghép ảnh (`V0 Sequential`, `V1 Basic CUDA`, và ít nhất 2 phiên bản tối ưu `V2`, `V3`) giữ chung phương pháp và tham số. Mỗi phiên bản sau `V1` chỉ đưa vào đúng một ý tưởng tối ưu chính xuất phát từ điểm nghẽn đo được, đo riêng tác dụng và cho kết quả nhất quán với `V0`. Nhóm chốt mục tiêu hoàn thành chắc chắn 4 phiên bản `V0`–`V3`; chỉ mở thêm `V4` nếu xong `V3` sớm và còn đủ thời gian cho báo cáo, slide và video.
 2. **Báo cáo Jupyter Notebook (`Group16_Final.ipynb`) và bản xuất PDF:** chạy `Runtime -> Run all` thành công từ đầu đến cuối trên phiên Google Colab GPU Tesla T4 mới, lưu sẵn toàn bộ output, mọi con số dẫn trong lời văn xuất hiện trực tiếp trong output cell, đủ 10 mục theo mục 5.2 của đề cuối kỳ.
@@ -48,7 +48,7 @@ Phân công theo phiên bản pipeline (mục tiêu tối ưu cụ thể của `
 
 ## 3. Các giai đoạn
 
-Kế hoạch cuối kỳ tiếp tục lập **cuốn chiếu** nối tiếp từ `P5`: chỉ giai đoạn đang mở có danh sách task và hạn chi tiết trong [bảng công việc](task-board.md); các giai đoạn tiếp theo chỉ ghi tên và được lập chi tiết ngay sau khi giai đoạn trước hoàn thành cùng số đo thực tế. Mốc cố định duy nhất là **27/11 (Thứ 6)**.
+Kế hoạch cuối kỳ tiếp tục lập **cuốn chiếu** nối tiếp từ `P5`: chỉ giai đoạn đang mở có danh sách task và hạn chi tiết trong [bảng công việc](task-board.md); các giai đoạn tiếp theo chỉ ghi tên và được lập chi tiết ngay sau khi giai đoạn trước hoàn thành cùng số đo thực tế. Mốc cố định duy nhất là **03/12 (Thứ 5)**.
 
 ```mermaid
 flowchart LR
@@ -56,16 +56,16 @@ flowchart LR
     P6 --> P7["P7 Tối ưu và profiling V2"]
     P7 --> P8["P8 Tối ưu và profiling V3"]
     P8 --> P9["P9 Hoàn thiện báo cáo, slide và video"]
-    P9 --> END["27/11 (Thứ 6) Nộp bài"]
+    P9 --> END["03/12 (Thứ 5) Nộp bài"]
 ```
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
 |---|---|---|
 | P5 | Khung GPU, dataset và từng stage V1 | Đã lập, kết thúc 02/11 (Thứ 2) |
-| P6 | Ghép pipeline, benchmark và profiling V1 | Lập sau khi hoàn thành P5 |
+| P6 | Ghép pipeline, benchmark và profiling V1 | Đã lập, kết thúc 08/11 (Chủ nhật) |
 | P7 | Tối ưu và profiling V2 | Lập sau khi hoàn thành P6 |
 | P8 | Tối ưu và profiling V3 | Lập sau khi hoàn thành P7 |
-| P9 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P8, hoàn tất trước 27/11 (Thứ 6) |
+| P9 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P8, hoàn tất trước 03/12 (Thứ 5) |
 
 Kết quả cần có khi kết thúc `P5`:
 
@@ -73,6 +73,12 @@ Kết quả cần có khi kết thúc `P5`:
 - khung chạy nhóm test GPU trong `tests/` và các công cụ benchmark đa phiên bản, thu thập profiling theo batch trong `scripts/` đã sẵn sàng và đạt test trên Colab T4;
 - cả 6 stage của `V1` (`S1`–`S6`) đã được cài đặt, định nghĩa ngưỡng kiểm chứng so với `V0` trong `docs/stages/` và đạt bài test đối chiếu trên Colab T4;
 - phương án chọn lại cặp chuẩn `site2` và cặp khó `challenge` đã được đánh giá, thống nhất trong Nhóm và cập nhật lên bộ `dataset/` trên Drive chung.
+
+Kết quả cần có khi kết thúc `P6`:
+
+- pipeline `v1_pipeline` hoàn chỉnh trong `src/main.cu` chạy trọn vẹn 6 stage trên GPU, đạt toàn bộ bài test đối chiếu và `compute-sanitizer` 0 lỗi;
+- bộ benchmark chính thức V0 vs V1 trên dataset cuối kỳ ở cả 3 độ phân giải hoàn thành trên Colab T4, xuất đủ CSV 11 cột và biểu đồ speedup;
+- báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) chỉ rõ bottleneck của V1, phân tích ca thất bại `challenge` và đề xuất phương án tối ưu cho V2 (P7).
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 
@@ -184,7 +190,7 @@ Một task cài đặt code/kernel hoặc công cụ được coi là xong khi:
 4. tài liệu liên quan (`docs/stages/<stage>.md`, `docs/interface.md` hoặc hướng dẫn sử dụng công cụ) đã được cập nhật khớp với code;
 5. đã mở pull request kèm log build/test trên Colab T4 và merge vào `main`; trạng thái trên [bảng công việc](task-board.md) chuyển sang `Xong`.
 
-Checklist tổng thể trước hạn 27/11 (Thứ 6):
+Checklist tổng thể trước hạn 03/12 (Thứ 5):
 
 - [ ] Có tối thiểu 4 phiên bản (`V0`, `V1`, `V2`, `V3`) chạy từ cùng một chương trình `stitch --version <k>`, dùng chung phương pháp và tham số, cho kết quả nhất quán với `V0`.
 - [ ] Mỗi phiên bản tối ưu (`V2`, `V3`...) có đầy đủ 5 phần trong báo cáo (Bottleneck kèm bằng chứng profiling `nsys`/`ncu`, Idea, Implementation, Result, Analysis).

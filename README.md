@@ -2,7 +2,7 @@
 
 Đồ án cuối kỳ môn Lập trình song song (CSC14120): ghép hai ảnh chồng lấn thành một ảnh panorama. Cùng một pipeline gồm sáu stage (preprocessing, keypoint detection, description, matching, homography estimation, warping and blending) được cài đặt thành nhiều phiên bản: V0 tuần tự bằng C/C++, V1 CUDA cơ bản, V2 và V3 tối ưu. Mọi build, test và đo thời gian chạy trên Google Colab với GPU Tesla T4.
 
-Mốc hiện tại là giai đoạn cuối kỳ (các phiên bản song song CUDA V1–V3, báo cáo notebook, slide và video), hạn hoàn tất 27/11/2026.
+Mốc hiện tại là giai đoạn cuối kỳ (các phiên bản song song CUDA V1–V3, báo cáo notebook, slide và video), hạn hoàn tất 03/12/2026.
 
 ## Cấu trúc thư mục
 

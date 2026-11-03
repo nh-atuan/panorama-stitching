@@ -164,6 +164,28 @@ Trung bình tỷ trọng trên ba site là 4.4% ở small, 5.8% ở medium và 8
 - Compact phải giữ thứ tự đầu vào nên không dùng atomic append. Với keypoint của S2, mọi keypoint đều được giữ (border 15), nhưng bước này vẫn cần để đúng với đầu vào bất kỳ.
 - Kết quả chỉ gồm phép so sánh `<` trên giá trị đã làm mượt. Nếu blur trên GPU giống V0 từng bit (cùng trọng số, cùng thứ tự cộng, build với `--fmad=false` khi đối chiếu) thì descriptor giống V0 từng bit.
 
+Cài đặt V1 (P5-T07):
+
+| File | Nội dung |
+|---|---|
+| `src/v1/s3/v1_brief_kernel.cuh` | Bảng `c_brief_pattern` trong `__constant__`, làm tròn tâm và 256 test như V0 |
+| `src/v1/s3/v1_compact.cuh` | Kernel kiểm tra keypoint, cờ giữ/bỏ, prefix sum một block, ghi descriptor, chép keypoint về và công bố số lượng |
+| `src/v1/s3/v1_describe.{h,cu}` | `v1_describe(DeviceWorkspace&, const Config&, cudaStream_t)` và `v1_describe_scratch_bytes(W, H, keypoint_capacity)` |
+| `src/v1/common/v1_gaussian_blur.{h,cu}` | Blur dùng chung với S1, ở đây với σ = 2, r = 4 |
+
+Bảng 256 test đặt trong constant memory ngay từ V1, dù mục 7.2 của kế hoạch cuối kỳ xếp việc này vào nhóm tối ưu sau V1. Thành chọn như vậy ngày 02/11 vì S3 không thuộc nhóm stage ưu tiên ở V2, V3, nên làm luôn ở V1 không làm mất bước tối ưu nào. Bảng được chép bằng `cudaMemcpyToSymbolAsync` ở lần gọi đầu tiên rồi đồng bộ stream một lần; lần gọi đó là lượt warm-up, nên không nằm trong vùng đo.
+
+Mỗi ảnh chạy theo thứ tự sau, không đồng bộ với Host:
+
+1. Blur ảnh của S1 vào buffer `smoothed` trong scratch. Ảnh của S1 không bị ghi.
+2. Kiểm tra keypoint: số keypoint vượt dung lượng buffer, hoặc có tọa độ NaN hay vô hạn, thì ghi `InvalidArgument` vào `d_counts->status` và đặt `descriptorsA`, `descriptorsB` về 0. Keypoint giữ nguyên, giống V0.
+3. Đánh cờ giữ/bỏ theo cách làm tròn tâm của V0 (`floor(double(x) + 0.5)`, so biên trước khi ép sang `int`).
+4. Prefix sum loại exclusive trên cờ, chạy trong một block 1024 thread, theo từng đoạn 1024 phần tử.
+5. Mỗi keypoint được giữ ghi descriptor thẳng vào `d_descriptors[offset]` và ghi keypoint vào một mảng tạm trong scratch.
+6. Chép mảng tạm về `d_keypoints`, rồi đặt cả `keypoints` và `descriptors` của ảnh bằng số keypoint được giữ.
+
+Bản cài đặt không có bước chép descriptor riêng như bảng ở trên, vì offset đã biết trước khi tính descriptor. Keypoint được chép qua mảng tạm để kernel không ghi đè danh sách đang đọc. Mọi kernel đều không làm gì khi `d_counts->status` đã báo lỗi từ trước, như S4. Scratch của một ảnh gồm `smoothed` và `temp` (mỗi buffer W·H·4 byte), 16 byte bộ đếm, cờ (4 byte cho mỗi keypoint) và mảng keypoint tạm (16 byte cho mỗi keypoint). Host kiểm tra ảnh trước (`InvalidImage`), sau đó đến workspace (`InvalidArgument`): `d_counts`, các buffer keypoint và descriptor phải có, dung lượng descriptor ≥ dung lượng keypoint, scratch đủ lớn và căn lề 16 byte.
+
 ### 6.3 Hướng tối ưu V2/V3 và rủi ro
 
 S3 chiếm 3.8–9.5% thời gian V0 nên không thuộc nhóm stage ưu tiên (S2, S4, S6). Các ý tưởng dưới đây chỉ làm khi profiling V1 cho thấy S3 đáng kể:
@@ -172,11 +194,21 @@ S3 chiếm 3.8–9.5% thời gian V0 nên không thuộc nhóm stage ưu tiên (
 2. **Chỉ làm mượt vùng quanh keypoint.** Descriptor chỉ đọc các pixel trong patch 31×31 của keypoint. Ở large, làm mượt cửa sổ 39×39 (patch cộng halo 4) quanh tối đa 2000 keypoint ít việc hơn làm mượt cả ảnh 3840×2160; ở small thì có thể ngược lại vì các cửa sổ chồng nhau. Giá trị phải giống V0, kể cả clamp ở mép ảnh.
 3. **Nạp patch vào shared memory.** Kết hợp với ý 1: mỗi warp nạp patch của keypoint vào shared memory một lần rồi chạy 256 test từ đó, thay vì đọc global memory rải rác.
 
-Rủi ro: truy cập bộ nhớ rải rác khi gather; ý 2 làm việc phụ thuộc số keypoint và vị trí của chúng nên phải đo ở cả ba kích thước. Chưa có kernel hay số đo GPU nào của S3.
+Rủi ro: truy cập bộ nhớ rải rác khi gather; ý 2 làm việc phụ thuộc số keypoint và vị trí của chúng nên phải đo ở cả ba kích thước. Chưa có số đo thời gian GPU nào của S3, vì V1 chưa được nối vào pipeline (việc này thuộc P6).
 
 ### 6.4 Kiểm chứng V1
 
 So descriptor và danh sách keypoint của V1 với V0 từng bit và đúng thứ tự. Dùng lại các test ở mục 7: ảnh ramp theo x và y, làm tròn tâm, dịch ảnh, compact với keypoint ngoài biên và tọa độ cực lớn, ảnh hẹp hơn patch, danh sách rỗng. Sau đó so trên ảnh dataset ở cả ba kích thước, chạy toàn pipeline và bộ cặp synthetic ở mục 5.5 tài liệu S5. Thời gian S3 đo bằng CUDA events gồm cả làm mượt và compact.
+
+Kết quả kiểm chứng của Thành ngày 03/11 trên Colab Tesla T4, CUDA 13.0 (V13.0.88), build với `--fmad=false`, commit `00c662a` trên nhánh `thanh/p5`:
+
+| Đầu vào | Kết quả |
+|---|---|
+| Suite `gpu_s3` | `PASS GPU S3: 1022 checks`; 11850 descriptor giống V0 từng bit, keypoint giữ lại đúng thứ tự |
+| Chuỗi S1 → S2 → S3 → S4 của V1, dataset giữa kỳ (site1, site2, site3, challenge, mỗi bộ 3 kích thước) | 12 cặp: keypoint, descriptor và danh sách match giống V0 (`v0_match`); số match từ 246 đến 749 |
+| Cùng chuỗi trên 6 cặp synthetic | Giống V0; số match từ 699 đến 1132 |
+| `compute-sanitizer --tool memcheck --leak-check full`, suite kèm cặp site1 small | `0 errors`, `0 bytes leaked` |
+| `compute-sanitizer --tool racecheck` trên suite | `0 hazards` |
 
 ## 7. Kiểm thử
 
@@ -202,6 +234,15 @@ Test nằm ở `tests/test_v0_describe.cpp`, dùng dữ liệu tự tạo.
 | Cấp phát thất bại | Giả lập `bad_alloc` | `AllocationFailed`, keypoints giữ nguyên |
 
 Test tích hợp S1 → S5 nằm ở `tests/test_v0_detect_describe.cpp` (mục 7 của tài liệu S2).
+
+Test V1 nằm ở `tests/gpu/test_gpu_s3_describe.cu` (suite `gpu_s3`). Suite so output với `v0_describe` trên ảnh nhiễu ở 5 kích thước, dùng danh sách keypoint có điểm ở đúng biên, điểm ngoài biên sau khi làm tròn, điểm ở nửa đơn vị, tọa độ ±1e30 và điểm trùng. Suite cũng kiểm tra ảnh có padding, ảnh hẹp hơn patch, danh sách rỗng, dung lượng 0, chạy lại trên danh sách đã compact, NaN và vô hạn ở A hoặc B, số keypoint vượt dung lượng, trường hợp `status` đã báo lỗi từ trước, cùng các lỗi phát hiện trên Host. Cuối cùng suite chạy chuỗi S1 → S2 → S3 → `v1_match` trên GPU, so với V0 đến `v0_match`. Lệnh chạy trên Colab T4:
+
+```bash
+python3 tests/run_tests.py --compiler nvcc --require-t4 --group gpu --suite gpu_s3
+./build/tests_gpu/gpu_s3 <left.jpg> <right.jpg>
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 ./build/tests_gpu/gpu_s3
+compute-sanitizer --tool racecheck --error-exitcode 99 ./build/tests_gpu/gpu_s3
+```
 
 Lệnh build và chạy ở máy cá nhân:
 

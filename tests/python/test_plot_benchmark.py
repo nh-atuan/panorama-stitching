@@ -131,7 +131,7 @@ class PlotBenchmarkTest(unittest.TestCase):
         rows = [
             {"site": site, "size": size, "version": "V1", "Total_ms": 10.0, "Total_Kernel_ms": 8.0,
              "speedup_vs_v0": 2.5, "speedup_vs_prev": 2.5, "kernel_speedup_vs_v0": 3.0}
-            for site in run_benchmark.BENCHMARK_SITES for size in SIZES
+            for site in run_benchmark.BENCHMARK_SITES for size in plot_benchmark.SIZES
         ]
         run_benchmark.write_speedup_csv(speedup_csv, rows)
         with redirect_stdout(io.StringIO()):

@@ -221,7 +221,7 @@ def main(argv=None):
 
     if args.summary:
         if not args.summary.is_file():
-            print(f"error: summary file not found: {args.summary}", file=sys.stderr)
+            print(f"error: summary not found: {args.summary}", file=sys.stderr)
             return 1
         try:
             table, _ = analyse(args.summary, out)

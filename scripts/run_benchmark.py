@@ -49,7 +49,7 @@ SPEEDUP_COLUMNS = [
     "site", "size", "version", "Total_ms", "Total_Kernel_ms",
     "speedup_vs_v0", "speedup_vs_prev", "kernel_speedup_vs_v0"
 ]
-DEBUG_PREFIXES = ("[debug] version=", "[debug] config: ", "[debug] GPU=")
+DEBUG_PREFIXES = ("[debug] version=", "[debug] config: ")
 
 
 class BenchmarkError(RuntimeError):

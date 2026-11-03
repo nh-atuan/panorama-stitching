@@ -199,12 +199,22 @@ Cả ba lượt của S1 đều là phép tính độc lập trên từng pixel,
 | Blur dọc | Pixel `(x, y)`: cộng `2r+1` tap theo thứ tự `k = -r..r`, chỉ số y clamp vào `[0, H-1]` | `temp` | `output` |
 
 - Grid 2D, block ban đầu 32×8 thread để một warp đọc 32 pixel liên tiếp trên cùng hàng. 256 thread mỗi block nằm trong khoảng 128–256 mà CUDA C++ Best Practices Guide (mục 11.3) gợi ý để bắt đầu thử. Kích thước block là cấu hình để đo lại, không phải tham số của phương pháp.
-- Trọng số kernel (tối đa 33 giá trị vì `r ≤ 16`) vẫn sinh trên Host bằng `src/gaussian_kernel.cpp` như V0, rồi chép vào constant memory. Ở mỗi bước cộng, mọi thread trong warp đọc cùng một trọng số; theo mục 10.2.6 của cùng tài liệu, khi cả warp đọc cùng một địa chỉ thì constant memory nhanh gần bằng register.
+- Trọng số kernel (tối đa 33 giá trị vì `r ≤ 16`) vẫn sinh trên Host bằng `make_gaussian_weights` như V0. Ở mỗi bước cộng, mọi thread trong warp đọc cùng một trọng số; theo mục 10.2.6 của cùng tài liệu, khi cả warp đọc cùng một địa chỉ thì constant memory nhanh gần bằng register. Bản V1 không dùng `cudaMemcpyToSymbol` mà truyền trọng số theo giá trị qua tham số kernel (struct `V1GaussianWeights`: 33 `float` và bán kính). Trên sm_75, tham số kernel nằm trong một constant bank nên vẫn có cơ chế broadcast này, và không có lệnh chép trọng số nào trong vùng đo.
 - Thread nằm ngoài ảnh (khi W hoặc H không chia hết cho kích thước block) chỉ thoát, không ghi gì.
 - Ảnh RGB được chép từ Host lên Device một lần cho mỗi ảnh. `output` ở lại trên Device để S2 dùng tiếp, không chép về Host giữa các stage.
 - V1 dùng global memory cho cả ba lượt. Thứ tự cộng trong mỗi pixel giữ như V0, build với `--fmad=false` khi đối chiếu để chênh lệch chỉ đến từ làm tròn `float`.
 
 S3 dùng lại blur của S1 (`gaussian_blur_in_place` với σ = 2, r = 4), nên hai kernel blur viết theo tham số `r` và trọng số truyền vào để S3 dùng chung.
+
+Cài đặt V1 (P5-T03) gồm:
+
+| File | Nội dung |
+|---|---|
+| `src/v1/s1/v1_grayscale.cuh` | Kernel grayscale, block 32×8, cùng biểu thức và thứ tự tính với `convert_to_gray` của V0 |
+| `src/v1/common/v1_gaussian_blur.{h,cu}` | Hai kernel blur ngang và dọc, dùng chung với S3 |
+| `src/v1/s1/v1_preprocess.{h,cu}` | `v1_preprocess(DeviceWorkspace&, const Config&, cudaStream_t)` và `v1_preprocess_scratch_bytes(W, H)` |
+
+`v1_preprocess` xử lý A rồi B trên cùng stream, mỗi ảnh một kernel grayscale ghi thẳng vào `grayA` hoặc `grayB` rồi blur tại chỗ. Thứ tự kiểm tra đầu vào giống V0: ảnh trước (`InvalidImage`), config sau (`InvalidConfig`), cuối cùng là scratch (`InvalidArgument` khi `d_scratch` null, lệch 4 byte hoặc nhỏ hơn mức cần). Khi có lỗi thì không kernel nào được đưa vào stream, nên output giữ nguyên. S1 không có lỗi phát sinh trên Device, nên không đọc hay ghi `d_counts`.
 
 ### 6.3 Hướng tối ưu V2/V3 và rủi ro
 
@@ -214,13 +224,24 @@ S1 chỉ chiếm 3–8% thời gian V0 nên không thuộc nhóm stage ưu tiên
 2. **Gộp grayscale với blur ngang.** Đề cuối kỳ gợi ý kernel fusion grayscale + blur. Một kernel đọc RGB, tính giá trị xám cho cả vùng halo rồi blur ngang luôn, bỏ một lượt ghi và đọc lại `output`. Thứ tự cộng vẫn phải giữ như V0.
 3. **Xử lý hai ảnh song song và pinned memory.** A và B độc lập ở S1, có thể chạy trên hai CUDA stream; chép RGB từ pinned memory để chồng việc chép ảnh này với tính toán ảnh kia.
 
-Rủi ro chính: S1 bị giới hạn bởi băng thông bộ nhớ. Ở large, mỗi ảnh RGB khoảng 24.9 MB phải chép lên Device, nên thời gian chép có thể lớn hơn thời gian kernel. Chi phí này cần đo riêng thay vì chỉ báo thời gian kernel. V0 cấp phát `temp` trong mỗi lần gọi; V1 cần ghi rõ việc cấp phát Device nằm trong hay ngoài vùng đo của S1.
+Rủi ro chính: S1 bị giới hạn bởi băng thông bộ nhớ. Ở large, mỗi ảnh RGB khoảng 24.9 MB phải chép lên Device, nên thời gian chép có thể lớn hơn thời gian kernel. Chi phí này cần đo riêng thay vì chỉ báo thời gian kernel. V0 cấp phát `temp` trong mỗi lần gọi. V1 thì không cấp phát gì trong S1: `temp` lấy từ `d_scratch`, do caller cấp trước vùng đo theo `v1_preprocess_scratch_bytes(W, H)` = W·H·4 byte (lấy giá trị lớn hơn giữa A và B). Hai ảnh chạy nối tiếp trên cùng stream nên dùng chung vùng này được.
 
 ### 6.4 Kiểm chứng V1
 
 Chạy lại các test ở mục 7 với output của V1: ảnh hằng, ảnh một màu, điểm sáng, ảnh ngẫu nhiên nhiều kích thước và nhiều cặp (σ, r), ảnh nhỏ hơn bán kính, ảnh có kích thước không chia hết cho block. Sai lệch tuyệt đối lớn nhất so với V0 phải ≤ 1e-5 (mục 3). Sau đó so output S1 của V1 với V0 trên ảnh dataset ở cả ba kích thước, rồi chạy toàn pipeline và bộ cặp synthetic ở mục 5.5 của tài liệu S5.
 
-Thời gian S1 trên GPU đo bằng CUDA events quanh ba kernel, có đồng bộ trước khi đọc kết quả; thời gian chép ảnh RGB lên Device ghi thành một cột riêng. Chưa có kernel hay số đo speedup nào của S1.
+Thời gian S1 trên GPU đo bằng CUDA events quanh ba kernel, có đồng bộ trước khi đọc kết quả; thời gian chép ảnh RGB lên Device ghi thành một cột riêng. Chưa có số đo speedup nào của S1, vì V1 chưa được nối vào pipeline (việc này thuộc P6).
+
+Kết quả kiểm chứng của Thành ngày 03/11 trên Colab Tesla T4, CUDA 13.0 (V13.0.88), build với `--fmad=false`, commit `924e0d7` trên nhánh `thanh/p5`:
+
+| Đầu vào | Kết quả |
+|---|---|
+| Suite `gpu_s1` (ảnh ngẫu nhiên, ảnh một màu, điểm sáng, chạy lặp, đầu vào sai) | `PASS GPU S1: 10706 checks`, 629536 pixel, cả 629536 pixel giống V0 từng bit, `max_abs_diff=0` |
+| Dataset giữa kỳ: site1, site2, site3, challenge, mỗi bộ 3 kích thước | 12 cặp, tất cả `max_abs_diff=0` |
+| 6 cặp synthetic (translation và projective, 3 kích thước) | Tất cả `max_abs_diff=0` |
+| `compute-sanitizer --tool memcheck --leak-check full` trên suite kèm cặp site1 small | `0 errors`, `0 bytes leaked` |
+
+Sai lệch đo được là 0 vì V1 giữ nguyên biểu thức và thứ tự cộng của V0, và cả hai phía đều tắt FMA (`--fmad=false` cho Device, `-ffp-contract=off` cho Host). Ngưỡng nghiệm thu vẫn là 1e-5 như mục 3.
 
 ## 7. Kiểm thử
 
@@ -265,6 +286,15 @@ Kết quả ngày 13/10:
 | Input, output, config sai | Null, kênh, kích thước, stride (kể cả tràn), căn lề, σ NaN, r ngoài khoảng | Đúng `ErrorCode`, output không đổi |
 | Chạy hai lần, tái dùng output | Cùng đầu vào | Giống từng bit |
 | Cấp phát thất bại | Giả lập `bad_alloc` | `AllocationFailed`, output không đổi |
+
+Test V1 nằm ở `tests/gpu/test_gpu_s1_preprocess.cu` (suite `gpu_s1`) và `tests/gpu/test_gpu_gaussian_blur.cu` (suite `gpu_blur`). Hai suite này so output V1 với `v0_preprocess` và `gaussian_blur_in_place`, gồm các trường hợp ở bảng trên (trừ test cấp phát, vì V1 không cấp phát), thêm A và B khác kích thước, scratch null, thiếu hoặc lệch, và kiểm tra ảnh RGB không bị ghi. Lệnh chạy trên Colab T4 từ gốc repo:
+
+```bash
+python3 tests/run_tests.py --compiler nvcc --require-t4 --group gpu --suite gpu_blur
+python3 tests/run_tests.py --compiler nvcc --require-t4 --group gpu --suite gpu_s1
+./build/tests_gpu/gpu_s1 <left.jpg> <right.jpg>
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 ./build/tests_gpu/gpu_s1
+```
 
 AddressSanitizer và UndefinedBehaviorSanitizer chạy trên Colab (MinGW trên máy cá nhân không hỗ trợ). Công cụ `tests/tool_export_gray.cpp` chạy trên Colab T4 ngày 18/10, kết quả ở mục 5.
 

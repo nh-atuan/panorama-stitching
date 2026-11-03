@@ -329,3 +329,11 @@ Caller sở hữu scratch, cấp phát theo `v1_match_scratch_bytes()` và `v1_h
 Scaffold trong `main.cu` giữ hai hàm riêng `v1_stub_match`, `v1_stub_homography` trong bảng điều phối. Vì S1–S3 chưa phát sinh feature, chương trình chính chưa gọi hai API thật và vẫn cảnh báo sáu stub. Cách đặt tên này cho phép link module S4/S5 mà không trùng symbol, đồng thời giữ smoke test hạ tầng của P5-T12. Việc đổi bảng điều phối sang sáu stage thật thuộc P6.
 
 S5 cung cấp diagnostics và inlier mask dưới dạng con trỏ Device mượn trong scratch. Chỉ đọc sau khi stream hoàn tất và trước khi scratch được dùng lại. Không chuyển STL container qua Device. Ngưỡng so H CPU–GPU do Đế xác nhận ngày 31/10/2026: RMSE ≤ 0,0001 px, Max ≤ 0,001 px trên lưới 20×20 của ảnh B; match, sample prefix và mask phải khớp chính xác. Ngưỡng ground truth giữ RMSE ≤ 0,5 px và Max ≤ 1 px.
+
+### 11.7. Entry point S1/S2/S3 sau P5
+
+Thành (23120166) bổ sung ngày 03/11/2026 cho P5-T03, P5-T06, P5-T07. Ba API thật nằm trong `src/v1/s1/v1_preprocess.h`, `src/v1/s2/v1_detect.h` và `src/v1/s3/v1_describe.h`, giữ chữ ký `ErrorCode(DeviceWorkspace&, const Config&, cudaStream_t)` như mục 11.2. `DeviceWorkspace`, `DeviceCounts` và các kiểu truyền dữ liệu không thay đổi.
+
+Scaffold trong `main.cu` đổi ba hàm stub thành `v1_stub_preprocess`, `v1_stub_detect`, `v1_stub_describe`, cùng cách làm với S4/S5 ở mục 11.6. `scripts/build.py` gom mọi file `.cu` trong `src/v1/`, nên đổi tên là cần thiết để link module thật mà không trùng symbol. Bảng điều phối vẫn gọi stub và vẫn cảnh báo sáu stub; việc đổi sang sáu stage thật thuộc P6.
+
+Mỗi stage xử lý cả A và B nối tiếp trên cùng stream và dùng lại một vùng scratch cho hai ảnh. Caller gọi hàm `v1_<stage>_scratch_bytes()` của stage cho từng ảnh, lấy giá trị lớn nhất rồi cấp phát `d_scratch` trước vùng đo; khi các stage chạy nối tiếp, chúng có thể dùng chung một buffer có dung lượng bằng giá trị lớn nhất của mọi stage. Stage không cấp phát hoặc giải phóng bộ nhớ Device. Return code phản ánh lỗi Host/launch; lỗi thuật toán ghi vào `d_counts->status` như S4/S5. Chữ ký của từng hàm scratch và ngưỡng so với V0 ghi trong tài liệu stage tương ứng.

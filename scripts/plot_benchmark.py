@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Authors: Tran Huu Kim Thanh (23120166)
+# Authors: Tran Huu Kim Thanh (23120166), Nguyen Ho Anh Tuan (23120185)
 # External source: none
 
-"""Charts and hot stage tables from the summary.csv written by scripts/run_benchmark.py (P3-T05).
+"""Charts, speedup plots and hot stage analysis for multi-version panorama benchmarks.
 
-Reads only the average rows; Minimum takes every column from a possibly different run.
-No timing is measured here. Outputs in --out:
+Supports single-version summary.csv (P3-T05) and multi-version speedup.csv (P5-T05).
+No timing is measured here.
+
+Outputs in --out:
     stage_timing.png   stacked average time of S1-S6 per size, one panel per site
     stage_share.png    the same as a share of Total_ms
     hot_stages.csv     hot stage, its share, p and 1/(1-p) for every site and size
     hot_stages.md      the same table, the mean share of every stage per size and a summary line
-
-p is the share of the hot stage alone. The p of the stages the team moves to the GPU
-(P3-T01) is computed by the notebook from ACCELERATED_STAGES.
+    speedup.png        speedup vs V0 across resolutions (when speedup.csv is provided)
 
 Example:
-    python scripts/plot_benchmark.py --summary results/benchmark/summary.csv --out results/benchmark/analysis
+    python scripts/plot_benchmark.py --summary results/benchmark/v0/summary.csv --out results/benchmark/v0/analysis
+    python scripts/plot_benchmark.py --speedup results/benchmark/speedup.csv --out results/benchmark/analysis
 """
 
 import argparse
@@ -27,13 +28,15 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from midterm_notebook import SIZES  # noqa: E402
-from run_benchmark import BENCHMARK_SITES, PCT_COLUMNS, STAGE_COLUMNS  # noqa: E402
+from run_benchmark import BENCHMARK_SITES, PCT_COLUMNS, BASE_STAGE_COLUMNS  # noqa: E402
 
+STAGE_COLUMNS = BASE_STAGE_COLUMNS
 STAGES = [column[:-3] for column in STAGE_COLUMNS]
-# Same palette as the stage timing chart of Group16_Midterm.ipynb.
+# Same color palette as Group16_Midterm.ipynb.
 COLORS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#D55E00", "#56B4E9"]
 HOT_COLUMNS = ["site", "size", "hot_stage", "hot_pct", "p_hot", "amdahl_limit"]
 
@@ -43,8 +46,9 @@ class AnalysisError(RuntimeError):
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Plot stage timing and hot stages from summary.csv.")
-    parser.add_argument("--summary", required=True, type=Path, help="summary.csv from run_benchmark.py")
+    parser = argparse.ArgumentParser(description="Plot stage timing, speedups and hot stages.")
+    parser.add_argument("--summary", type=Path, default=None, help="summary.csv from run_benchmark.py")
+    parser.add_argument("--speedup", type=Path, default=None, help="speedup.csv from multi-version run_benchmark.py")
     parser.add_argument("--out", required=True, type=Path, help="folder for charts and tables")
     return parser.parse_args(argv)
 
@@ -54,10 +58,11 @@ def load_averages(path):
     averages = {}
     with Path(path).open(encoding="utf-8", newline="") as stream:
         for row in csv.DictReader(stream):
-            if row["stat"] != "average":
+            if row.get("stat") != "average":
                 continue
             for column in [*STAGE_COLUMNS, "Total_ms", *PCT_COLUMNS, "p_hot", "amdahl_limit"]:
-                row[column] = float(row[column])
+                if column in row and row[column]:
+                    row[column] = float(row[column])
             averages[(row["site"], row["size"])] = row
     return averages
 
@@ -100,7 +105,7 @@ def hot_stage_summary(table):
             if row["size"] == size:
                 by_stage.setdefault(row["hot_stage"], []).append(row["site"])
         parts.append(f"{size}: " + "; ".join(f"{stage} ({', '.join(sites)})"
-                                            for stage, sites in by_stage.items()))
+                                             for stage, sites in by_stage.items()))
     return "Hot stage by size - " + " | ".join(parts) + "."
 
 
@@ -123,6 +128,46 @@ def plot_stacked(averages, columns, ylabel, path):
     plt.close(figure)
 
 
+def plot_speedup(speedup_path, out_path):
+    """Plot speedup vs V0 grouped bar chart by site and resolution."""
+    rows = []
+    with Path(speedup_path).open(encoding="utf-8", newline="") as stream:
+        for r in csv.DictReader(stream):
+            if r.get("version") == "V0":
+                continue
+            rows.append(r)
+    if not rows:
+        return
+
+    versions = sorted(list({r["version"] for r in rows}))
+    figure, axes = plt.subplots(1, len(BENCHMARK_SITES), figsize=(15, 4), sharey=True)
+    if len(BENCHMARK_SITES) == 1:
+        axes = [axes]
+
+    x = np.arange(len(SIZES))
+    width = 0.8 / max(1, len(versions))
+
+    for axis, site in zip(axes, BENCHMARK_SITES):
+        for idx, ver in enumerate(versions):
+            vals = []
+            for sz in SIZES:
+                match = next((float(r["speedup_vs_v0"]) for r in rows
+                              if r["site"] == site and r["size"] == sz and r["version"] == ver), 1.0)
+                vals.append(match)
+            offset = (idx - (len(versions) - 1) / 2) * width
+            axis.bar(x + offset, vals, width, label=ver)
+        axis.set_xticks(x, list(SIZES))
+        axis.set(title=site, xlabel="Resolution", ylabel="Speedup vs V0 (x)")
+        axis.axhline(1.0, color="gray", linestyle="--", linewidth=0.8)
+        axis.spines[["top", "right"]].set_visible(False)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    figure.legend(handles, labels, loc="upper center", ncol=len(versions), frameon=False)
+    figure.tight_layout(rect=(0, 0, 1, 0.9))
+    figure.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(figure)
+
+
 def write_hot_stages_csv(path, table):
     with Path(path).open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=HOT_COLUMNS, lineterminator="\n")
@@ -137,7 +182,7 @@ def write_hot_stages_md(path, table, means):
                                    f"{row['p_hot']:.3f}", f"{row['amdahl_limit']:.3f}"]) + " |"
                 for row in table]
     mean_rows = ["| " + " | ".join([size, *(f"{share:.1f}%" for share in mean["shares"]),
-                                    mean["hot_stage"]]) + " |" for size, mean in means.items()]
+                                     mean["hot_stage"]]) + " |" for size, mean in means.items()]
     text = "\n".join([
         "# Hot stages", "",
         "## Per site and size", "",
@@ -167,16 +212,32 @@ def analyse(summary, out):
 
 def main(argv=None):
     args = parse_args(argv)
-    if not args.summary.is_file():
-        print(f"error: summary not found: {args.summary}", file=sys.stderr)
+    if not args.summary and not args.speedup:
+        print("error: at least one of --summary or --speedup must be provided", file=sys.stderr)
         return 1
-    try:
-        table, _ = analyse(args.summary, args.out)
-    except AnalysisError as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 1
-    print(hot_stage_summary(table))
-    print(f"Wrote charts and tables to {args.out}")
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+
+    if args.summary:
+        if not args.summary.is_file():
+            print(f"error: summary file not found: {args.summary}", file=sys.stderr)
+            return 1
+        try:
+            table, _ = analyse(args.summary, out)
+            print(hot_stage_summary(table))
+            print(f"Wrote charts and tables to {out}")
+        except AnalysisError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 1
+
+    if args.speedup:
+        if not args.speedup.is_file():
+            print(f"error: speedup file not found: {args.speedup}", file=sys.stderr)
+            return 1
+        plot_speedup(args.speedup, out / "speedup.png")
+        print(f"Wrote speedup chart to {out / 'speedup.png'}")
+
     return 0
 
 

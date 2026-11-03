@@ -35,8 +35,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Thống nhất contract GPU dùng chung, chốt bộ cặp dataset cuối kỳ và merge nhánh <code>&lt;tên&gt;/p5</code> của từng thành viên vào <code>main</code></td>
       <td>Các task trong P5</td>
       <td>Contract GPU và đủ 6 stage V1 đã merge vào <code>main</code>, build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4; bộ cặp dataset cuối kỳ ghi vào mục "Quyết định đã chốt"</td>
-      <td>Đang làm</td>
-      <td>03/11: Đủ 6 stage V1 và hạ tầng GPU đã merge vào <code>main</code>. Nhóm trưởng đã chốt dataset cuối kỳ và layout benchmark; chờ hoàn tất P5-T05 và upload bộ <code>dataset/</code> lên Drive chung để đóng P5.</td>
+      <td>Xong</td>
+      <td>03/11: Đủ 6 stage V1 và hạ tầng GPU đã merge vào <code>main</code>. Nhóm trưởng đã chốt dataset cuối kỳ và layout benchmark; đã hoàn tất P5-T05 và bổ sung công cụ tự động <code>scripts/fetch_and_prepare_dataset.py</code> chuẩn bị dữ liệu. P5 chính thức hoàn tất.</td>
     </tr>
     <tr>
       <td rowspan="2">Tuấn</td>
@@ -69,8 +69,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Nâng cấp công cụ benchmark và vẽ biểu đồ trong <code>scripts/</code> hỗ trợ đo đa phiên bản, schema CSV mở rộng và tính speedup theo đề cuối kỳ</td>
       <td>P5-T12</td>
       <td>Script kèm bộ unit test Python tương ứng chạy đạt trên Colab T4</td>
-      <td>Đang làm</td>
-      <td>03/11: Nhóm trưởng chốt layout output theo phiên bản <code>&lt;out&gt;/v&lt;k&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> cho bài nộp cuối kỳ (<code>Group16_Final.ipynb</code>), không ràng buộc tương thích ngược với notebook giữa kỳ. Thành tiến hành cập nhật <code>scripts/run_benchmark.py</code>, <code>scripts/plot_benchmark.py</code> và bộ test Python.</td>
+      <td>Xong</td>
+      <td>03/11: Nhóm trưởng chốt layout output theo phiên bản <code>&lt;out&gt;/v&lt;k&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> cho bài nộp cuối kỳ (<code>Group16_Final.ipynb</code>). Đã hoàn tất nâng cấp <code>scripts/run_benchmark.py</code> (hỗ trợ đa phiên bản, schema 11 cột, tính speedup V0/prev), <code>scripts/plot_benchmark.py</code> (vẽ biểu đồ speedup) và mở rộng unit test Python tương ứng.</td>
     </tr>
     <tr>
       <td>P5-T06</td>

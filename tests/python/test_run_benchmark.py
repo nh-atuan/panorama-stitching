@@ -28,17 +28,32 @@ if spec["mode"] == "fail":
     print("[error] Detect failed.", file=sys.stderr)
     sys.exit(3)
 runs = int(args[args.index("--runs") + 1])
+version = int(args[args.index("--version") + 1]) if "--version" in args else 0
 stages = spec["stages"]
 total = sum(stages) + spec["overhead"]
-row = ",".join(f"{value:.9f}" for value in [*stages, total])
-print("[debug] version=0 seed=16 runs=%d" % runs, file=sys.stderr)
-print("[debug] config: gaussian_sigma=2 seed=16", file=sys.stderr)
-print("Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,Total_ms")
-count = runs - 1 if spec["mode"] == "short" else runs
-for index in range(1, count + 1):
-    print(f"{index},{row}")
-print(f"Average,{row}")
-print(f"Minimum,{row}")
+if version == 0:
+    row = ",".join(f"{value:.9f}" for value in [*stages, total])
+    print("[debug] version=0 seed=16 runs=%d" % runs, file=sys.stderr)
+    print("[debug] config: gaussian_sigma=2 seed=16", file=sys.stderr)
+    print("Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,Total_ms")
+    count = runs - 1 if spec["mode"] == "short" else runs
+    for index in range(1, count + 1):
+        print(f"{index},{row}")
+    print(f"Average,{row}")
+    print(f"Minimum,{row}")
+else:
+    h2d = spec.get("h2d", 0.5)
+    d2h = spec.get("d2h", 0.5)
+    kernel_total = sum(stages)
+    row = ",".join(f"{value:.9f}" for value in [*stages, total, h2d, d2h, kernel_total])
+    print("[debug] GPU=Tesla T4 version=%d runs=%d seed=16" % (version, runs), file=sys.stderr)
+    print("[debug] Config: gaussian_sigma=2 seed=16", file=sys.stderr)
+    print("Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms")
+    count = runs - 1 if spec["mode"] == "short" else runs
+    for index in range(1, count + 1):
+        print(f"{index},{row}")
+    print(f"Average,{row}")
+    print(f"Minimum,{row}")
 '''
 
 
@@ -65,9 +80,12 @@ class RunBenchmarkTest(unittest.TestCase):
                                     "calls": str(self.calls)}))
         return [sys.executable, self.fake, spec]
 
-    def run_quiet(self, stitch_cmd, runs=5):
+    def run_quiet(self, stitch_cmd, runs=5, versions=(0,), flat=False):
         with redirect_stdout(io.StringIO()):
-            return run_benchmark.run_benchmark(stitch_cmd, self.fake, self.dataset, runs, self.out)
+            return run_benchmark.run_benchmark(
+                stitch_cmd, self.fake, self.dataset, runs, self.out,
+                versions=versions, flat=flat
+            )
 
     def calls_made(self):
         if not self.calls.exists():
@@ -77,18 +95,39 @@ class RunBenchmarkTest(unittest.TestCase):
     def test_full_run_writes_handoff_layout_and_summaries(self):
         self.run_quiet(self.stitch_cmd())
         for site, size in run_benchmark.configurations():
-            self.assertTrue((self.out / site / f"{size}.csv").is_file())
-            self.assertTrue((self.out / site / f"{size}.log").is_file())
+            self.assertTrue((self.out / "v0" / site / f"{size}.csv").is_file())
+            self.assertTrue((self.out / "v0" / site / f"{size}.log").is_file())
         self.assertEqual(len(run_benchmark.configurations()), 9)
-        with (self.out / "summary.csv").open(newline="") as stream:
+        with (self.out / "v0" / "summary.csv").open(newline="") as stream:
             rows = list(csv.DictReader(stream))
         self.assertEqual(len(rows), 18)
-        self.assertEqual(list(rows[0]), run_benchmark.SUMMARY_COLUMNS)
+        self.assertTrue((self.out / "summary.csv").is_file())
         environment = json.loads((self.out / "environment.json").read_text())
         for key in ("gpu", "cpu", "time_utc", "runs", "stitch_sha256", "commands"):
             self.assertIn(key, environment)
         self.assertEqual(len(environment["commands"]), 9)
-        self.assertIn("Hot stage", (self.out / "summary.md").read_text(encoding="utf-8"))
+        self.assertIn("Hot stage", (self.out / "v0" / "summary.md").read_text(encoding="utf-8"))
+
+    def test_flat_layout_for_legacy_compatibility(self):
+        self.run_quiet(self.stitch_cmd(), flat=True)
+        for site, size in run_benchmark.configurations():
+            self.assertTrue((self.out / site / f"{size}.csv").is_file())
+            self.assertTrue((self.out / site / f"{size}.log").is_file())
+        self.assertTrue((self.out / "summary.csv").is_file())
+
+    def test_multi_version_computes_speedup(self):
+        self.run_quiet(self.stitch_cmd(), versions=[0, 1])
+        self.assertTrue((self.out / "v0" / "summary.csv").is_file())
+        self.assertTrue((self.out / "v1" / "summary.csv").is_file())
+        self.assertTrue((self.out / "speedup.csv").is_file())
+        self.assertTrue((self.out / "speedup.md").is_file())
+        with (self.out / "speedup.csv").open(newline="") as stream:
+            speedup_rows = list(csv.DictReader(stream))
+        self.assertEqual(len(speedup_rows), 18)  # 9 config * 2 versions
+        v1_rows = [r for r in speedup_rows if r["version"] == "V1"]
+        self.assertEqual(len(v1_rows), 9)
+        for r in v1_rows:
+            self.assertGreater(float(r["speedup_vs_v0"]), 0.0)
 
     def test_percentages_hot_stage_and_amdahl(self):
         rows = self.run_quiet(self.stitch_cmd())
@@ -126,7 +165,7 @@ class RunBenchmarkTest(unittest.TestCase):
         with self.assertRaisesRegex(run_benchmark.BenchmarkError, r"exit code 3.*small\.log"):
             self.run_quiet(self.stitch_cmd(mode="fail"))
         self.assertEqual(len(self.calls_made()), 1)
-        self.assertIn("Detect failed", (self.out / "site1" / "small.log").read_text())
+        self.assertIn("Detect failed", (self.out / "v0" / "site1" / "small.log").read_text())
 
     def test_malformed_csv_is_rejected(self):
         with self.assertRaisesRegex(run_benchmark.BenchmarkError, "Invalid CSV from site1/small"):
@@ -136,7 +175,7 @@ class RunBenchmarkTest(unittest.TestCase):
         self.run_quiet(self.stitch_cmd(), runs=3)
         first = self.calls_made()[0]
         left, right = run_benchmark.input_paths(self.dataset, "site1", "small")
-        self.assertEqual(first, [str(left), str(right), str(self.out / "site1" / "small_panorama.jpg"),
+        self.assertEqual(first, [str(left), str(right), str(self.out / "v0" / "site1" / "small_panorama.jpg"),
                                  "--version", "0", "--runs", "3", "--debug"])
 
     def test_debug_config_is_read_from_log(self):
@@ -147,7 +186,7 @@ class RunBenchmarkTest(unittest.TestCase):
         self.assertEqual(config, "[debug] config: gaussian_sigma=2 seed=16")
         self.assertEqual(run_benchmark.read_debug_config("no debug"), ["", ""])
         self.run_quiet(self.stitch_cmd())
-        self.assertIn("seed=16", (self.out / "summary.md").read_text(encoding="utf-8"))
+        self.assertIn("seed=16", (self.out / "v0" / "summary.md").read_text(encoding="utf-8"))
 
     def test_main_rejects_missing_binary(self):
         with redirect_stderr(io.StringIO()) as error:

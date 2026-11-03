@@ -126,6 +126,20 @@ class PlotBenchmarkTest(unittest.TestCase):
         finally:
             helper.tearDown()
 
+    def test_plots_speedup_chart(self):
+        speedup_csv = self.root / "speedup.csv"
+        rows = [
+            {"site": site, "size": size, "version": "V1", "Total_ms": 10.0, "Total_Kernel_ms": 8.0,
+             "speedup_vs_v0": 2.5, "speedup_vs_prev": 2.5, "kernel_speedup_vs_v0": 3.0}
+            for site in run_benchmark.BENCHMARK_SITES for size in SIZES
+        ]
+        run_benchmark.write_speedup_csv(speedup_csv, rows)
+        with redirect_stdout(io.StringIO()):
+            code = plot_benchmark.main(["--speedup", str(speedup_csv), "--out", str(self.out)])
+        self.assertEqual(code, 0)
+        self.assertTrue((self.out / "speedup.png").is_file())
+        self.assertEqual((self.out / "speedup.png").read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+
 
 if __name__ == "__main__":
     unittest.main()

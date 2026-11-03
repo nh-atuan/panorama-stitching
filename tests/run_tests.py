@@ -102,6 +102,7 @@ GPU_SUITES = {
     "gpu_s5": [*HOMOGRAPHY, "src/v1/s5/v1_homography.cu", "tests/gpu/test_gpu_s5_homography.cu"],
     "gpu_s6": ["src/v0/v0_warp_blend.cpp", "src/v1/v1_warp_blend.cu", "tests/gpu/test_gpu_s6_warp_blend.cu"],
     "gpu_reference": [*V0_ALL_SOURCES, "tests/gpu/test_gpu_reference.cu"],
+    "gpu_blur": [*COMMON_BLUR, "src/v1/common/v1_gaussian_blur.cu", "tests/gpu/test_gpu_gaussian_blur.cu"],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {"gpu_s6": ["-Xlinker=--wrap=cudaMalloc"]}

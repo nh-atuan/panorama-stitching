@@ -52,8 +52,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S1</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S1 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s1-preprocessing.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>03/11: Thành làm thay (xem mục "Quyết định đã chốt"). Blur dùng chung ở PR #28, S1 ở PR #29 (<code>thanh/p5</code>). Colab T4: suite <code>gpu_s1</code> 10706 checks, giống V0 từng bit (<code>max_abs_diff=0</code>, ngưỡng 1e-5) trên suite, 12 cặp dataset và 6 cặp synthetic; memcheck 0 lỗi.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -61,32 +61,32 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Mở rộng khung kiểm thử trong <code>tests/</code> để hỗ trợ biên dịch, chạy nhóm test GPU và tiện ích đối chiếu kết quả stage GPU với V0</td>
       <td>P5-T02</td>
       <td>Runner kiểm thử hỗ trợ nhóm test GPU và tiện ích nạp dữ liệu tham chiếu V0, chạy đạt trên Colab T4</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>03/11: PR #26 (<code>thanh/shared-gpu-test-tools</code>). Colab T4: 14 suite V0 (45284 checks), 4 suite GPU (19647 checks) và 7 suite Python (102 test) đạt.</td>
     </tr>
     <tr>
       <td>P5-T05</td>
       <td>Nâng cấp công cụ benchmark và vẽ biểu đồ trong <code>scripts/</code> hỗ trợ đo đa phiên bản, schema CSV mở rộng và tính speedup theo đề cuối kỳ</td>
       <td>P5-T12</td>
       <td>Script kèm bộ unit test Python tương ứng chạy đạt trên Colab T4</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Bị chặn</td>
+      <td>03/11: cần báo lại cho cả Nhóm để cùng quyết định layout output. <code>Group16_Midterm.ipynb</code> đọc kết quả ở <code>&lt;out&gt;/&lt;site&gt;/&lt;size&gt;.csv</code>, nên nếu đặt mọi phiên bản dưới <code>v&lt;k&gt;/</code> thì phải sửa notebook giữa kỳ; phương án còn lại là giữ V0 ở chỗ cũ và chỉ đặt V1 trở đi dưới <code>v&lt;k&gt;/</code>. Phần đọc CSV V0/V1 và tính speedup đã viết, chưa commit.</td>
     </tr>
     <tr>
       <td>P5-T06</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S2</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S2 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s2-detection.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>03/11: PR #29 (<code>thanh/p5</code>); đổi tên stub ở PR #27. Colab T4: suite <code>gpu_s2</code> 2080 checks; keypoint giống V0 (tọa độ, bit score, thứ tự) trên suite và chuỗi S1→S2 với 12 cặp dataset, 6 cặp synthetic; memcheck 0 lỗi.</td>
     </tr>
     <tr>
       <td>P5-T07</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S3</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S3 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s3-description.md</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Chờ review</td>
+      <td>03/11: PR #29 (<code>thanh/p5</code>). Colab T4: suite <code>gpu_s3</code> 1022 checks; descriptor giống V0 từng bit; chuỗi S1→S2→S3→<code>v1_match</code> giống V0 đến <code>v0_match</code> trên 12 cặp dataset và 6 cặp synthetic; memcheck và racecheck 0 lỗi.</td>
     </tr>
     <tr>
       <td rowspan="4">Đế</td>
@@ -154,3 +154,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 21/10 | P3-T01: V1 cài kernel cho cả 6 stage; V2, V3 ưu tiên tối ưu S2, S4, S6, ba stage chiếm nhiều thời gian nhất ở cả ba độ phân giải. Ước lượng Amdahl tính p cho S2 + S4 + S6; không tính cho cả 6 stage vì p gần bằng 1. Phân công V1-V3 giữ như mục 2 của kế hoạch |
 | 21/10 | Notebook không cần comment tác giả; yêu cầu ở mục 9.3 của kế hoạch chỉ áp dụng cho file code |
 | 24/10 | Nhóm trưởng xác nhận các thành viên đã xác nhận nội dung phần mình; P4 không chờ xác nhận lại. Tiếp tục đối chiếu bản notebook cuối với output mới trước khi nghiệm thu |
+| 03/11 | Tuấn và cả Nhóm đồng ý để Thành làm thay P5-T03 (V1 cho S1); dòng `Authors:` ghi Thành. Tuấn vẫn phụ trách tài liệu S1 và xem lại phần V1 khi review |

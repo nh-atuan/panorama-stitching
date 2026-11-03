@@ -362,3 +362,17 @@ Ngày 03/11/2026, Nhóm trưởng (Nguyễn Hồ Anh Tuấn) thay mặt cả Nh�
        --pair site3=de-standard2 --pair challenge=de-challenge1
    ```
    Sau khi sinh 24 ảnh và `dataset/manifest.csv`, nén bộ ảnh và cập nhật lên Google Drive chung trước khi thực hiện benchmark chính thức của P6.
+
+### 8.4 Quản lý phân tách phiên bản Dataset (Giữa kỳ vs Cuối kỳ) trên Google Drive
+
+Để bảo đảm tính toàn vẹn và bất biến của bài nộp giữa kỳ khi chấm điểm, Nhóm thực hiện phân tách rõ ràng hai thư mục trên Google Drive chung:
+
+1. **Thư mục Dataset Giữa kỳ (Giữ nguyên vẹn 100%):**
+   - **Link Drive:** https://drive.google.com/drive/folders/1HOvnly1k1QHOsV17qLzSAG4ihszNzCqO?usp=sharing
+   - Chứa 24 ảnh gốc và `manifest.csv` của đợt nộp giữa kỳ ngày 18/10 (với `tuan-standard2` và `chuong-challenge1`). Tuyệt đối không ghi đè để phục vụ công tác chấm bài giữa kỳ của giảng viên và trợ giảng.
+
+2. **Thư mục Dataset Cuối kỳ (`dataset_final`):**
+   - **Link Drive:** https://drive.google.com/drive/folders/1_J_q5q-K1g7ZNnczTWvXBzwpOsof9ghL?usp=sharing
+   - Chứa trọn vẹn bộ dataset chuẩn cuối kỳ được Nhóm trưởng phê duyệt ngày 03/11 (`site1=thanh-standard1`, `site2=thanh-standard2`, `site3=de-standard2`, `challenge=de-challenge1`):
+     - `dataset.zip`: Gói nén trọn bộ 24 ảnh 16:9 ở 3 độ phân giải (small, medium, large) và `manifest.csv`. Dùng để tải nhanh và giải nén 1 lệnh trên Colab T4.
+     - `manifest.csv`: Bảng tra cứu mã băm SHA-256 chính thức cho cả 24 ảnh cuối kỳ.

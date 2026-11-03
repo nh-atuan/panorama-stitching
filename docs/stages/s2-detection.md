@@ -197,17 +197,43 @@ S2 gồm ba bước có mức song song khác nhau. Score và NMS là phép tín
 - Top-N ở V1 dùng sort tự viết trên Device, ví dụ bitonic sort trên khóa 64 bit: 32 bit cao là bit pattern của score (score dương nên thứ tự số nguyên giống thứ tự số thực, đảo bit để được thứ tự giảm), 32 bit thấp là raster. Dùng CUB hoặc Thrust là thêm thư viện, cần cả Nhóm quyết định trước.
 - Score V chỉ có phép trừ và cộng nên FMA không làm đổi kết quả (mục 8). So sánh với ngưỡng vẫn dùng hiệu `float` và so sánh chặt như V0.
 
+Cài đặt V1 (P5-T06):
+
+| File | Nội dung |
+|---|---|
+| `src/v1/s2/v1_fast_score.cuh` | Segment test và score V trên Device, viết lại theo `fast_corner_score` (không sửa code V0); bảng vòng tròn nằm trong `__constant__` |
+| `src/v1/s2/v1_nms.cuh` | Kernel NMS 3×3 và khóa sort 64 bit |
+| `src/v1/s2/v1_topk_sort.cuh` | Đệm khóa, bitonic sort, ghi `Keypoint` |
+| `src/v1/s2/v1_detect.{h,cu}` | `v1_detect(DeviceWorkspace&, const Config&, cudaStream_t)` và `v1_detect_scratch_bytes(W, H)` |
+
+Mỗi ảnh chạy theo thứ tự: `cudaMemset` bản đồ score và bộ đếm, kernel score, kernel NMS, chép bộ đếm ứng viên về Host rồi đồng bộ stream, bitonic sort, ghi tối đa N keypoint, cuối cùng ghi `d_counts->keypointsA` hoặc `keypointsB`. Lần đồng bộ này cho Host biết cần sort bao nhiêu phần tử, nên mỗi ảnh đồng bộ một lần. Một số điểm của bản cài đặt:
+
+- Dung lượng danh sách ứng viên là ⌈W/2⌉·⌈H/2⌉. Hai pixel kề nhau (8 hướng) không thể cùng sống sót qua NMS: nếu score khác nhau thì pixel thấp hơn bị loại, nếu bằng nhau thì pixel đứng sau theo raster bị loại. Vì vậy mỗi ô 2×2 có nhiều nhất một ứng viên.
+- Khóa sort gồm 32 bit cao là bit score đã đảo, 32 bit thấp là raster. Khóa đệm `~0` lớn hơn mọi khóa thật, vì score > 0 nên bit score đảo không vượt quá `0xFFFFFFFE`. Do raster chỉ có 32 bit, V1 yêu cầu W·H < 2^32; ảnh lớn nhất của dataset (3840×2160) mới khoảng 8.3 triệu pixel.
+- Scratch của một ảnh gồm bộ đếm (16 byte đầu), bản đồ score W·H·4 byte, rồi các khóa (dung lượng ứng viên làm tròn lên lũy thừa của 2, mỗi khóa 8 byte). A và B dùng chung vùng này. Ở large, phần này khoảng 50 MB.
+- Thứ tự kiểm tra: ảnh (`InvalidImage`), config (`InvalidConfig`), rồi workspace (`InvalidArgument`): `d_counts` và hai buffer keypoint phải có, dung lượng keypoint ≥ `max_keypoints`, W·H < 2^32, scratch có, căn lề 16 byte và đủ lớn. Khi có lỗi thì không kernel nào được đưa vào stream.
+- S2 không có lỗi phát sinh trên Device, nên chỉ ghi hai trường `keypointsA`, `keypointsB` và không đọc hay ghi `d_counts->status`. Ảnh có cạnh ≤ 30 px cho 0 keypoint, như V0.
+
 ### 6.3 Hướng tối ưu V2/V3 và rủi ro
 
 1. **Shared memory tile cho segment test.** Mỗi pixel đọc 17 giá trị trong cửa sổ 7×7, các thread kề nhau đọc chồng lên nhau rất nhiều. Mỗi block nạp tile cùng halo 3 pixel mỗi phía vào shared memory rồi đọc vòng tròn từ đó. Có thể tính luôn score cho thêm 1 pixel halo để làm NMS trong cùng kernel, bỏ một lượt ghi và đọc lại bản đồ score.
 2. **Loại sớm bằng 4 điểm la bàn.** Một cung 9 điểm liên tiếp trên vòng 16 điểm luôn chứa ít nhất 2 trong 4 điểm 0, 4, 8, 12. Kiểm tra 4 điểm này trước giúp phần lớn pixel thoát sớm mà không đổi kết quả. Rủi ro: warp divergence khi trong cùng warp có pixel thoát sớm và pixel phải kiểm tra đủ 16 điểm; cần đo trước khi giữ.
 3. **Chọn top-N thay vì sắp xếp toàn bộ.** Chỉ cần 2000 phần tử đầu. Dựng histogram score để tìm ngưỡng mà số ứng viên trên ngưỡng vừa đủ N, rồi chỉ sắp xếp các ứng viên đó. Phải giữ đúng quy tắc hòa ở biên ngưỡng.
 
-Rủi ro chung: số ứng viên sau NMS phụ thuộc nội dung ảnh nên thời gian sort thay đổi giữa các site; bản đồ score ở large chiếm khoảng 33 MB mỗi ảnh; sort trên GPU phải cho đúng thứ tự của `std::sort` với khóa duy nhất. Chưa có kernel hay số đo GPU nào của S2.
+Rủi ro chung: số ứng viên sau NMS phụ thuộc nội dung ảnh nên thời gian sort thay đổi giữa các site; bản đồ score ở large chiếm khoảng 33 MB mỗi ảnh; sort trên GPU phải cho đúng thứ tự của `std::sort` với khóa duy nhất. Bitonic sort ở V1 cần (log₂n)(log₂n + 1)/2 lượt launch; với n = 2^21 (large) là 231 lượt. Hướng 3 ở trên sẽ giảm con số này. Chưa có số đo thời gian GPU nào của S2, vì V1 chưa được nối vào pipeline (việc này thuộc P6).
 
 ### 6.4 Kiểm chứng V1
 
 So danh sách keypoint của V1 với V0 từng phần tử: tọa độ, score (giống từng bit) và thứ tự. Dùng lại các test ở mục 7: bảng vòng tròn, cung bị ngắt, hiệu bằng ngưỡng, ảnh 3 mức xám nhiều score bằng nhau, ảnh nhỏ hơn border, N lớn hơn số ứng viên. Sau đó so trên ảnh dataset ở cả ba kích thước, chạy toàn pipeline và bộ cặp synthetic ở mục 5.5 tài liệu S5. Thời gian đo bằng CUDA events quanh cả ba bước, kể cả sort và chép keypoint, không chỉ kernel score.
+
+Kết quả kiểm chứng của Thành ngày 03/11 trên Colab Tesla T4, CUDA 13.0 (V13.0.88), build với `--fmad=false`, commit `24b7dd2` trên nhánh `thanh/p5`:
+
+| Đầu vào | Kết quả |
+|---|---|
+| Suite `gpu_s2` | `PASS GPU S2: 2080 checks`; 89131 keypoint giống V0 cả tọa độ, bit score và thứ tự |
+| Chuỗi S1 V1 → S2 V1, dataset giữa kỳ (site1, site2, site3, challenge, mỗi bộ 3 kích thước) | 12 cặp giống V0. Site1, site2, challenge cho đủ 2000 keypoint mỗi ảnh; site3 cho 1440 đến 1780 |
+| Chuỗi S1 V1 → S2 V1, 6 cặp synthetic | Giống V0, 2000 keypoint mỗi ảnh |
+| `compute-sanitizer --tool memcheck --leak-check full`, suite kèm cặp site1 small | `0 errors`, `0 bytes leaked` |
 
 ## 7. Kiểm thử
 
@@ -265,6 +291,14 @@ Kết quả:
 | 16/10 | Colab Tesla T4, `nvcc`, test tích hợp | `integration: keypoints A=1235 B=1265 matches=1113 exact=1090`; `PASS: 18 assertions for S1-S5 integration on a translated pair`; cũng đạt khi build với sanitizer |
 
 Cùng phiên Colab, `nvcc -arch=sm_75 -O2 -I src src/*.cpp src/main.cu` build được chương trình đầy đủ cùng các stage khác.
+
+Test V1 nằm ở `tests/gpu/test_gpu_s2_detect.cu` (suite `gpu_s2`). Suite so output với `v0_detect` trên ảnh hình chữ nhật đã blur, ảnh 3 mức xám, ảnh nhiễu (hàng chục nghìn ứng viên, N từ 1 đến 1 000 000), ảnh có padding, ảnh nhỏ, ảnh hằng, chấm tối ở (15, 15), chạy lặp, cùng các đầu vào, config và workspace sai. Suite cũng kiểm tra rằng `d_counts->status` và các trường khác của `d_counts` không đổi, và chạy chuỗi S1 V1 → S2 V1 so với V0. Lệnh chạy trên Colab T4:
+
+```bash
+python3 tests/run_tests.py --compiler nvcc --require-t4 --group gpu --suite gpu_s2
+./build/tests_gpu/gpu_s2 <left.jpg> <right.jpg>
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 ./build/tests_gpu/gpu_s2
+```
 
 ## 8. Trường hợp biên và rủi ro
 

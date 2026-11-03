@@ -74,6 +74,13 @@ compute-sanitizer --tool memcheck --error-exitcode 99 build/tests_gpu/gpu_s5
 
 `gpu_s4`, `gpu_s5` đăng ký danh sách source riêng. `--group all` bao gồm V0, GPU và Python; test Python mới là `test_profiling_scripts.py`.
 
+S1 đến S3 của V1 (P5-T03, T06, T07) có các suite `gpu_blur`, `gpu_s1`, `gpu_s2`, `gpu_s3`. Ba suite `gpu_s1`, `gpu_s2` và `gpu_s3` nhận thêm `<left> <right>` để chạy trên ảnh thật; `gpu_s2` và `gpu_s3` chạy cả chuỗi stage V1 so với V0 (S1 → S2, và S1 → S4). Lệnh và kết quả ghi trong mục 7 của tài liệu từng stage.
+
+```bash
+python3 tests/run_tests.py --group gpu --suite gpu_blur --suite gpu_s1 --suite gpu_s2 --suite gpu_s3 --compiler nvcc --require-t4
+./build/tests_gpu/gpu_s3 dataset/site1/small_left.jpg dataset/site1/small_right.jpg
+```
+
 `tool_gpu_s45` là driver kiểm chứng từ ảnh với S1–S3/S6 trên CPU. Driver kiểm tra match, prefix, mask và H với V0 ngoài vùng CUDA events. Xem [hướng dẫn profiling](../docs/profiling.md) cho cách chạy batch và lưu bằng chứng.
 
 ## 6. Viết suite GPU mới

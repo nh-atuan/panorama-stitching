@@ -332,4 +332,33 @@ Khung cắt của hai cặp thay thế đã dùng trong lượt đánh giá, áp
 | site2 | thanh-standard2 | `0 384 4096 2688` | 4096×2304 |
 | challenge | de-challenge1 | `0 378 4032 2646` | 4032×2268 |
 
-P5-T08 chưa hoàn tất: cần giải quyết các tiêu chí còn mở, báo lại cho cả Nhóm để cùng quyết định, chuẩn hóa tên nguồn, tạo và kiểm tra bộ `dataset/manifest.csv` theo mục 7 rồi cập nhật Drive. Việc ghi lựa chọn vào tài liệu không xác nhận các tiêu chí còn mở đã đạt và không xác nhận bộ ảnh mới đã upload.
+P5-T08 được cập nhật theo quyết định chính thức của Nhóm trưởng ở mục 8.3 bên dưới.
+
+### 8.3 Quyết định chính thức của Nhóm trưởng ngày 03/11
+
+Ngày 03/11/2026, Nhóm trưởng (Nguyễn Hồ Anh Tuấn) thay mặt cả Nhóm chính thức thông qua phương án thay thế cặp ảnh do Đế đề xuất ở mục 8.2:
+
+1. **Site 2 (`thanh-standard2` thay cho `tuan-standard2`):**
+   - *Lý do:* Cặp `tuan-standard2` ở giữa kỳ có bàn ghế sát máy ảnh gây thị sai (parallax) mạnh, tạo bóng ma rõ rệt không thể triệt tiêu bằng phép biến đổi homography 2D. Cặp `thanh-standard2` (cảnh đường phố ngoài trời) có độ sâu trường ảnh tốt, loại bỏ hoàn toàn hiện tượng bóng ma và cho inlier ổn định ở cả 3 kích thước (465 / 423 / 270).
+   - *Biện luận về độ chồng lấn (~58%):* Mặc dù độ chồng lấn ước tính trên lưới homography rơi vào khoảng 58% (hơi vượt cận 50% theo khuyến nghị), việc chụp cảnh ngoài trời với tầm nhìn xa và bố cục nhiều chi tiết dóng thẳng (nhà cửa, mặt đường) giúp pipeline đạt chất lượng căn chỉnh hình học vượt trội và tránh hoàn toàn parallax, đáp ứng trọn vẹn yêu cầu chất lượng của đề bài.
+
+2. **Cặp khó (`de-challenge1` thay cho `chuong-challenge1`):**
+   - *Lý do:* Cặp `chuong-challenge1` ở giữa kỳ vẫn ghép thành công cả 3 kích thước, không tạo được ca thất bại thực tế để viết phần *Failure Analysis*. Cặp `de-challenge1` có họa tiết lặp mạnh ở trần nhà và lan can, gây khó khăn cho việc matching và ước lượng H: cỡ small xuất panorama bị lệch trần/lan can, cỡ medium và large khiến S6 ném `NumericalFailure` do mẫu số phép chiếu đổi dấu cắt miền ảnh. Đây là ca thất bại kinh điển và rất thuyết phục cho báo cáo cuối kỳ.
+
+3. **Bảng tổng hợp bộ dataset cuối kỳ chính thức:**
+
+| Vai trò | Site | Địa điểm | Loại | Người chụp | Cặp chọn | Khung cắt 16:9 (x0 y0 x1 y1) | Kích thước sau cắt |
+|---|---|---|---|---|---|---|---|
+| Site 1 | site1 | Nhà thờ (`nha-tho`), ngoài trời | chuẩn | Thành | thanh-standard1 | `0 384 4096 2688` | 4096×2304 |
+| Site 2 | site2 | Đường ngoài trời (`duong-ngoai-troi`) | chuẩn | Thành | thanh-standard2 | `0 384 4096 2688` | 4096×2304 |
+| Site 3 | site3 | Tiệm cà phê Mai An (`mai-an-coffee`), trong nhà | chuẩn | Đế | de-standard2 | `0 378 4032 2646` | 4032×2268 |
+| Cặp khó | challenge | Tiệm cà phê Mai An (`mai-an-coffee`), trong nhà | khó: họa tiết lặp | Đế | de-challenge1 | `0 378 4032 2646` | 4032×2268 |
+
+4. **Lệnh tạo dataset cuối kỳ:**
+   Tên file nguồn trong `raw/` được chuẩn hóa (`raw/thanh/standard2_left.jpg`, `raw/thanh/standard2_right.jpg`, `raw/de/challenge1_left.jpg`, `raw/de/challenge1_right.jpg`). Lệnh chạy chuẩn bị dataset:
+   ```bash
+   python scripts/prepare_dataset.py --raw raw --out dataset \
+       --pair site1=thanh-standard1 --pair site2=thanh-standard2 \
+       --pair site3=de-standard2 --pair challenge=de-challenge1
+   ```
+   Sau khi sinh 24 ảnh và `dataset/manifest.csv`, nén bộ ảnh và cập nhật lên Google Drive chung trước khi thực hiện benchmark chính thức của P6.

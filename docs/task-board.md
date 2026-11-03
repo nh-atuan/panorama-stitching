@@ -35,8 +35,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Thống nhất contract GPU dùng chung, chốt bộ cặp dataset cuối kỳ và merge nhánh <code>&lt;tên&gt;/p5</code> của từng thành viên vào <code>main</code></td>
       <td>Các task trong P5</td>
       <td>Contract GPU và đủ 6 stage V1 đã merge vào <code>main</code>, build được bằng <code>nvcc -arch=sm_75</code> trên Colab T4; bộ cặp dataset cuối kỳ ghi vào mục "Quyết định đã chốt"</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>03/11: Đủ 6 stage V1 và hạ tầng GPU đã merge vào <code>main</code>. Nhóm trưởng đã chốt dataset cuối kỳ và layout benchmark; chờ hoàn tất P5-T05 và upload bộ <code>dataset/</code> lên Drive chung để đóng P5.</td>
     </tr>
     <tr>
       <td rowspan="2">Tuấn</td>
@@ -52,8 +52,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S1</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S1 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s1-preprocessing.md</code></td>
-      <td>Chờ review</td>
-      <td>03/11: Thành làm thay (xem mục "Quyết định đã chốt"). Blur dùng chung ở PR #28, S1 ở PR #29 (<code>thanh/p5</code>). Colab T4: suite <code>gpu_s1</code> 10706 checks, giống V0 từng bit (<code>max_abs_diff=0</code>, ngưỡng 1e-5) trên suite, 12 cặp dataset và 6 cặp synthetic; memcheck 0 lỗi.</td>
+      <td>Xong</td>
+      <td>03/11: Thành làm thay (xem mục "Quyết định đã chốt"). Blur dùng chung ở PR #28, S1 ở PR #29 (<code>thanh/p5</code>, đã merge vào <code>main</code>). Colab T4: suite <code>gpu_s1</code> 10706 checks, giống V0 từng bit (<code>max_abs_diff=0</code>, ngưỡng 1e-5) trên suite, 12 cặp dataset và 6 cặp synthetic; memcheck 0 lỗi.</td>
     </tr>
     <tr>
       <td rowspan="4">Thành</td>
@@ -61,32 +61,32 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Mở rộng khung kiểm thử trong <code>tests/</code> để hỗ trợ biên dịch, chạy nhóm test GPU và tiện ích đối chiếu kết quả stage GPU với V0</td>
       <td>P5-T02</td>
       <td>Runner kiểm thử hỗ trợ nhóm test GPU và tiện ích nạp dữ liệu tham chiếu V0, chạy đạt trên Colab T4</td>
-      <td>Chờ review</td>
-      <td>03/11: PR #26 (<code>thanh/shared-gpu-test-tools</code>). Colab T4: 14 suite V0 (45284 checks), 4 suite GPU (19647 checks) và 7 suite Python (102 test) đạt.</td>
+      <td>Xong</td>
+      <td>03/11: Đã merge PR #26 (<code>thanh/shared-gpu-test-tools</code>) vào <code>main</code>. Colab T4: 14 suite V0 (45284 checks), 4 suite GPU (19647 checks) và 7 suite Python (102 test) đạt.</td>
     </tr>
     <tr>
       <td>P5-T05</td>
       <td>Nâng cấp công cụ benchmark và vẽ biểu đồ trong <code>scripts/</code> hỗ trợ đo đa phiên bản, schema CSV mở rộng và tính speedup theo đề cuối kỳ</td>
       <td>P5-T12</td>
       <td>Script kèm bộ unit test Python tương ứng chạy đạt trên Colab T4</td>
-      <td>Bị chặn</td>
-      <td>03/11: cần báo lại cho cả Nhóm để cùng quyết định layout output. <code>Group16_Midterm.ipynb</code> đọc kết quả ở <code>&lt;out&gt;/&lt;site&gt;/&lt;size&gt;.csv</code>, nên nếu đặt mọi phiên bản dưới <code>v&lt;k&gt;/</code> thì phải sửa notebook giữa kỳ; phương án còn lại là giữ V0 ở chỗ cũ và chỉ đặt V1 trở đi dưới <code>v&lt;k&gt;/</code>. Phần đọc CSV V0/V1 và tính speedup đã viết, chưa commit.</td>
+      <td>Đang làm</td>
+      <td>03/11: Nhóm trưởng chốt layout output theo phiên bản <code>&lt;out&gt;/v&lt;k&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> cho bài nộp cuối kỳ (<code>Group16_Final.ipynb</code>), không ràng buộc tương thích ngược với notebook giữa kỳ. Thành tiến hành cập nhật <code>scripts/run_benchmark.py</code>, <code>scripts/plot_benchmark.py</code> và bộ test Python.</td>
     </tr>
     <tr>
       <td>P5-T06</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S2</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S2 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s2-detection.md</code></td>
-      <td>Chờ review</td>
-      <td>03/11: PR #29 (<code>thanh/p5</code>); đổi tên stub ở PR #27. Colab T4: suite <code>gpu_s2</code> 2080 checks; keypoint giống V0 (tọa độ, bit score, thứ tự) trên suite và chuỗi S1→S2 với 12 cặp dataset, 6 cặp synthetic; memcheck 0 lỗi.</td>
+      <td>Xong</td>
+      <td>03/11: Đã merge PR #29 (<code>thanh/p5</code>) và PR #27 vào <code>main</code>. Colab T4: suite <code>gpu_s2</code> 2080 checks; keypoint giống V0 (tọa độ, bit score, thứ tự) trên suite và chuỗi S1→S2 với 12 cặp dataset, 6 cặp synthetic; memcheck 0 lỗi.</td>
     </tr>
     <tr>
       <td>P5-T07</td>
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S3</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S3 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s3-description.md</code></td>
-      <td>Chờ review</td>
-      <td>03/11: PR #29 (<code>thanh/p5</code>). Colab T4: suite <code>gpu_s3</code> 1022 checks; descriptor giống V0 từng bit; chuỗi S1→S2→S3→<code>v1_match</code> giống V0 đến <code>v0_match</code> trên 12 cặp dataset và 6 cặp synthetic; memcheck và racecheck 0 lỗi.</td>
+      <td>Xong</td>
+      <td>03/11: Đã merge PR #29 (<code>thanh/p5</code>) vào <code>main</code>. Colab T4: suite <code>gpu_s3</code> 1022 checks; descriptor giống V0 từng bit; chuỗi S1→S2→S3→<code>v1_match</code> giống V0 đến <code>v0_match</code> trên 12 cặp dataset và 6 cặp synthetic; memcheck và racecheck 0 lỗi.</td>
     </tr>
     <tr>
       <td rowspan="4">Đế</td>
@@ -95,7 +95,7 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td></td>
       <td>Lập luận và kết quả cập nhật trong <a href="dataset.md">dataset</a>; bộ <code>dataset/</code> kèm <code>manifest.csv</code> đã kiểm tra và upload lên Drive chung</td>
       <td>Xong</td>
-      <td>02/11: Đế chọn site2 <code>thanh-standard2</code>, challenge <code>de-challenge1</code>; review và kết quả V0 CPU ở <a href="dataset.md#61-review-và-lựa-chọn-của-đế-cho-p5-t08">dataset mục 6.1</a>. Còn xác minh tiêu chí ảnh, thống nhất với cả Nhóm và cập nhật dataset/manifest trên Drive; chưa nghiệm thu Colab T4.</td>
+      <td>03/11: Nhóm trưởng chốt chọn site2 <code>thanh-standard2</code>, challenge <code>de-challenge1</code> theo đề xuất của Đế; chấp nhận overlap ~58% của <code>thanh-standard2</code> để triệt tiêu bóng ma parallax; cập nhật <a href="dataset.md#83-bộ-dataset-cuối-kỳ-chính-thức-chốt-ngày-0311">dataset mục 8.3</a>; tiến hành chuẩn hóa tên nguồn và chạy <code>prepare_dataset.py</code> cập nhật Drive.</td>
     </tr>
     <tr>
       <td>P5-T09</td>
@@ -111,7 +111,7 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S4 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s4-matching.md</code></td>
       <td>Xong</td>
-      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s4/</code> trên <code>de/p5</code>, commit <code>deafa78</code>; 2387 checks trên Colab T4, memcheck 0 lỗi, match khớp V0 trên sáu cặp synthetic. NVTX ở commit <code>ebfd446</code>.</td>
+      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s4/</code> trên <code>de/p5</code>, commit <code>deafa78</code>; 2387 checks trên Colab T4, memcheck 0 lỗi, match khớp V0 trên sáu cặp synthetic. NVTX ở commit <code>ebfd446</code>. Đã merge PR #25.</td>
     </tr>
     <tr>
       <td>P5-T11</td>
@@ -119,7 +119,7 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S5 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s5-homography.md</code></td>
       <td>Xong</td>
-      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s5/</code> trên <code>de/p5</code>, commit <code>a0fa80f</code>, test biên <code>427ee94</code>; 16521 checks trên Colab T4, memcheck 0 lỗi. Driver <code>ed001e0</code> đối chiếu prefix/mask và H trên sáu cặp synthetic, đạt ngưỡng CPU–GPU và ground truth.</td>
+      <td>31/10: đã hoàn tất code và kiểm thử; code/test trong <code>src/v1/s5/</code> trên <code>de/p5</code>, commit <code>a0fa80f</code>, test biên <code>427ee94</code>; 16521 checks trên Colab T4, memcheck 0 lỗi. Driver <code>ed001e0</code> đối chiếu prefix/mask và H trên sáu cặp synthetic, đạt ngưỡng CPU–GPU và ground truth. Đã merge PR #25.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>
@@ -135,8 +135,8 @@ Các thành viên phát triển và kiểm thử độc lập từng stage V1 b�
       <td>Cài đặt, định nghĩa ngưỡng kiểm chứng và kiểm thử V1 cho S6</td>
       <td>P5-T04, P5-T12</td>
       <td>Đạt <a href="final-plan.md#9-tiêu-chí-hoàn-thành-một-task-và-checklist-nộp-bài">mục 9 của kế hoạch cuối kỳ</a>; test đối chiếu S6 với V0 đạt trên Colab T4; cập nhật <code>docs/stages/s6-warp-blend.md</code></td>
-      <td>Chờ review</td>
-      <td>30/10, <code>chuong/p5</code>: code và kiểm chứng Colab Tesla T4 đạt với nvcc 13.0.88, sm_75. Suite 709 checks / 66 đối chiếu; 12/12 case thật cùng H khớp, max RGB error 0 (ngưỡng 1). Memcheck fixtures và site2/large: 0 errors, 0 bytes leak. Đã cập nhật thiết kế, notebook tái lập và <a href="report/p5-s6-cuda-verification.md">báo cáo bằng chứng</a>. Chờ review/merge vào main; CLI tích hợp thuộc P6.</td>
+      <td>Xong</td>
+      <td>30/10, <code>chuong/p5</code>: code và kiểm chứng Colab Tesla T4 đạt với nvcc 13.0.88, sm_75. Suite 709 checks / 66 đối chiếu; 12/12 case thật cùng H khớp, max RGB error 0 (ngưỡng 1). Memcheck fixtures và site2/large: 0 errors, 0 bytes leak. Đã cập nhật thiết kế, notebook tái lập và <a href="report/p5-s6-cuda-verification.md">báo cáo bằng chứng</a>. Đã merge PR #23 vào <code>main</code>; CLI tích hợp thuộc P6.</td>
     </tr>
   </tbody>
 </table>
@@ -155,3 +155,5 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 21/10 | Notebook không cần comment tác giả; yêu cầu ở mục 9.3 của kế hoạch chỉ áp dụng cho file code |
 | 24/10 | Nhóm trưởng xác nhận các thành viên đã xác nhận nội dung phần mình; P4 không chờ xác nhận lại. Tiếp tục đối chiếu bản notebook cuối với output mới trước khi nghiệm thu |
 | 03/11 | Tuấn và cả Nhóm đồng ý để Thành làm thay P5-T03 (V1 cho S1); dòng `Authors:` ghi Thành. Tuấn vẫn phụ trách tài liệu S1 và xem lại phần V1 khi review |
+| 03/11 | Nhóm trưởng chốt bộ dataset cuối kỳ: site1 `thanh-standard1`, site2 `thanh-standard2` (thay `tuan-standard2` để triệt tiêu bóng ma parallax, chấp nhận overlap ~58% của cảnh đường ngoài trời), site3 `de-standard2`, challenge `de-challenge1` (thay `chuong-challenge1` để tạo ca thất bại thực sự do hoa văn lặp trần/lan can). Tiến hành chạy `prepare_dataset.py` và cập nhật Drive chung |
+| 03/11 | Nhóm trưởng chốt layout output của công cụ benchmark đa phiên bản (P5-T05): dùng cấu trúc phân cấp `<out>/v<k>/<site>/<size>.csv` cho bài nộp cuối kỳ (`Group16_Final.ipynb`); không ràng buộc tương thích ngược với notebook giữa kỳ |

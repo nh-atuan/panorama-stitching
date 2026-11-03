@@ -110,11 +110,21 @@ GPU_SUITES = {
         "src/v1/s1/v1_preprocess.cu",
         "tests/gpu/test_gpu_s1_preprocess.cu",
     ],
+    "gpu_s2": [
+        *COMMON_BLUR,
+        "src/common/fast_corner.cpp",
+        "src/v0/v0_preprocess.cpp",
+        "src/v0/v0_detect.cpp",
+        "src/v1/common/v1_gaussian_blur.cu",
+        "src/v1/s1/v1_preprocess.cu",
+        "src/v1/s2/v1_detect.cu",
+        "tests/gpu/test_gpu_s2_detect.cu",
+    ],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {"gpu_s6": ["-Xlinker=--wrap=cudaMalloc"]}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
-GPU_STB_SUITES = {"gpu_s6", "gpu_reference", "gpu_s1"}
+GPU_STB_SUITES = {"gpu_s6", "gpu_reference", "gpu_s1", "gpu_s2"}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
 GPU_COMPILE_FLAGS = [

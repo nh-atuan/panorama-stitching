@@ -167,9 +167,9 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>P6-T01</td>
       <td>Ghép nối <code>v1_pipeline</code> hoàn chỉnh và quản lý bộ nhớ <code>DeviceWorkspace</code> trong CLI</td>
       <td>P5-T01</td>
-      <td>Thay thế các stub trong <code>src/main.cu</code> bằng 6 stage thật; tính <code>max_scratch</code> cấp phát một lần cho <code>d_scratch</code>; quản lý cấp phát canvas linh hoạt cho S6 theo ma trận H; xử lý an toàn mã lỗi biên (<code>DegenerateHomography</code>, <code>TooFewKeypoints</code>). Lệnh <code>./stitch ... --version 1</code> chạy trọn vẹn 6 stage trên GPU và xuất ảnh panorama đạt chuẩn.</td>
+      <td>Thay thế các stub trong <code>src/main.cu</code> bằng 6 stage thật; tính <code>max_scratch</code> cấp phát một lần cho <code>d_scratch</code> (căn chỉnh 16 byte); quản lý cấp phát canvas linh hoạt cho S6 theo ma trận H kèm cấp phát buffer output trên Host theo kích thước canvas thực tế (tránh tràn buffer); xử lý an toàn mã lỗi biên (<code>DegenerateHomography</code>, <code>TooFewKeypoints</code>). Lệnh <code>./stitch ... --version 1</code> chạy trọn vẹn 6 stage trên GPU và xuất ảnh panorama đạt chuẩn.</td>
       <td>Chưa làm</td>
-      <td>Nhánh <code>chuong/p6</code></td>
+      <td>Nhánh <code>chuong/p6</code>; <strong>hạn gỡ nghẽn nội bộ: 05/11 (Thứ 5, sau 2 ngày)</strong> để kịp chạy benchmark, sanitizer và profiling.</td>
     </tr>
     <tr>
       <td>Tuấn</td>
@@ -226,3 +226,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 03/11 | Nhóm trưởng chốt bộ dataset cuối kỳ: site1 `thanh-standard1`, site2 `thanh-standard2` (thay `tuan-standard2` để triệt tiêu bóng ma parallax, chấp nhận overlap ~58% của cảnh đường ngoài trời), site3 `de-standard2`, challenge `de-challenge1` (thay `chuong-challenge1` để tạo ca thất bại thực sự do hoa văn lặp trần/lan can). Tiến hành chạy `prepare_dataset.py` và cập nhật Drive chung |
 | 03/11 | Nhóm trưởng chốt layout output của công cụ benchmark đa phiên bản (P5-T05): dùng cấu trúc phân cấp `<out>/v<k>/<site>/<size>.csv` cho bài nộp cuối kỳ (`Group16_Final.ipynb`); không ràng buộc tương thích ngược với notebook giữa kỳ |
 | 03/11 | Chốt kế hoạch Phase 6 (hạn 08/11): thu hẹp còn 5 ngày để giữ nhịp tiến độ; thiết kế các task độc lập tối đa ngay từ đầu phase (Thành chạy trước benchmark V0, Đế chạy trước NCU các kernel stage, Tuấn viết target runner test tích hợp, Chương ghép `v1_pipeline`); Đế phụ trách thu thập NSYS toàn pipeline, phân tích ca lỗi `challenge` và chốt báo cáo bottleneck V1/đề xuất V2. Cập nhật mốc nộp bài cuối kỳ sang 03/12 (Thứ 5) |
+| 03/11 | Chốt hạn chót nội bộ cho P6-T01 (Chương): phải hoàn thành ghép `v1_pipeline` và mở PR chậm nhất trong 2 ngày (05/11, Thứ 5) để gỡ nghẽn cho các task phụ thuộc (Tuấn chạy compute-sanitizer, Thành đo benchmark V1, Đế thu thập NSYS toàn pipeline); lưu ý Chương xử lý cấp phát động buffer output Host tránh tràn bộ nhớ khi canvas mở rộng |

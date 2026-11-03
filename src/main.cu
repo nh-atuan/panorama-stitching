@@ -1,4 +1,5 @@
-// Authors: Le Thuong De (23120232), Le Ha Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
+// Authors: Le Thuong De (23120232), Le Ha Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185),
+//          Tran Huu Kim Thanh (23120166)
 // External source: none
 
 #include "common/common.h"
@@ -25,14 +26,14 @@ namespace panorama {
 
 // Temporary V1 entry points. Replace these stubs with stage implementations in
 // src/v1/; all operations must use the borrowed workspace and the supplied stream.
-// S4/S5 scaffold names stay separate from their real, independently tested APIs.
-ErrorCode v1_preprocess(DeviceWorkspace&, const Config&, cudaStream_t) {
+// S1-S5 scaffold names stay separate from their real, independently tested APIs.
+ErrorCode v1_stub_preprocess(DeviceWorkspace&, const Config&, cudaStream_t) {
     return ErrorCode::Success;
 }
-ErrorCode v1_detect(DeviceWorkspace&, const Config&, cudaStream_t) {
+ErrorCode v1_stub_detect(DeviceWorkspace&, const Config&, cudaStream_t) {
     return ErrorCode::Success;
 }
-ErrorCode v1_describe(DeviceWorkspace&, const Config&, cudaStream_t) {
+ErrorCode v1_stub_describe(DeviceWorkspace&, const Config&, cudaStream_t) {
     return ErrorCode::Success;
 }
 ErrorCode v1_stub_match(DeviceWorkspace&, const Config&, cudaStream_t) {
@@ -420,7 +421,7 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
                                 workspace.imageB.height, cudaMemcpyHostToDevice, stream));
     if (measure) events.h2d_stop.record(stream);
     typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
-    const StageFunction stages[] = {v1_preprocess, v1_detect, v1_describe,
+    const StageFunction stages[] = {v1_stub_preprocess, v1_stub_detect, v1_stub_describe,
                                    v1_stub_match, v1_stub_homography, v1_scaffold_warp_blend};
     for (std::size_t i = 0; i < kStageCount; ++i) {
         if (measure) events.stage_start[i].record(stream);

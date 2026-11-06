@@ -229,16 +229,16 @@ void test_edge_cases(Stream& stream) {
                 "zero max_keypoints rejected");
     }
 
-    // 3. Side too small for FAST ring (side <= 30)
+    // 3. Side too small for FAST ring (side <= 30 gives 0 keypoints, handled gracefully)
     {
         RgbImage tiny_a = make_test_image(24, 24, 1);
         RgbImage tiny_b = make_test_image(24, 24, 2);
         Config config;
         make_v0_config(24, 24, config);
-        V1DeviceOwner owner;
-        // Scratch bytes returns 0 because S2 detects side <= 30, so v1_prepare returns InvalidImage
-        require(v1_prepare(tiny_a.view(), tiny_b.view(), config, owner) == ErrorCode::InvalidImage,
-                "tiny image <= 30 rejected by v1_prepare");
+        V1Output v1;
+        run_v1(tiny_a.view(), tiny_b.view(), config, stream, v1);
+        require(v1.status == ErrorCode::InsufficientKeypoints,
+                "tiny image <= 30 gives InsufficientKeypoints");
     }
 
     // 4. Flat / blank image (insufficient keypoints)

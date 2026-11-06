@@ -177,8 +177,8 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Bổ sung target kiểm tra tích hợp V1 vào test runner và kiểm tra an toàn bộ nhớ</td>
       <td>P6-T01</td>
       <td>Mở rộng <code>tests/run_tests.py</code> hỗ trợ target/suite kiểm tra tích hợp CLI V1 trên ảnh synthetic và ảnh dataset; kiểm chứng H và kích thước canvas; chạy <code>compute-sanitizer</code> trên Colab T4 nghiệm thu 0 lỗi rò rỉ bộ nhớ.</td>
-      <td>Đang làm</td>
-      <td>06/11, nhánh <code>tuan/p6</code>: bổ sung suite C++/CUDA <code>gpu_pipeline</code> trong <code>tests/gpu/test_gpu_v1_pipeline.cu</code> kiểm tra end-to-end 6 stage V1; đăng ký <code>gpu_pipeline</code> vào <code>GPU_SUITES</code> và <code>GPU_STB_SUITES</code> của <code>tests/run_tests.py</code>; bổ sung suite Python <code>tests/python/test_v1_cli.py</code> kiểm tra schema CSV 11 cột và CLI V1 (đạt 8/8 suite Python, 130 test). Chuẩn bị chạy kiểm chứng <code>compute-sanitizer</code> trên Colab T4.</td>
+      <td>Xong</td>
+      <td>06/11, nhánh <code>tuan/p6</code>: bổ sung suite C++/CUDA <code>gpu_pipeline</code> trong <code>tests/gpu/test_gpu_v1_pipeline.cu</code> kiểm tra end-to-end 6 stage V1; đăng ký <code>gpu_pipeline</code> vào <code>GPU_SUITES</code> và <code>GPU_STB_SUITES</code> của <code>tests/run_tests.py</code>; bổ sung suite Python <code>tests/python/test_v1_cli.py</code>. Nghiệm thu Colab T4 ngày 06/11: 14 suite V0 (45284 checks), 9 suite GPU (33783 checks, <code>gpu_pipeline</code> 53 checks, max RGB error 0), 8 suite Python (130 test) đạt; <code>compute-sanitizer</code> trên <code>gpu_pipeline</code> đạt 0 lỗi, 0 byte rò rỉ bộ nhớ.</td>
     </tr>
     <tr>
       <td>Thành</td>
@@ -195,15 +195,15 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Thu thập số liệu Nsight Compute (<code>ncu</code>) đo sâu các kernel V1 riêng lẻ</td>
       <td>P5-T09</td>
       <td>Chạy <code>scripts/run_profiling.py</code> trên Colab T4 thu thập metric chi tiết (Memory Bandwidth, Occupancy, Warp Stalls) cho từng kernel stage từ S1 đến S6 thông qua các test suite GPU độc lập.</td>
-      <td>Đang làm</td>
-      <td>06/11: Tuấn làm thay Đế (xem mục "Quyết định đã chốt") trên nhánh <code>tuan/p6</code>; thu thập và phân tích các chỉ số vi kiến trúc NCU (SOL Memory, SOL Compute, Occupancy, Warp Stalls) cho 6 kernel stage V1.</td>
+      <td>Xong</td>
+      <td>06/11: Tuấn làm thay Đế (xem mục "Quyết định đã chốt") trên nhánh <code>tuan/p6</code>; thu thập và phân tích các chỉ số vi kiến trúc NCU (SOL Memory, SOL Compute, Occupancy, Warp Stalls) cho 6 kernel stage V1, ghi nhận tại <code>docs/report/4.1-v1-profiling-and-bottlenecks.md</code>.</td>
     </tr>
     <tr>
       <td>P6-T05</td>
       <td>Thu thập Nsight Systems toàn pipeline, phân tích ca lỗi <code>challenge</code> và viết báo cáo bottleneck V1</td>
       <td>P6-T01, P6-T03, P6-T04</td>
       <td>Chạy <code>nsys</code> lấy timeline NVTX toàn pipeline; phân tích cơ chế thất bại trên cặp <code>de-challenge1</code>; đối chiếu số liệu benchmark và profiling để xác định chính xác hotspot của V1; viết tài liệu đề xuất bài toán tối ưu cho V2 (P7) và soạn cuốn chiếu mục V1 vào <code>docs/report/</code>.</td>
-      <td>Đang làm</td>
+      <td>Xong</td>
       <td>06/11: Tuấn làm thay Đế trên nhánh <code>tuan/p6</code>; thu thập NSYS timeline NVTX toàn pipeline, phân tích cơ chế thất bại do hoa văn lặp lan can gây thoái hóa descriptor BRIEF trên <code>de-challenge1</code>; hoàn thành báo cáo <code>docs/report/4.1-v1-profiling-and-bottlenecks.md</code> chỉ rõ các hotspot S2, S4, S6 và đề xuất giải pháp tối ưu cho V2 (P7).</td>
     </tr>
   </tbody>

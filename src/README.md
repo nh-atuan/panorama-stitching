@@ -1,4 +1,4 @@
-<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185) -->
+<!-- Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166) -->
 <!-- External source: none -->
 
 # Cấu trúc và quy ước thư mục `src/`
@@ -14,9 +14,10 @@ src/
 ├── common/          # Hợp đồng dữ liệu, cấu hình, tiện ích dùng chung và thư viện stb
 ├── v0/              # Bản tuần tự C/C++ đóng băng (chuẩn tham chiếu cho các bản GPU)
 ├── v1/              # Basic CUDA, chia thư mục theo stage
-│   ├── common/      # Nhãn NVTX dùng chung giữa các stage V1
-│   ├── s4/          # Matching
-│   └── s5/          # Homography
+│   ├── common/      # Nhãn NVTX và Gaussian blur dùng chung giữa các stage V1
+│   ├── s1/ ... s5/  # Preprocess, detect, describe, matching, homography
+│   ├── v1_warp_blend.*  # S6
+│   └── v1_pipeline.*    # Bộ nhớ Device và điều phối sáu stage cho --version 1
 └── v2/, v3/         # Các phiên bản tối ưu
 ```
 
@@ -24,7 +25,7 @@ Vai trò từng nhóm:
 
 - `common/`: chứa `common.h` (struct dữ liệu standard-layout đi qua ranh giới Host–Device), `cuda_utils.cuh` (macro kiểm tra lỗi CUDA và đo `cudaEvent`), `v0_config.*` (tham số thuật toán dùng chung cho mọi phiên bản), các module hình học/lọc/biên/mẫu (`image_layout.*`, `gaussian_kernel.*`, `gaussian_blur.*`, `feature_border.h`, `fast_corner.*`, `brief_pattern.*`, `feature_support.*`) và `stb_image.h`, `stb_image_write.h`, `stb_impl.cpp`.
 - `v0/`: cài đặt tuần tự 6 stage (`v0_preprocess.*`, `v0_detect.*`, `v0_describe.*`, `v0_match.*`, `v0_homography.*`, `v0_warp_blend.*`) và `v0_pipeline.*`.
-- `v1/` (Basic CUDA): chia theo stage trong `s1/` đến `s6/`, chỉ tạo thư mục khi có implementation. S4/S5 hiện có trong `s4/`, `s5/`; tiện ích nội bộ dùng chung đặt trong `common/`. Pipeline vẫn ở cấp phiên bản.
+- `v1/` (Basic CUDA): chia theo stage trong `s1/` đến `s6/`, chỉ tạo thư mục khi có implementation. S1–S5 nằm trong `s1/` đến `s5/`, S6 đặt ở `v1_warp_blend.*`; tiện ích nội bộ dùng chung đặt trong `common/`. Pipeline ở cấp phiên bản: `v1_pipeline.*` cấp phát workspace Device và gọi sáu stage, giống vai trò của `v0_pipeline.*`.
 - `v2/`, `v3/` (Optimized CUDA): chỉ tạo file mới cho những stage/kernel có thay đổi ở phiên bản đó cùng `v2_pipeline.*` / `v3_pipeline.*`. Những stage giữ nguyên gọi lại trực tiếp hàm từ phiên bản trước, không chép lại file cũ sang thư mục mới.
 
 ## 2. Quy ước viết code

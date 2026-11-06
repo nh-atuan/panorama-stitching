@@ -34,15 +34,13 @@ struct V0Output {
     HomographyReport report{};
 };
 
-V0Output run_v0(const Image& left, const Image& right, const Config& config) {
-    V0Output out;
+void run_v0(const Image& left, const Image& right, const Config& config, V0Output& out) {
     ErrorCode prep = v0_prepare(left, right, config, out.workspace);
     if (prep != ErrorCode::Success) {
         out.status = prep;
-        return out;
+        return;
     }
     out.status = v0_run(left, right, config, out.workspace, nullptr, &out.failed_stage, &out.report);
-    return out;
 }
 
 struct V1Output {
@@ -54,10 +52,9 @@ struct V1Output {
     Homography homography{};
 };
 
-V1Output run_v1(const Image& left, const Image& right, const Config& config, Stream& stream) {
-    V1Output out;
+void run_v1(const Image& left, const Image& right, const Config& config, Stream& stream, V1Output& out) {
     out.status = v1_prepare(left, right, config, out.owner);
-    if (out.status != ErrorCode::Success) return out;
+    if (out.status != ErrorCode::Success) return;
 
     cuda(cudaMemcpyAsync(out.owner.view.d_imageA, left.data,
                          left.stride * static_cast<std::size_t>(left.height),
@@ -87,13 +84,14 @@ V1Output run_v1(const Image& left, const Image& right, const Config& config, Str
         }
         stream.wait();
     }
-    return out;
 }
 
 void compare_v0_v1(const Image& left, const Image& right, const Config& config,
                    Stream& stream, const std::string& case_name) {
-    V0Output v0 = run_v0(left, right, config);
-    V1Output v1 = run_v1(left, right, config, stream);
+    V0Output v0;
+    run_v0(left, right, config, v0);
+    V1Output v1;
+    run_v1(left, right, config, stream, v1);
 
     require(v0.status == v1.status, case_name + ": status mismatch: v0=" +
             std::to_string(static_cast<int>(v0.status)) + ", v1=" +
@@ -252,7 +250,8 @@ void test_edge_cases(Stream& stream) {
         Config config;
         make_v0_config(160, 120, config);
 
-        V1Output v1 = run_v1(blank_a.view(), blank_b.view(), config, stream);
+        V1Output v1;
+        run_v1(blank_a.view(), blank_b.view(), config, stream, v1);
         require(v1.status == ErrorCode::InsufficientKeypoints,
                 "blank image gives InsufficientKeypoints");
     }

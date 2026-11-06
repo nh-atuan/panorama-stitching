@@ -1,4 +1,5 @@
-// Authors: Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
+// Authors: Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185),
+//          Tran Huu Kim Thanh (23120166)
 // External source: none
 
 #ifndef GROUP16_VERSIONS_H
@@ -10,7 +11,7 @@
 namespace panorama {
 
 // Versions accepted by --version. V0 is the sequential pipeline in v0_pipeline.cpp;
-// V1 currently exposes infrastructure stubs only, with an explicit CLI warning.
+// V1 is the basic CUDA pipeline in v1/v1_pipeline.cu: six GPU stages on one stream.
 // Host-only builds retain V0 support without CUDA headers or a GPU driver.
 inline bool is_supported_version(int version) {
 #ifdef __CUDACC__

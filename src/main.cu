@@ -22,45 +22,14 @@
 #include <stdexcept>
 
 #ifdef __CUDACC__
-namespace panorama {
-
-// Temporary V1 entry points. Replace these stubs with stage implementations in
-// src/v1/; all operations must use the borrowed workspace and the supplied stream.
-// S1-S5 scaffold names stay separate from their real, independently tested APIs.
-ErrorCode v1_stub_preprocess(DeviceWorkspace&, const Config&, cudaStream_t) {
-    return ErrorCode::Success;
-}
-ErrorCode v1_stub_detect(DeviceWorkspace&, const Config&, cudaStream_t) {
-    return ErrorCode::Success;
-}
-ErrorCode v1_stub_describe(DeviceWorkspace&, const Config&, cudaStream_t) {
-    return ErrorCode::Success;
-}
-ErrorCode v1_stub_match(DeviceWorkspace&, const Config&, cudaStream_t) {
-    return ErrorCode::Success;
-}
-ErrorCode v1_stub_homography(DeviceWorkspace&, const Config&, cudaStream_t) {
-    return ErrorCode::Success;
-}
-// Keep the CLI scaffold separate from the real, independently tested S6 module.
-// P6 replaces this call after S1-S5 can supply a valid Device homography.
-ErrorCode v1_scaffold_warp_blend(DeviceWorkspace& workspace, const Config&, cudaStream_t stream) {
-    // Infrastructure smoke output only: copy A, without estimating H or stitching B.
-    CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_canvas, workspace.canvas.image.stride,
-                                workspace.d_imageA, workspace.imageA.stride,
-                                static_cast<std::size_t>(workspace.imageA.width) * 3,
-                                workspace.imageA.height, cudaMemcpyDeviceToDevice, stream));
-    return ErrorCode::Success;
-}
-
-}  // namespace panorama
+#include "v1/v1_pipeline.h"
 #endif
 
 namespace {
 
 const char* const kUsage =
     "Usage: ./stitch <left_image> <right_image> <output_image> "
-    "--version <0|1> [--runs N] [--debug] (V1: CUDA infrastructure stubs only)";
+    "--version <0|1> [--runs N] [--debug]";
 
 class ProgramError : public std::runtime_error {
 public:
@@ -164,7 +133,7 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
              "supported versions in this build: " +
-             std::string(panorama::is_supported_version(1) ? "0, 1 (stubs)." : "0."),
+             std::string(panorama::is_supported_version(1) ? "0, 1." : "0."),
              panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
@@ -299,10 +268,35 @@ void check_stage(ErrorCode status, Stage stage) {
     if (status != ErrorCode::Success) fail(std::string(stage_name(stage)) + " failed.", status);
 }
 
+// Pipeline values printed by --debug, filled by V0 or V1 after all timed runs.
+struct DebugSummary {
+    std::size_t detected_a = 0, detected_b = 0;  // After S2.
+    std::size_t kept_a = 0, kept_b = 0;          // After S3 drops border keypoints.
+    std::size_t matches = 0;
+    Homography homography;
+    std::int32_t canvas_width = 0, canvas_height = 0;
+    std::int32_t offset_x = 0, offset_y = 0;
+};
+
+DebugSummary v0_debug_summary(const V0Workspace& workspace) {
+    DebugSummary summary;
+    summary.detected_a = workspace.detected_a;
+    summary.detected_b = workspace.detected_b;
+    summary.kept_a = workspace.keypoints_a.size();
+    summary.kept_b = workspace.keypoints_b.size();
+    summary.matches = workspace.matches.size();
+    summary.homography = workspace.homography;
+    summary.canvas_width = workspace.panorama.image.width;
+    summary.canvas_height = workspace.panorama.image.height;
+    summary.offset_x = workspace.panorama.offset_x;
+    summary.offset_y = workspace.panorama.offset_y;
+    return summary;
+}
+
 // Diagnostics of the pipeline, written to stderr after all timed runs.
 // The "H(B->A)=" line is parsed by scripts that compare H with a ground truth.
 void print_diagnostics(const Image& left, const Image& right, const Config& config,
-                       const V0Workspace& workspace, const HomographyReport& report) {
+                       const DebugSummary& summary, const HomographyReport& report) {
     std::ostream& log = std::cerr;
     const std::ios_base::fmtflags flags = log.flags();
     const std::streamsize precision = log.precision();
@@ -311,105 +305,68 @@ void print_diagnostics(const Image& left, const Image& right, const Config& conf
         << " B=" << right.width << 'x' << right.height << '\n';
     log << "[debug] config: ";
     write_config(log, config);
-    log << "[debug] S2 keypoints A=" << workspace.detected_a << " B=" << workspace.detected_b
-        << "; kept by S3 A=" << workspace.keypoints_a.size()
-        << " B=" << workspace.keypoints_b.size() << '\n';
-    log << "[debug] S4 matches=" << workspace.matches.size() << '\n';
+    log << "[debug] S2 keypoints A=" << summary.detected_a << " B=" << summary.detected_b
+        << "; kept by S3 A=" << summary.kept_a << " B=" << summary.kept_b << '\n';
+    log << "[debug] S4 matches=" << summary.matches << '\n';
     log << "[debug] ";
     write_homography_report(log, report);
     log << "[debug] H(B->A)=";
-    for (int i = 0; i < 9; ++i) log << (i ? " " : "") << workspace.homography.data[i];
+    for (int i = 0; i < 9; ++i) log << (i ? " " : "") << summary.homography.data[i];
     log << '\n';
-    log << "[debug] S6 canvas=" << workspace.panorama.image.width << 'x'
-        << workspace.panorama.image.height << " offset=(" << workspace.panorama.offset_x
-        << ',' << workspace.panorama.offset_y << ")\n";
+    log << "[debug] S6 canvas=" << summary.canvas_width << 'x' << summary.canvas_height
+        << " offset=(" << summary.offset_x << ',' << summary.offset_y << ")\n";
     log.flags(flags);
     log.precision(precision);
 }
 
 #ifdef __CUDACC__
-// Owns each allocation once. Alias image views in DeviceWorkspace are never freed.
-struct OwnedDeviceWorkspace {
-    DeviceWorkspace view;
-    OwnedDeviceWorkspace() = default;
-    OwnedDeviceWorkspace(const OwnedDeviceWorkspace&) = delete;
-    OwnedDeviceWorkspace& operator=(const OwnedDeviceWorkspace&) = delete;
-    ~OwnedDeviceWorkspace() {
-        device_free(view.d_scratch);
-        device_free(view.d_canvas_info);
-        device_free(view.d_counts);
-        device_free(view.d_canvas);
-        device_free(view.d_homography);
-        device_free(view.d_matches);
-        device_free(view.d_descriptorsB);
-        device_free(view.d_descriptorsA);
-        device_free(view.d_keypointsB);
-        device_free(view.d_keypointsA);
-        device_free(view.d_grayB);
-        device_free(view.d_grayA);
-        device_free(view.d_imageB);
-        device_free(view.d_imageA);
-    }
-};
-
-void prepare_device_workspace(const Image& left, const Image& right, const Config& config,
-                              DeviceWorkspace& workspace) {
-    const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
-    const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
-    const std::size_t features = static_cast<std::size_t>(config.max_keypoints);
-    device_allocate(workspace.d_imageA, bytes_a);
-    device_allocate(workspace.d_imageB, bytes_b);
-    workspace.imageA = left;
-    workspace.imageB = right;
-    workspace.imageA.data = workspace.d_imageA;
-    workspace.imageB.data = workspace.d_imageB;
-    device_allocate(workspace.d_grayA, static_cast<std::size_t>(left.width) * left.height);
-    device_allocate(workspace.d_grayB, static_cast<std::size_t>(right.width) * right.height);
-    workspace.grayA.data = workspace.d_grayA;
-    workspace.grayA.width = left.width;
-    workspace.grayA.height = left.height;
-    workspace.grayA.channels = 1;
-    workspace.grayA.stride = static_cast<std::size_t>(left.width) * sizeof(float);
-    workspace.grayB.data = workspace.d_grayB;
-    workspace.grayB.width = right.width;
-    workspace.grayB.height = right.height;
-    workspace.grayB.channels = 1;
-    workspace.grayB.stride = static_cast<std::size_t>(right.width) * sizeof(float);
-    device_allocate(workspace.d_keypointsA, features);
-    device_allocate(workspace.d_keypointsB, features);
-    device_allocate(workspace.d_descriptorsA, features);
-    device_allocate(workspace.d_descriptorsB, features);
-    device_allocate(workspace.d_matches, features);
-    device_allocate(workspace.d_homography, 1);
-    device_allocate(workspace.d_counts, 1);
-    device_allocate(workspace.d_canvas_info, 1);
-    CUDA_CHECK(cudaMemset(workspace.d_counts, 0, sizeof(DeviceCounts)));
-    CUDA_CHECK(cudaMemset(workspace.d_canvas_info, 0, sizeof(DeviceCanvasInfo)));
-    workspace.keypoint_capacityA = workspace.keypoint_capacityB = features;
-    workspace.descriptor_capacityA = workspace.descriptor_capacityB = features;
-    workspace.match_capacity = features;
-    // The stub has A's canvas. Real S6 must publish its computed geometry first;
-    // the Host owner then checks the budget and reserves the required capacity.
-    device_allocate(workspace.d_canvas, bytes_a);
-    workspace.canvas_capacity_bytes = bytes_a;
-    workspace.canvas.image = workspace.imageA;
-    workspace.canvas.image.data = workspace.d_canvas;
-}
-
 struct V1Events {
     CudaEvent h2d_start, h2d_stop, d2h_start, d2h_stop;
     CudaEvent stage_start[kStageCount], stage_stop[kStageCount];
 };
 
+// Pinned Host copy of the panorama. Its size is known only after S6 computes the canvas
+// from H, so the untimed warm-up allocates it and the timed runs must reuse that canvas.
+struct HostPanorama {
+    std::unique_ptr<PinnedBuffer<std::uint8_t>> pixels;
+    Panorama geometry;  // Canvas of the warm-up; geometry.image.data stays null.
+};
+
+bool same_canvas(const Panorama& a, const Panorama& b) {
+    return a.image.width == b.image.width && a.image.height == b.image.height &&
+           a.image.stride == b.image.stride && a.offset_x == b.offset_x &&
+           a.offset_y == b.offset_y;
+}
+
+// Warm-up only, outside timing: sizes the pinned output for the canvas S6 just published.
+void reserve_host_panorama(const Panorama& canvas, HostPanorama& output) {
+    const Image& image = canvas.image;
+    if (!image.data || image.width <= 0 || image.height <= 0 ||
+        image.stride < static_cast<std::size_t>(image.width) * 3 ||
+        static_cast<std::size_t>(image.height) >
+            std::numeric_limits<std::size_t>::max() / image.stride) {
+        fail("S6 published an invalid canvas.", ErrorCode::InvalidCanvas);
+    }
+    output.pixels.reset();
+    output.pixels.reset(new PinnedBuffer<std::uint8_t>(
+        image.stride * static_cast<std::size_t>(image.height)));
+    output.geometry = canvas;
+    output.geometry.image.data = nullptr;
+}
+
+// One H2D -> S1..S6 -> D2H run on `stream`. The warm-up (measure = false) sizes the pinned
+// output from the canvas; a timed run fails when S6 gives another canvas.
 TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
                         const std::uint8_t* host_a, const std::uint8_t* host_b,
-                        std::uint8_t* host_output, cudaStream_t stream,
-                        V1Events& events, bool measure) {
+                        HostPanorama& output, cudaStream_t stream, V1Events& events,
+                        bool measure, DeviceCounts* after_s2) {
     using Clock = std::chrono::high_resolution_clock;
     Clock::time_point start;
     // Chrono measures synchronized Host-observed end-to-end only, never kernels.
     // The caller drains the stream before entry; completion is awaited below.
     if (measure) start = Clock::now();
+    // S3-S5 skip their work once d_counts->status holds an error, so every run starts clean.
+    CUDA_CHECK(cudaMemsetAsync(workspace.d_counts, 0, sizeof(DeviceCounts), stream));
     if (measure) events.h2d_start.record(stream);
     CUDA_CHECK(cudaMemcpy2DAsync(workspace.d_imageA, workspace.imageA.stride,
                                 host_a, workspace.imageA.stride,
@@ -420,20 +377,27 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
                                 static_cast<std::size_t>(workspace.imageB.width) * 3,
                                 workspace.imageB.height, cudaMemcpyHostToDevice, stream));
     if (measure) events.h2d_stop.record(stream);
-    typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
-    const StageFunction stages[] = {v1_stub_preprocess, v1_stub_detect, v1_stub_describe,
-                                   v1_stub_match, v1_stub_homography, v1_scaffold_warp_blend};
-    for (std::size_t i = 0; i < kStageCount; ++i) {
-        if (measure) events.stage_start[i].record(stream);
-        check_stage(stages[i](workspace, config, stream), static_cast<Stage>(i));
-        CUDA_CHECK(cudaGetLastError());  // Catch immediate launch errors as kernels arrive.
-        if (measure) events.stage_stop[i].record(stream);
+    V1StageTrace trace;
+    if (measure) {
+        trace.stage_start = events.stage_start;
+        trace.stage_stop = events.stage_stop;
     }
+    trace.after_s2 = after_s2;
+    V1StageFailure failure;
+    const ErrorCode status = v1_run_stages(workspace, config, stream, trace, failure);
+    if (failure.on_device) fail("Device-side check in S3-S5 failed.", status);
+    check_stage(status, failure.stage);
+    // S6 has waited for its setup kernel, so the canvas geometry is already on the Host.
+    if (!measure) {
+        reserve_host_panorama(workspace.canvas, output);
+    } else if (!same_canvas(workspace.canvas, output.geometry)) {
+        fail("S6 canvas changed between runs.", ErrorCode::InvalidCanvas);
+    }
+    const Image& canvas = workspace.canvas.image;
     if (measure) events.d2h_start.record(stream);
-    CUDA_CHECK(cudaMemcpy2DAsync(host_output, workspace.canvas.image.stride,
-                                workspace.d_canvas, workspace.canvas.image.stride,
-                                static_cast<std::size_t>(workspace.canvas.image.width) * 3,
-                                workspace.canvas.image.height, cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpy2DAsync(output.pixels->get(), canvas.stride, canvas.data, canvas.stride,
+                                static_cast<std::size_t>(canvas.width) * 3, canvas.height,
+                                cudaMemcpyDeviceToHost, stream));
     if (measure) {
         events.d2h_stop.record(stream);
         events.d2h_stop.synchronize();  // One wait after all stages and final D2H.
@@ -448,42 +412,84 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
         for (std::size_t i = 0; i < kStageCount; ++i) {
             timing.stage_ms[i] = events.stage_stop[i].elapsed_since(events.stage_start[i]);
         }
-        // No compute kernels exist in these stubs. S6's D2D copy is not a kernel.
-        // Real stages must supply kernel-only event measurements before this can
-        // report nonzero total_kernel_ms; do not substitute the sum of stage spans.
+        // Kernel-only time is not measured yet (0 = not measured). Stage spans also hold
+        // Host waits (S2 candidate count, S6 setup) and S6's canvas cudaMalloc, so their
+        // sum is not a kernel total. The team decides how to measure this field.
         timing.total_kernel_ms = 0.0;
+    }
+    // Outside the timed window: S3-S5 report algorithm errors on the Device only.
+    const DeviceCounts counts = v1_read_counts(workspace, stream);
+    if (counts.status != ErrorCode::Success) {
+        fail("Device-side check in S3-S5 failed.", counts.status);
     }
     return timing;
 }
 
+HomographyReport v1_homography_report(const V1HomographyDiagnostics& s5, const Config& config) {
+    HomographyReport report;
+    report.success = true;  // Read only after a run that finished without error.
+    report.seed = config.seed;
+    report.max_iterations = config.ransac_iters;
+    report.threshold = config.ransac_threshold;
+    report.attempts = s5.attempts;
+    report.valid_hypotheses = s5.valid_hypotheses;
+    report.rejected_samples = s5.rejected_samples;
+    report.best_hypothesis = s5.best_hypothesis;
+    report.adaptive_budget = s5.adaptive_budget;
+    report.best_inliers = s5.best_inliers;
+    report.first_refit_inliers = s5.first_refit_inliers;
+    report.final_inliers = s5.final_inliers;
+    report.refit_passes = s5.refit_passes;
+    report.sample_hash = s5.sample_hash;
+    report.best_loss = s5.best_loss;
+    report.first_refit_loss = s5.first_refit_loss;
+    report.refit_loss = s5.refit_loss;
+    report.final_loss = s5.final_loss;
+    return report;
+}
+
+DebugSummary v1_debug_summary(const DeviceCounts& after_s2, const V1Diagnostics& diagnostics) {
+    DebugSummary summary;
+    summary.detected_a = after_s2.keypointsA;
+    summary.detected_b = after_s2.keypointsB;
+    summary.kept_a = diagnostics.counts.keypointsA;
+    summary.kept_b = diagnostics.counts.keypointsB;
+    summary.matches = diagnostics.counts.matches;
+    summary.homography = diagnostics.homography;
+    summary.canvas_width = diagnostics.canvas.image.width;
+    summary.canvas_height = diagnostics.canvas.image.height;
+    summary.offset_x = diagnostics.canvas.offset_x;
+    summary.offset_y = diagnostics.canvas.offset_y;
+    return summary;
+}
+
 int run_v1(const CliOptions& options, OutputFormat format, const Image& left,
            const Image& right, const Config& config) {
-    std::cerr << "Warning: V1 is an infrastructure scaffold with six stubs. "
-                 "Output copies image A; timings are not stitching benchmarks.\n";
     int device = 0;
     cudaDeviceProp properties;
     CUDA_CHECK(cudaGetDevice(&device));
     CUDA_CHECK(cudaGetDeviceProperties(&properties, device));
     if (options.debug) {
-        std::cerr << "[debug] GPU=" << properties.name << " version=1 (stubs) runs="
-                  << options.runs << " seed=" << config.seed << '\n'
-                  << "[debug] Config: ";
-        write_config(std::cerr, config);
-        std::cerr << "\n[debug] One warm-up (not timed): S1 S2 S3 S4 S5 S6 stubs.\n";
+        std::cerr << "[debug] GPU=" << properties.name << " version=1 seed=" << config.seed
+                  << " runs=" << options.runs << '\n'
+                  << "[debug] One warm-up (not timed).\n";
     }
     // Declaration order ensures stream completion before pinned/device buffers die,
     // including exceptions during a partially queued run.
-    OwnedDeviceWorkspace owner;
-    prepare_device_workspace(left, right, config, owner.view);
+    V1DeviceOwner owner;
+    const ErrorCode prepared = v1_prepare(left, right, config, owner);
+    if (prepared != ErrorCode::Success) fail("Cannot prepare the V1 pipeline buffers.", prepared);
     const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
     const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
-    PinnedBuffer<std::uint8_t> input_a(bytes_a), input_b(bytes_b), output(bytes_a);
+    PinnedBuffer<std::uint8_t> input_a(bytes_a), input_b(bytes_b);
     std::copy(left.data, left.data + bytes_a, input_a.get());
     std::copy(right.data, right.data + bytes_b, input_b.get());
+    HostPanorama output;
     CudaStream stream;
     V1Events events;
-    run_v1_once(owner.view, config, input_a.get(), input_b.get(), output.get(),
-                stream.get(), events, false);
+    DeviceCounts after_s2;
+    run_v1_once(owner.view, config, input_a.get(), input_b.get(), output, stream.get(), events,
+                false, options.debug ? &after_s2 : nullptr);
     TimingSummary summary;
     std::cout.imbue(std::locale::classic());
     std::cout << std::fixed << std::setprecision(9)
@@ -491,15 +497,21 @@ int run_v1(const CliOptions& options, OutputFormat format, const Image& left,
                  "Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
     for (int index = 0; index < options.runs; ++index) {
         const TimingStats timing = run_v1_once(owner.view, config, input_a.get(), input_b.get(),
-                                               output.get(), stream.get(), events, true);
+                                               output, stream.get(), events, true, nullptr);
         summary.add(timing);
         print_timing(std::to_string(index + 1), timing, true);
     }
     Image result = owner.view.canvas.image;
-    result.data = output.get();
+    result.data = output.pixels->get();
     save_image(options.output_image, format, result);  // Disk I/O is outside timing.
     print_timing("Average", summary.average, true);
     print_timing("Minimum", summary.minimum, true);
+    if (options.debug) {
+        std::cout.flush();  // Keep the CSV block and the stderr diagnostics apart.
+        const V1Diagnostics diagnostics = v1_collect_diagnostics(owner.view, stream.get());
+        print_diagnostics(left, right, config, v1_debug_summary(after_s2, diagnostics),
+                          v1_homography_report(diagnostics.s5, config));
+    }
     std::cout.flush();
     if (!std::cout) throw std::runtime_error("Cannot write benchmark CSV to stdout.");
     return EXIT_SUCCESS;
@@ -551,7 +563,7 @@ int run(int argc, char** argv) {
     print_timing("Minimum", summary.minimum);
     if (options.debug) {
         std::cout.flush();  // Keep the CSV block and the stderr diagnostics apart.
-        print_diagnostics(left.view, right.view, config, workspace, report);
+        print_diagnostics(left.view, right.view, config, v0_debug_summary(workspace), report);
     }
     std::cout.flush();
     if (!std::cout) throw std::runtime_error("Cannot write benchmark CSV to stdout.");

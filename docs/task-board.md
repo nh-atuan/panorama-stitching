@@ -168,8 +168,8 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Ghép nối <code>v1_pipeline</code> hoàn chỉnh và quản lý bộ nhớ <code>DeviceWorkspace</code> trong CLI</td>
       <td>P5-T01</td>
       <td>Thay thế các stub trong <code>src/main.cu</code> bằng 6 stage thật; tính <code>max_scratch</code> cấp phát một lần cho <code>d_scratch</code> (căn chỉnh 16 byte); quản lý cấp phát canvas linh hoạt cho S6 theo ma trận H kèm cấp phát buffer output trên Host theo kích thước canvas thực tế (tránh tràn buffer); xử lý an toàn mã lỗi biên (<code>DegenerateHomography</code>, <code>TooFewKeypoints</code>). Lệnh <code>./stitch ... --version 1</code> chạy trọn vẹn 6 stage trên GPU và xuất ảnh panorama đạt chuẩn.</td>
-      <td>Chờ review</td>
-      <td>06/11: Thành làm thay (xem mục "Quyết định đã chốt"). Task chỉ sửa file dùng chung nên dùng nhánh <code>thanh/shared-v1-pipeline</code> thay cho <code>chuong/p6</code>, PR #31: module mới <code>src/v1/v1_pipeline.{h,cu}</code>, xóa 6 stub trong <code>main.cu</code>, cấp pinned output theo canvas ở warm-up, đọc <code>d_counts->status</code> để báo đúng lỗi của S3–S5, đặt stack Device 32 KiB cho S5. Colab T4 (commit <code>f3b1861</code>): build đạt; 14 suite V0 (45284 checks), 8 suite GPU (33730 checks), 7 suite Python (105 test) đạt; V1 khớp V0 trên 10 cấu hình dataset chạy được (H giống, pixel lệch tối đa 0), challenge medium/large cùng lỗi <code>NumericalFailure</code> như V0; 6 cặp synthetic đạt; memcheck 0 lỗi, 0 byte rò rỉ. <code>Total_Kernel_ms</code> của V1 vẫn là 0 (chưa đo). Chi tiết ở <a href="interface.md#118-pipeline-v1-tích-hợp-p6-t01">interface mục 11.8</a>.</td>
+      <td>Xong</td>
+      <td>06/11: Thành làm thay (xem mục "Quyết định đã chốt"). Đã merge PR #31 vào <code>main</code>. Module <code>src/v1/v1_pipeline.{h,cu}</code> thay thế các stub trong <code>main.cu</code>, cấp pinned output theo canvas ở warm-up, đọc <code>d_counts-&gt;status</code> để báo đúng lỗi của S3–S5, đặt stack Device 32 KiB cho S5. Colab T4: build đạt; 14 suite V0 (45284 checks), 8 suite GPU (33730 checks), 7 suite Python (105 test) đạt; V1 khớp V0 trên 10 cấu hình dataset chạy được (H giống, pixel lệch tối đa 0), challenge medium/large cùng lỗi <code>NumericalFailure</code> như V0; 6 cặp synthetic đạt; memcheck 0 lỗi, 0 byte rò rỉ. Chi tiết ở <a href="interface.md#118-pipeline-v1-tích-hợp-p6-t01">interface mục 11.8</a>.</td>
     </tr>
     <tr>
       <td>Tuấn</td>
@@ -177,8 +177,8 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Bổ sung target kiểm tra tích hợp V1 vào test runner và kiểm tra an toàn bộ nhớ</td>
       <td>P6-T01</td>
       <td>Mở rộng <code>tests/run_tests.py</code> hỗ trợ target/suite kiểm tra tích hợp CLI V1 trên ảnh synthetic và ảnh dataset; kiểm chứng H và kích thước canvas; chạy <code>compute-sanitizer</code> trên Colab T4 nghiệm thu 0 lỗi rò rỉ bộ nhớ.</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p6</code></td>
+      <td>Xong</td>
+      <td>06/11, nhánh <code>tuan/p6</code>: bổ sung suite C++/CUDA <code>gpu_pipeline</code> trong <code>tests/gpu/test_gpu_v1_pipeline.cu</code> kiểm tra end-to-end 6 stage V1; đăng ký <code>gpu_pipeline</code> vào <code>GPU_SUITES</code> và <code>GPU_STB_SUITES</code> của <code>tests/run_tests.py</code>; bổ sung suite Python <code>tests/python/test_v1_cli.py</code>. Nghiệm thu Colab T4 ngày 06/11: 14 suite V0 (45284 checks), 9 suite GPU (33783 checks, <code>gpu_pipeline</code> 53 checks, max RGB error 0), 8 suite Python (130 test) đạt; <code>compute-sanitizer</code> trên <code>gpu_pipeline</code> đạt 0 lỗi, 0 byte rò rỉ bộ nhớ.</td>
     </tr>
     <tr>
       <td>Thành</td>
@@ -195,16 +195,16 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Thu thập số liệu Nsight Compute (<code>ncu</code>) đo sâu các kernel V1 riêng lẻ</td>
       <td>P5-T09</td>
       <td>Chạy <code>scripts/run_profiling.py</code> trên Colab T4 thu thập metric chi tiết (Memory Bandwidth, Occupancy, Warp Stalls) cho từng kernel stage từ S1 đến S6 thông qua các test suite GPU độc lập.</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p6</code>; chạy độc lập ngay từ ngày đầu.</td>
+      <td>Xong</td>
+      <td>06/11: Tuấn làm thay Đế (xem mục "Quyết định đã chốt") trên nhánh <code>tuan/p6</code>; thu thập và phân tích các chỉ số vi kiến trúc NCU (SOL Memory, SOL Compute, Occupancy, Warp Stalls) cho 6 kernel stage V1, ghi nhận tại <code>docs/report/4.1-v1-profiling-and-bottlenecks.md</code>.</td>
     </tr>
     <tr>
       <td>P6-T05</td>
       <td>Thu thập Nsight Systems toàn pipeline, phân tích ca lỗi <code>challenge</code> và viết báo cáo bottleneck V1</td>
       <td>P6-T01, P6-T03, P6-T04</td>
       <td>Chạy <code>nsys</code> lấy timeline NVTX toàn pipeline; phân tích cơ chế thất bại trên cặp <code>de-challenge1</code>; đối chiếu số liệu benchmark và profiling để xác định chính xác hotspot của V1; viết tài liệu đề xuất bài toán tối ưu cho V2 (P7) và soạn cuốn chiếu mục V1 vào <code>docs/report/</code>.</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p6</code></td>
+      <td>Xong</td>
+      <td>06/11: Tuấn làm thay Đế trên nhánh <code>tuan/p6</code>; thu thập NSYS timeline NVTX toàn pipeline, phân tích cơ chế thất bại do hoa văn lặp lan can gây thoái hóa descriptor BRIEF trên <code>de-challenge1</code>; hoàn thành báo cáo <code>docs/report/4.1-v1-profiling-and-bottlenecks.md</code> chỉ rõ các hotspot S2, S4, S6 và đề xuất giải pháp tối ưu cho V2 (P7).</td>
     </tr>
   </tbody>
 </table>
@@ -228,3 +228,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 03/11 | Chốt kế hoạch Phase 6 (hạn 08/11): thu hẹp còn 5 ngày để giữ nhịp tiến độ; thiết kế các task độc lập tối đa ngay từ đầu phase (Thành chạy trước benchmark V0, Đế chạy trước NCU các kernel stage, Tuấn viết target runner test tích hợp, Chương ghép `v1_pipeline`); Đế phụ trách thu thập NSYS toàn pipeline, phân tích ca lỗi `challenge` và chốt báo cáo bottleneck V1/đề xuất V2. Cập nhật mốc nộp bài cuối kỳ sang 03/12 (Thứ 5) |
 | 03/11 | Chốt hạn chót nội bộ cho P6-T01 (Chương): phải hoàn thành ghép `v1_pipeline` và mở PR chậm nhất trong 2 ngày (05/11, Thứ 5) để gỡ nghẽn cho các task phụ thuộc (Tuấn chạy compute-sanitizer, Thành đo benchmark V1, Đế thu thập NSYS toàn pipeline); lưu ý Chương xử lý cấp phát động buffer output Host tránh tràn bộ nhớ khi canvas mở rộng |
 | 06/11 | Nhóm đồng ý để Thành làm thay P6-T01 (ghép `v1_pipeline`) vì task chưa bắt đầu sau 05/11; dòng `Authors:` ghi Thành, code chuyển từ `main.cu` giữ tên Chương. `Total_Kernel_ms` của V1 tạm để 0 (chưa đo); cách đo kernel time được báo lại cho cả Nhóm để cùng quyết định |
+| 06/11 | Tuấn (nhóm trưởng) review và merge PR #31 vào main gỡ nghẽn pipeline V1; Tuấn tiếp quản các task P6-T04 (đo NCU kernel) và P6-T05 (đo NSYS, phân tích ca lỗi challenge, báo cáo bottleneck V1) của Đế trên nhánh `tuan/p6` do Đế bận; dòng `Authors:` ở tài liệu và test mới ghi Tuấn |

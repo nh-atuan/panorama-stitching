@@ -7,12 +7,17 @@
 Supports single-version summary.csv (P3-T05) and multi-version speedup.csv (P5-T05).
 No timing is measured here.
 
+The three standard sites must be complete. The challenge site, written by
+run_benchmark.py --include-challenge, gets one more panel; its sizes without timing (listed in
+failures.csv) are drawn as empty bars marked "failed". Mean shares stay over the standard sites.
+
 Outputs in --out:
-    stage_timing.png   stacked average time of S1-S6 per size, one panel per site
-    stage_share.png    the same as a share of Total_ms
-    hot_stages.csv     hot stage, its share, p and 1/(1-p) for every site and size
-    hot_stages.md      the same table, the mean share of every stage per size and a summary line
-    speedup.png        speedup vs V0 across resolutions (when speedup.csv is provided)
+    stage_timing.png        stacked average time of S1-S6 per size, one panel per site
+    stage_share.png         the same as a share of Total_ms
+    hot_stages.csv          hot stage, its share, p and 1/(1-p) for every site and size
+    hot_stages.md           the same table, the mean share of every stage per size and a summary line
+    speedup.png             speedup vs V0 across resolutions (when speedup.csv is provided)
+    stage_speedup_v<k>.png  speedup vs V0 of every stage of version k (when speedup.csv has stage columns)
 
 Example:
     python scripts/plot_benchmark.py --summary results/benchmark/v0/summary.csv --out results/benchmark/v0/analysis
@@ -21,6 +26,7 @@ Example:
 
 import argparse
 import csv
+import math
 from pathlib import Path
 import sys
 
@@ -32,7 +38,7 @@ import numpy as np  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from midterm_notebook import SIZES  # noqa: E402
-from run_benchmark import BENCHMARK_SITES, PCT_COLUMNS, BASE_STAGE_COLUMNS  # noqa: E402
+from run_benchmark import BENCHMARK_SITES, CHALLENGE_SITE, PCT_COLUMNS, BASE_STAGE_COLUMNS  # noqa: E402
 
 STAGE_COLUMNS = BASE_STAGE_COLUMNS
 STAGES = [column[:-3] for column in STAGE_COLUMNS]
@@ -74,10 +80,33 @@ def check_complete(averages):
         raise AnalysisError("Missing average rows in summary.csv: " + ", ".join(missing))
 
 
+def sites_with_challenge(present_sites):
+    """The standard sites, then the challenge site if it appears in `present_sites`."""
+    return [*BENCHMARK_SITES, *([CHALLENGE_SITE] if CHALLENGE_SITE in present_sites else [])]
+
+
+def plot_sites(averages):
+    return sites_with_challenge({site for site, _ in averages})
+
+
+def site_axes(sites):
+    """One panel per site, sharing the y axis."""
+    figure, axes = plt.subplots(1, len(sites), figsize=(5 * len(sites), 4), sharey=True, squeeze=False)
+    return figure, list(axes[0])
+
+
+def mark_failed(axis, positions):
+    """Label the sizes that have no timing, so an empty bar is not read as zero time."""
+    for position in positions:
+        axis.text(position, 0, "failed", ha="center", va="bottom", rotation=90, fontsize=9, color="gray")
+
+
 def hot_stage_table(averages):
     rows = []
-    for site in BENCHMARK_SITES:
+    for site in plot_sites(averages):
         for size in SIZES:
+            if (site, size) not in averages:
+                continue  # A challenge size that failed; standard sites are checked by check_complete.
             row = averages[(site, size)]
             hot_pct = row[PCT_COLUMNS[STAGES.index(row["hot_stage"])]]
             rows.append({"site": site, "size": size, "hot_stage": row["hot_stage"], "hot_pct": hot_pct,
@@ -110,14 +139,16 @@ def hot_stage_summary(table):
 
 
 def plot_stacked(averages, columns, ylabel, path):
-    figure, axes = plt.subplots(1, len(BENCHMARK_SITES), figsize=(15, 4), sharey=True)
+    sites = plot_sites(averages)
+    figure, axes = site_axes(sites)
     positions = range(len(SIZES))
-    for axis, site in zip(axes, BENCHMARK_SITES):
+    for axis, site in zip(axes, sites):
         bottom = [0.0] * len(SIZES)
         for stage, column, color in zip(STAGES, columns, COLORS):
-            values = [averages[(site, size)][column] for size in SIZES]
+            values = [averages[(site, size)][column] if (site, size) in averages else 0.0 for size in SIZES]
             axis.bar(positions, values, bottom=bottom, color=color, label=stage)
             bottom = [low + value for low, value in zip(bottom, values)]
+        mark_failed(axis, [index for index, size in enumerate(SIZES) if (site, size) not in averages])
         axis.set_xticks(list(positions), list(SIZES))
         axis.set(title=site, xlabel="Resolution", ylabel=ylabel)
         axis.spines[["top", "right"]].set_visible(False)
@@ -128,34 +159,46 @@ def plot_stacked(averages, columns, ylabel, path):
     plt.close(figure)
 
 
+def load_speedups(path):
+    """Rows of speedup.csv except V0, whose speedups are 1 by definition."""
+    with Path(path).open(encoding="utf-8", newline="") as stream:
+        return [row for row in csv.DictReader(stream) if row.get("version") != "V0"]
+
+
+def speedup_sites(rows):
+    return sites_with_challenge({row["site"] for row in rows})
+
+
+def speedup_value(rows, site, size, version, column):
+    """The speedup as a float, or NaN when the row or the cell is missing (a failed configuration)."""
+    text = next((row.get(column, "") for row in rows
+                 if row["site"] == site and row["size"] == size and row["version"] == version), "")
+    return float(text) if text else math.nan
+
+
+def version_order(rows):
+    return sorted({row["version"] for row in rows}, key=lambda name: int(name.lstrip("V")))
+
+
 def plot_speedup(speedup_path, out_path):
     """Plot speedup vs V0 grouped bar chart by site and resolution."""
-    rows = []
-    with Path(speedup_path).open(encoding="utf-8", newline="") as stream:
-        for r in csv.DictReader(stream):
-            if r.get("version") == "V0":
-                continue
-            rows.append(r)
+    rows = load_speedups(speedup_path)
     if not rows:
         return
 
-    versions = sorted(list({r["version"] for r in rows}))
-    figure, axes = plt.subplots(1, len(BENCHMARK_SITES), figsize=(15, 4), sharey=True)
-    if len(BENCHMARK_SITES) == 1:
-        axes = [axes]
+    versions = version_order(rows)
+    sites = speedup_sites(rows)
+    figure, axes = site_axes(sites)
 
     x = np.arange(len(SIZES))
     width = 0.8 / max(1, len(versions))
 
-    for axis, site in zip(axes, BENCHMARK_SITES):
+    for axis, site in zip(axes, sites):
         for idx, ver in enumerate(versions):
-            vals = []
-            for sz in SIZES:
-                match = next((float(r["speedup_vs_v0"]) for r in rows
-                              if r["site"] == site and r["size"] == sz and r["version"] == ver), 1.0)
-                vals.append(match)
+            vals = [speedup_value(rows, site, sz, ver, "speedup_vs_v0") for sz in SIZES]
             offset = (idx - (len(versions) - 1) / 2) * width
             axis.bar(x + offset, vals, width, label=ver)
+            mark_failed(axis, [position + offset for position, value in zip(x, vals) if math.isnan(value)])
         axis.set_xticks(x, list(SIZES))
         axis.set(title=site, xlabel="Resolution", ylabel="Speedup vs V0 (x)")
         axis.axhline(1.0, color="gray", linestyle="--", linewidth=0.8)
@@ -166,6 +209,42 @@ def plot_speedup(speedup_path, out_path):
     figure.tight_layout(rect=(0, 0, 1, 0.9))
     figure.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(figure)
+
+
+def plot_stage_speedups(speedup_path, out):
+    """One stage_speedup_v<k>.png per version: speedup vs V0 of S1-S6, one bar per size.
+
+    Returns the written paths. A version gets no chart when none of its stage cells has a value,
+    for example a speedup.csv written before the per-stage columns existed.
+    """
+    rows = load_speedups(speedup_path)
+    stage_columns = [f"{stage}_speedup_vs_v0" for stage in STAGES]
+    sites = speedup_sites(rows)
+    x = np.arange(len(STAGES))
+    width = 0.8 / len(SIZES)
+    written = []
+    for version in version_order(rows):
+        if not any(row.get(column) for row in rows if row["version"] == version for column in stage_columns):
+            continue
+        figure, axes = site_axes(sites)
+        for axis, site in zip(axes, sites):
+            for idx, size in enumerate(SIZES):
+                vals = [speedup_value(rows, site, size, version, f"{stage}_speedup_vs_v0") for stage in STAGES]
+                offset = (idx - (len(SIZES) - 1) / 2) * width
+                axis.bar(x + offset, vals, width, label=size)
+                mark_failed(axis, [position + offset for position, value in zip(x, vals) if math.isnan(value)])
+            axis.set_xticks(x, STAGES)
+            axis.set(title=site, xlabel="Stage", ylabel=f"{version} speedup vs V0 (x)")
+            axis.axhline(1.0, color="gray", linestyle="--", linewidth=0.8)
+            axis.spines[["top", "right"]].set_visible(False)
+        handles, labels = axes[0].get_legend_handles_labels()
+        figure.legend(handles, labels, loc="upper center", ncol=len(SIZES), frameon=False)
+        figure.tight_layout(rect=(0, 0, 1, 0.9))
+        path = Path(out) / f"stage_speedup_{version.lower()}.png"
+        figure.savefig(path, dpi=150, bbox_inches="tight")
+        plt.close(figure)
+        written.append(path)
+    return written
 
 
 def write_hot_stages_csv(path, table):
@@ -237,6 +316,8 @@ def main(argv=None):
             return 1
         plot_speedup(args.speedup, out / "speedup.png")
         print(f"Wrote speedup chart to {out / 'speedup.png'}")
+        for path in plot_stage_speedups(args.speedup, out):
+            print(f"Wrote stage speedup chart to {path}")
 
     return 0
 

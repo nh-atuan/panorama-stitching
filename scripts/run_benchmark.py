@@ -5,7 +5,15 @@
 """Run multi-version panorama benchmark: 3 sites x 3 sizes (docs/final-plan.md).
 
 Supports V0 Sequential and GPU versions (V1 Basic CUDA, V2, V3 Optimized).
-Reads both the 8-column V0 CSV schema and the 11-column CUDA CSV schema.
+The CSV header must match the version (docs/interface.md, section 11.4): V0 prints 8 columns
+(S<i>_ms, Total_ms); V1 and later print S<i>_V<k>_ms, Total_ms, H2D_ms, D2H_ms and
+Total_Kernel_ms. A run whose stderr says that V1 is still the infrastructure scaffold is
+rejected, because stub timings must not give a speedup.
+
+The main benchmark uses the three standard sites. --include-challenge also runs the challenge
+pair. A challenge configuration that stitch cannot finish (non-zero exit, for example
+NumericalFailure in S6) is written to failures.csv and gets no speedup row; a failure on a
+standard site still stops the benchmark.
 
 Output layout in --out:
     v<k>/<site>/<size>.csv            raw stdout of stitch
@@ -13,12 +21,14 @@ Output layout in --out:
     v<k>/<site>/<size>_panorama.jpg   panorama written by stitch
     v<k>/summary.csv                  stage timing and shares for version k
     v<k>/summary.md                   Markdown summary for version k
-    speedup.csv                       speedup comparisons across versions
-    speedup.md                        speedup Markdown table
+    v<k>/failures.csv                 failed challenge configurations (only with --include-challenge)
+    speedup.csv                       Total, kernel and per-stage speedups vs V0 and the previous version
+    speedup.md                        speedup Markdown tables
     environment.json                  GPU, CPU, time, commands and binary SHA-256
 
 Example:
-    python scripts/run_benchmark.py --stitch build/stitch --dataset dataset --runs 5 --out results/benchmark --versions 0 1
+    python scripts/run_benchmark.py --stitch build/stitch --dataset dataset --runs 5 --out results/benchmark \\
+        --versions 0 1 --include-challenge
 """
 
 import argparse
@@ -29,6 +39,7 @@ import json
 import math
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -36,7 +47,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from midterm_notebook import SITES, SIZES, sha256  # noqa: E402
 
-BENCHMARK_SITES = SITES[:3]  # The challenge pair is for quality analysis only.
+BENCHMARK_SITES = SITES[:3]  # The standard pairs: the main benchmark table.
+CHALLENGE_SITE = SITES[3]  # Failure analysis; benchmarked only with --include-challenge.
 BASE_STAGE_COLUMNS = [f"S{i}_ms" for i in range(1, 7)]
 CUDA_EXTRA_COLUMNS = ["H2D_ms", "D2H_ms", "Total_Kernel_ms"]
 TIMING_COLUMNS = [*BASE_STAGE_COLUMNS, "Total_ms", *CUDA_EXTRA_COLUMNS]
@@ -45,11 +57,18 @@ SUMMARY_COLUMNS = [
     "version", "site", "size", "stat", *TIMING_COLUMNS, *PCT_COLUMNS,
     "other_pct", "hot_stage", "p_hot", "amdahl_limit"
 ]
+STAGE_SPEEDUP_COLUMNS = [f"S{i}_speedup_vs_{base}" for base in ("v0", "prev") for i in range(1, 7)]
 SPEEDUP_COLUMNS = [
     "site", "size", "version", "Total_ms", "Total_Kernel_ms",
-    "speedup_vs_v0", "speedup_vs_prev", "kernel_speedup_vs_v0"
+    "speedup_vs_v0", "speedup_vs_prev", "kernel_speedup_vs_v0", *STAGE_SPEEDUP_COLUMNS
 ]
+FAILURE_COLUMNS = ["version", "site", "size", "exit_code", "error"]
 DEBUG_PREFIXES = ("[debug] version=", "[debug] config: ")
+SCAFFOLD_MARKER = "infrastructure scaffold"  # Printed by src/main.cu while V1 runs the six stubs.
+ERROR_PATTERN = re.compile(r"^Error: \[(\w+)\]", re.MULTILINE)  # main() in src/main.cu
+# Six stage times may add up to slightly more than Total_ms: cudaEventElapsedTime has a resolution
+# of about 0.5 us, and every value is rounded to 9 decimals.
+STAGE_SUM_TOLERANCE_MS = 0.005
 
 
 class BenchmarkError(RuntimeError):
@@ -87,11 +106,14 @@ def parse_args(argv=None):
     parser.add_argument("--versions", "--version", dest="versions", nargs="+", default=["0"],
                         help="versions to benchmark (e.g. 0 1, or 0,1; default 0)")
     parser.add_argument("--flat", action="store_true", help="use flat output layout for single version compatibility")
+    parser.add_argument("--include-challenge", action="store_true",
+                        help="also run the challenge pair; its failed configurations go to failures.csv")
     return parser.parse_args(argv)
 
 
-def configurations():
-    return [(site, size) for site in BENCHMARK_SITES for size in SIZES]
+def configurations(include_challenge=False):
+    sites = [*BENCHMARK_SITES, CHALLENGE_SITE] if include_challenge else BENCHMARK_SITES
+    return [(site, size) for site in sites for size in SIZES]
 
 
 def input_paths(dataset, site, size):
@@ -99,9 +121,9 @@ def input_paths(dataset, site, size):
     return folder / f"{size}_left.jpg", folder / f"{size}_right.jpg"
 
 
-def check_inputs(dataset):
-    """Fail before any run if one of the 18 input images is missing."""
-    missing = [str(path) for site, size in configurations()
+def check_inputs(dataset, include_challenge=False):
+    """Fail before any run if one of the 18 (24 with the challenge) input images is missing."""
+    missing = [str(path) for site, size in configurations(include_challenge)
                for path in input_paths(dataset, site, size) if not path.is_file()]
     if missing:
         raise BenchmarkError("Missing input images:\n  " + "\n  ".join(missing))
@@ -113,7 +135,10 @@ def build_command(stitch_cmd, left, right, panorama, runs, version=0):
 
 
 def run_config(stitch_cmd, dataset, out, site, size, runs, version=0, flat=False):
-    """Run stitch for one configuration; save stdout and stderr verbatim."""
+    """Run stitch for one configuration; save stdout and stderr verbatim.
+
+    Returns (command, result, log_path); the caller decides what a non-zero exit means.
+    """
     left, right = input_paths(dataset, site, size)
     version_dir = Path(out) if flat else Path(out) / f"v{version}"
     folder = version_dir / site
@@ -123,14 +148,28 @@ def run_config(stitch_cmd, dataset, out, site, size, runs, version=0, flat=False
     csv_path, log_path = folder / f"{size}.csv", folder / f"{size}.log"
     csv_path.write_text(result.stdout, encoding="utf-8", newline="")
     log_path.write_text(result.stderr, encoding="utf-8", newline="")
-    if result.returncode != 0:
-        raise BenchmarkError(f"stitch failed on {site}/{size} (version {version}) with exit code {result.returncode}; "
-                             f"see {log_path}")
-    return command, result.stdout, result.stderr
+    return command, result, log_path
 
 
-def parse_version_csv(text, runs=5):
-    """Validate numbered runs and the average/minimum rows for both V0 (8 cols) and CUDA (11 cols)."""
+def read_error_code(log_text):
+    """ErrorCode name from the 'Error: [Name] ...' line of stitch, or 'unknown'."""
+    match = ERROR_PATTERN.search(log_text)
+    return match.group(1) if match else "unknown"
+
+
+def version_columns(version):
+    """CSV header that stitch prints for `version` (docs/interface.md, section 11.4)."""
+    if version == 0:
+        return ["Run_Index", *BASE_STAGE_COLUMNS, "Total_ms"]
+    stages = [f"S{index}_V{version}_ms" for index in range(1, 7)]
+    return ["Run_Index", *stages, "Total_ms", *CUDA_EXTRA_COLUMNS]
+
+
+def parse_version_csv(text, runs=5, version=0):
+    """Validate the header of `version`, numbered runs and the average/minimum rows.
+
+    V0 has 8 columns and V1 and later 11; stage keys are always S<i>_ms.
+    """
     if runs <= 0:
         raise ValueError("runs must be positive")
     reader = csv.reader(io.StringIO(text.strip()))
@@ -139,27 +178,22 @@ def parse_version_csv(text, runs=5):
         raise ValueError("Empty CSV output")
 
     header = [col.strip() for col in rows[0]]
+    if header != version_columns(version):
+        raise ValueError(f"Unexpected CSV header for version {version}: {header}")
+    is_gpu = version != 0
     expected_labels = [str(index) for index in range(1, runs + 1)] + ["Average", "Minimum"]
     if len(rows) != runs + 3 or [row[0] for row in rows[1:]] != expected_labels:
         raise ValueError("Missing, duplicated, or unordered timing rows")
-
-    # Detect schema: V0 (8 columns) vs CUDA V1+ (11 columns)
-    if len(header) == 8:
-        if header[0] != "Run_Index" or header[1:7] != BASE_STAGE_COLUMNS or header[7] != "Total_ms":
-            raise ValueError(f"Unexpected V0 CSV header: {header}")
-        is_gpu = False
-    elif len(header) == 11:
-        if header[0] != "Run_Index" or header[7] != "Total_ms" or header[8:] != CUDA_EXTRA_COLUMNS:
-            raise ValueError(f"Unexpected GPU CSV header: {header}")
-        is_gpu = True
-    else:
-        raise ValueError(f"Unexpected timing column count: {len(header)}")
+    if any(len(row) != len(header) for row in rows[1:]):
+        raise ValueError("Unexpected timing column count")
 
     measurements = []
     for row in rows[1:runs + 1]:
         numbers = [float(val) for val in row[1:]]
         if any(not math.isfinite(val) or val < 0 for val in numbers):
             raise ValueError("Non-finite or negative timing")
+        if sum(numbers[:6]) > numbers[6] + STAGE_SUM_TOLERANCE_MS:
+            raise ValueError("Total_ms is smaller than the sum of the stage times")
         item = {
             "S1_ms": numbers[0], "S2_ms": numbers[1], "S3_ms": numbers[2],
             "S4_ms": numbers[3], "S5_ms": numbers[4], "S6_ms": numbers[5],
@@ -216,11 +250,11 @@ def query_cpu():
     return platform.processor() or "unavailable"
 
 
-def collect_environment(stitch_path, runs, versions, commands):
+def collect_environment(stitch_path, runs, versions, commands, include_challenge=False):
     return {
         "gpu": query_gpu(), "cpu": query_cpu(),
         "time_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "runs": runs, "versions": versions,
+        "runs": runs, "versions": versions, "include_challenge": include_challenge,
         "stitch_sha256": sha256(stitch_path) if Path(stitch_path).is_file() else "unavailable",
         "python": platform.python_version(), "commands": commands
     }
@@ -286,7 +320,23 @@ def markdown_table(header, body):
     return "\n".join(lines)
 
 
-def write_summary_md(path, rows, environment, debug_configs, version=0):
+def write_failures_csv(path, failures):
+    with Path(path).open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=FAILURE_COLUMNS, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(failures)
+
+
+def failure_lines(failures):
+    """One Markdown table of the failed configurations, or a sentence when there is none."""
+    if not failures:
+        return ["No configuration failed."]
+    body = [[row["version"], row["site"], row["size"], str(row["exit_code"]), row["error"]] for row in failures]
+    return [markdown_table(["Version", "Site", "Size", "Exit code", "Error"], body)]
+
+
+def write_summary_md(path, rows, environment, debug_configs, version=0, failures=None):
+    """failures is None when the challenge was not requested, so the section is left out."""
     averages = [row for row in rows if row["stat"] == "average"]
     minima = [row for row in rows if row["stat"] == "minimum"]
     stages = [column[:-3] for column in BASE_STAGE_COLUMNS]
@@ -319,7 +369,7 @@ def write_summary_md(path, rows, environment, debug_configs, version=0):
     headers_avg = ["Site", "Size", *stages, "Total", *extra_headers, "Hot stage", "p", "1/(1-p)"]
     headers_min = ["Site", "Size", *stages, "Total", *extra_headers]
 
-    text = "\n\n".join([
+    sections = [
         f"# V{version} benchmark",
         f"GPU: {environment['gpu']}. CPU: {environment['cpu']}. Time (UTC): {environment['time_utc']}. "
         f"Runs per configuration: {environment['runs']}, after one untimed warm-up.",
@@ -329,46 +379,49 @@ def write_summary_md(path, rows, environment, debug_configs, version=0):
         markdown_table(headers_min, minimum_body),
         "## Config diagnostics",
         markdown_table(["Site", "Size", "Diagnostics"], config_body),
-    ])
-    Path(path).write_text(text + "\n", encoding="utf-8", newline="")
+    ]
+    if failures is not None:
+        sections += ["## Failed configurations", *failure_lines(failures)]
+    Path(path).write_text("\n\n".join(sections) + "\n", encoding="utf-8", newline="")
 
 
-def compute_speedups(all_averages, versions):
-    """Calculate speedup vs V0 and vs previous version across sizes and sites."""
+def ratio(baseline, current):
+    """baseline / current, or '' when the baseline was not measured or current is not positive."""
+    return baseline / current if baseline is not None and current > 0 else ""
+
+
+def compute_speedups(all_averages, versions, include_challenge=False):
+    """Speedup vs V0 and vs the previous version of Total_ms, the kernel total and every stage.
+
+    A configuration gets a row only for the versions that measured it. A cell is empty when its
+    baseline (V0 or the previous version) has no measurement there, for example a challenge
+    configuration that failed in V0 but not in V1. The first version is its own previous version.
+    """
     rows = []
     sorted_v = sorted(versions)
     v0_data = all_averages.get(0, {})
 
     for idx, v in enumerate(sorted_v):
-        prev_v = sorted_v[idx - 1] if idx > 0 else None
-        prev_data = all_averages.get(prev_v, {}) if prev_v is not None else {}
-        for site, size in configurations():
-            curr = all_averages[v][(site, size)]
+        prev_data = all_averages[sorted_v[idx - 1]] if idx > 0 else all_averages[v]
+        for site, size in configurations(include_challenge):
+            curr = all_averages[v].get((site, size))
+            if curr is None:
+                continue
+            v0 = v0_data.get((site, size), {})
+            prev = prev_data.get((site, size), {})
             total_ms = curr["Total_ms"]
             kernel_ms = curr.get("Total_Kernel_ms", total_ms)
-
-            # speedup vs V0
-            if v0_data and (site, size) in v0_data:
-                v0_total = v0_data[(site, size)]["Total_ms"]
-                speedup_v0 = v0_total / total_ms if total_ms > 0 else 0.0
-                kernel_speedup_v0 = v0_total / kernel_ms if kernel_ms > 0 else 0.0
-            else:
-                speedup_v0 = 1.0 if v == 0 else 0.0
-                kernel_speedup_v0 = 1.0 if v == 0 else 0.0
-
-            # speedup vs previous version
-            if prev_data and (site, size) in prev_data:
-                prev_total = prev_data[(site, size)]["Total_ms"]
-                speedup_prev = prev_total / total_ms if total_ms > 0 else 0.0
-            else:
-                speedup_prev = 1.0
-
-            rows.append({
+            row = {
                 "site": site, "size": size, "version": f"V{v}",
                 "Total_ms": total_ms, "Total_Kernel_ms": kernel_ms,
-                "speedup_vs_v0": speedup_v0, "speedup_vs_prev": speedup_prev,
-                "kernel_speedup_vs_v0": kernel_speedup_v0
-            })
+                "speedup_vs_v0": ratio(v0.get("Total_ms"), total_ms),
+                "speedup_vs_prev": ratio(prev.get("Total_ms"), total_ms),
+                "kernel_speedup_vs_v0": ratio(v0.get("Total_ms"), kernel_ms),
+            }
+            for index, column in enumerate(BASE_STAGE_COLUMNS, start=1):
+                row[f"S{index}_speedup_vs_v0"] = ratio(v0.get(column), curr[column])
+                row[f"S{index}_speedup_vs_prev"] = ratio(prev.get(column), curr[column])
+            rows.append(row)
     return rows
 
 
@@ -380,55 +433,86 @@ def write_speedup_csv(path, speedup_rows):
             writer.writerow({key: format_value(value) for key, value in row.items()})
 
 
-def write_speedup_md(path, speedup_rows):
+def speedup_cell(value):
+    return f"{value:.2f}x" if value != "" else "-"
+
+
+def write_speedup_md(path, speedup_rows, failures=()):
     header = ["Site", "Size", "Version", "Total (ms)", "Kernel (ms)", "Speedup vs V0", "Speedup vs Prev"]
     body = [[
         row["site"], row["size"], row["version"],
         f"{row['Total_ms']:.3f}", f"{row['Total_Kernel_ms']:.3f}",
-        f"{row['speedup_vs_v0']:.2f}x", f"{row['speedup_vs_prev']:.2f}x"
+        speedup_cell(row["speedup_vs_v0"]), speedup_cell(row["speedup_vs_prev"])
     ] for row in speedup_rows]
-    text = "\n\n".join([
-        "# Multi-Version Speedup Summary",
-        markdown_table(header, body),
-    ])
-    Path(path).write_text(text + "\n", encoding="utf-8", newline="")
+    stages = [column[:-3] for column in BASE_STAGE_COLUMNS]
+    sections = ["# Multi-Version Speedup Summary", markdown_table(header, body)]
+    for base, title in (("v0", "V0"), ("prev", "the previous version")):
+        stage_body = [[row["site"], row["size"], row["version"],
+                       *(speedup_cell(row[f"S{index}_speedup_vs_{base}"]) for index in range(1, 7))]
+                      for row in speedup_rows]
+        sections += [f"## Per-stage speedup vs {title}",
+                     markdown_table(["Site", "Size", "Version", *stages], stage_body)]
+    if failures:
+        missing = [f"- {row['version']} {row['site']}/{row['size']}: {row['error']} (exit code {row['exit_code']})"
+                   for row in failures]
+        sections += ["## Configurations without timing", "\n".join(missing)]
+    Path(path).write_text("\n\n".join(sections) + "\n", encoding="utf-8", newline="")
 
 
-def run_benchmark(stitch_cmd, stitch_path, dataset, runs, out, versions=(0,), flat=False):
+def run_benchmark(stitch_cmd, stitch_path, dataset, runs, out, versions=(0,), flat=False, include_challenge=False):
     """Run benchmark for all requested versions and generate summaries & speedups."""
-    check_inputs(dataset)
+    check_inputs(dataset, include_challenge)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
 
     all_commands = []
     all_averages = {}
+    all_failures = []
     last_version_rows = []
 
     print(f"Beginning benchmark for version(s): {list(versions)}", flush=True)
-    env = collect_environment(stitch_path, runs, list(versions), all_commands)
+    env = collect_environment(stitch_path, runs, list(versions), all_commands, include_challenge)
     print(f"GPU: {env['gpu']}\nCPU: {env['cpu']}", flush=True)
 
     for v in versions:
         v_out = out if flat else out / f"v{v}"
         v_out.mkdir(parents=True, exist_ok=True)
         v_rows = []
+        v_failures = []
         debug_configs = {}
 
         print(f"\n--- Benchmarking V{v} ---", flush=True)
-        for site, size in configurations():
+        for site, size in configurations(include_challenge):
             print(f"[{site}/{size}] Running V{v} ({runs} runs) ...", flush=True)
-            cmd, stdout, stderr = run_config(stitch_cmd, dataset, out, site, size, runs, version=v, flat=flat)
+            cmd, result, log_path = run_config(stitch_cmd, dataset, out, site, size, runs, version=v, flat=flat)
             all_commands.append(cmd)
+            name = f"{site}/{size} (version {v})"
+            if result.returncode != 0:
+                if site != CHALLENGE_SITE:
+                    raise BenchmarkError(f"stitch failed on {name} with exit code {result.returncode}; "
+                                         f"see {log_path}")
+                error = read_error_code(result.stderr)
+                v_failures.append({"version": f"V{v}", "site": site, "size": size,
+                                   "exit_code": result.returncode, "error": error})
+                print(f"[{site}/{size}] V{v} failed with {error}; recorded in failures.csv", flush=True)
+                continue
+            if SCAFFOLD_MARKER in result.stderr:
+                raise BenchmarkError(f"{name} ran the V1 infrastructure scaffold stubs, whose timings are not "
+                                     f"a benchmark (docs/interface.md); see {log_path}")
             try:
-                parsed = parse_version_csv(stdout, runs)
+                parsed = parse_version_csv(result.stdout, runs, version=v)
             except ValueError as error:
-                raise BenchmarkError(f"Invalid CSV from {site}/{size} (version {v}): {error}") from error
+                raise BenchmarkError(f"Invalid CSV from {name}: {error}") from error
             v_rows.extend(summary_rows(site, size, parsed, version=v))
-            debug_configs[(site, size)] = read_debug_config(stderr)
+            debug_configs[(site, size)] = read_debug_config(result.stderr)
 
         write_summary_csv(v_out / "summary.csv", v_rows)
-        write_summary_md(v_out / "summary.md", v_rows, env, debug_configs, version=v)
+        failures = v_failures if include_challenge else None
+        write_summary_md(v_out / "summary.md", v_rows, env, debug_configs, version=v, failures=failures)
+        if include_challenge:
+            write_failures_csv(v_out / "failures.csv", v_failures)
         all_averages[v] = {(r["site"], r["size"]): r for r in v_rows if r["stat"] == "average"}
+        all_failures.extend(v_failures)
         last_version_rows = v_rows
 
     # Write root summary.csv / summary.md when V0 is included or in flat mode
@@ -441,13 +525,14 @@ def run_benchmark(stitch_cmd, stitch_path, dataset, runs, out, versions=(0,), fl
             shutil.copy2(v0_md, out / "summary.md")
     elif flat and versions:
         write_summary_csv(out / "summary.csv", last_version_rows)
-        write_summary_md(out / "summary.md", last_version_rows, env, debug_configs, version=versions[0])
+        write_summary_md(out / "summary.md", last_version_rows, env, debug_configs, version=versions[0],
+                         failures=failures)
 
     # If multiple versions, or if both V0 and another version exist, generate speedup tables
     if len(versions) > 1 or (not flat and 0 in all_averages and len(all_averages) > 1):
-        speedup_rows = compute_speedups(all_averages, versions)
+        speedup_rows = compute_speedups(all_averages, versions, include_challenge)
         write_speedup_csv(out / "speedup.csv", speedup_rows)
-        write_speedup_md(out / "speedup.md", speedup_rows)
+        write_speedup_md(out / "speedup.md", speedup_rows, all_failures)
         print(f"Wrote speedup tables to {out / 'speedup.csv'} and {out / 'speedup.md'}")
 
     env["commands"] = all_commands
@@ -465,7 +550,7 @@ def main(argv=None):
     try:
         run_benchmark(
             [args.stitch], args.stitch, args.dataset, args.runs, args.out,
-            versions=versions, flat=args.flat
+            versions=versions, flat=args.flat, include_challenge=args.include_challenge
         )
     except BenchmarkError as error:
         print(f"error: {error}", file=sys.stderr)

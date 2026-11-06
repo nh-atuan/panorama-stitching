@@ -31,7 +31,8 @@ std::size_t v1_scratch_bytes(const Image& a, const Image& b, std::size_t feature
 
 // Outside timing: allocates Device images, gray images, features, counts, H, canvas
 // metadata and the shared scratch for config.max_keypoints entries; zeroes the metadata.
-// d_canvas stays empty: S6 allocates it from H inside every run.
+// d_canvas stays empty: S6 allocates it from H inside every run. Also raises the Device
+// stack limit to the 32 KiB that S5 needs, a global setting S5 leaves to the caller.
 // Returns InvalidImage or InvalidConfig before allocating; CUDA errors throw CudaError.
 ErrorCode v1_prepare(const Image& left, const Image& right, const Config& config,
                      V1DeviceOwner& owner);

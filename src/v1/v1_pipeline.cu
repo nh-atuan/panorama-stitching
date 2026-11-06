@@ -32,6 +32,11 @@ GrayImage packed_gray(float* data, const Image& rgb) {
     return gray;
 }
 
+// Per-thread Device stack for the recursive summation tree of S5. The S5 design
+// (docs/stages/s5-homography.md, section 11) leaves this global limit to the caller,
+// with the same value its tests and driver use.
+constexpr std::size_t kV1StackBytes = 32768;
+
 // Order of the dispatch table and of the CSV columns S1_V1_ms..S6_V1_ms.
 typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
 const StageFunction kStages[kStageCount] = {
@@ -86,6 +91,12 @@ ErrorCode v1_prepare(const Image& left, const Image& right, const Config& config
     const std::size_t features = static_cast<std::size_t>(config.max_keypoints);
     const std::size_t scratch = v1_scratch_bytes(left, right, features);
     if (!scratch) return ErrorCode::InvalidImage;
+
+    std::size_t stack_bytes = 0;
+    CUDA_CHECK(cudaDeviceGetLimit(&stack_bytes, cudaLimitStackSize));
+    if (stack_bytes < kV1StackBytes) {
+        CUDA_CHECK(cudaDeviceSetLimit(cudaLimitStackSize, kV1StackBytes));
+    }
 
     DeviceWorkspace& w = owner.view;
     device_allocate(w.d_imageA, left.stride * static_cast<std::size_t>(left.height));

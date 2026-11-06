@@ -1,6 +1,6 @@
 # S6 - Warping and blending
 
-Người phụ trách: Chương (23120195). Cập nhật lần cuối: 21/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7.
+Người phụ trách: Chương (23120195). Cập nhật lần cuối: 21/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7. Thành (23120166) cập nhật trạng thái tích hợp CLI ở mục 7 ngày 06/11/2026 (P6-T01).
 
 Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark. Ngày 18/10/2026 test S6 đạt trên Colab T4 và S6 ra panorama cho cả 4 cặp của dataset ở 3 kích thước (mục 5, 7).
 
@@ -614,7 +614,7 @@ Test nhận thêm ảnh thật và 9 hệ số H B→A: `./build/test_gpu_s6 A.j
 | Hồi quy V0 | Cùng môi trường, g++ 13 cho suite warp/pipeline; nvcc cho CLI | 2 suite / 16.141 checks đạt; CLI default 5 runs giữ CSV 8 cột, PNG khớp byte baseline ngay cả khi ẩn GPU |
 | Compute Sanitizer | WSL/WDDM trên máy local | Chưa chạy được target: debugger interface chưa bật, tool báo device not supported; không coi đây là memcheck đạt |
 
-Log và ảnh kiểm tra local ở `build/p5_t13/`, không commit output thực nghiệm. Lượt Colab T4 bổ sung ngày 30/10 đã đạt như mục 7.2; chưa có số đo speedup S6 chính thức. Dispatcher `stitch --version 1` vẫn gọi `v1_scaffold_warp_blend` để giữ pipeline scaffold chạy được khi S1–S5 còn stub. S6 thật được kiểm chứng độc lập ở P5; P6 sẽ nối hàm thật khi upstream cung cấp H hợp lệ và mở rộng pinned output theo canvas động.
+Log và ảnh kiểm tra local ở `build/p5_t13/`, không commit output thực nghiệm. Lượt Colab T4 bổ sung ngày 30/10 đã đạt như mục 7.2; chưa có số đo speedup S6 chính thức. S6 được kiểm chứng độc lập ở P5. Ngày 06/11/2026, P6-T01 (Thành làm thay) nối `v1_warp_blend` vào dispatcher `stitch --version 1` và cấp pinned output theo canvas ở warm-up. Trên 10 cấu hình dataset chạy được, panorama V1 khớp V0 với pixel lệch tối đa 0; chi tiết ở [interface mục 11.8](../interface.md#118-pipeline-v1-tích-hợp-p6-t01).
 
 ### 7.2. Nghiệm thu Colab Tesla T4 — 30/10/2026
 

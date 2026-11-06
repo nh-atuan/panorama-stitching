@@ -1,8 +1,8 @@
-<!-- Authors: Le Thuong De (23120232). External source: none. -->
+<!-- Authors: Le Thuong De (23120232), Tran Huu Kim Thanh (23120166). External source: none. -->
 
 # Interface chung của pipeline Panorama Stitching
 
-Người soạn: Chương (23120195). Cập nhật: 30/10/2026, P5-T12: contract Device workspace và luồng V1 stub. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026.
+Người soạn: Chương (23120195). Cập nhật: 30/10/2026, P5-T12: contract Device workspace và luồng V1 stub. Tuấn (23120185) bổ sung mục 10 và cập nhật mục 6–8 khi nối pipeline V0 ngày 18/10/2026. Thành (23120166) cập nhật mục 11 và thêm mục 11.8 khi nối pipeline V1 ngày 06/11/2026 (P6-T01).
 
 Tài liệu mô tả contract trong [`src/common/common.h`](../src/common/common.h). Contract V0 đã được dùng cho 6 stage cùng pipeline; phần GPU được bổ sung ở mục 11. Tham số thuật toán do người phụ trách chốt ở mục 3 tài liệu từng stage. V1 hiện là luồng thử hạ tầng, chưa phải thuật toán ghép ảnh CUDA hoàn chỉnh.
 
@@ -197,7 +197,7 @@ ErrorCode là enum uint32 cho trạng thái nội bộ; không dùng số enum t
 
 Thông báo CLI định dạng `Error: <message>` gửi stderr; có usage khi lỗi tham số. Khi tích hợp trạng thái stage, dùng `Error: [<Enum>] <message>` để truy nguyên. Process thành công trả EXIT_SUCCESS; lỗi fatal trả EXIT_FAILURE sau khi giải phóng tài nguyên. Muốn phân biệt file không tồn tại với không có quyền phải kiểm tra thực tế, không gán mọi lỗi open cho InputNotFound.
 
-`main.cu` decode ảnh về RGB, kiểm tra CLI và chấp nhận các version mà `is_supported_version()` trong `versions.h` cho phép: bản build Host có V0; bản build nvcc có V0 và V1 stub kèm cảnh báo rõ ràng. Lỗi parse/I/O và lỗi stage dùng ErrorCode trong exception nội bộ; main bắt sau khi RAII giải phóng buffer, in stderr và gọi `exit(EXIT_FAILURE)`. Lỗi stage có dạng `Error: [<Enum>] <tên stage> failed.`, ví dụ `Error: [InsufficientKeypoints] S4 match failed.` Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 thật lỗi.
+`main.cu` decode ảnh về RGB, kiểm tra CLI và chấp nhận các version mà `is_supported_version()` trong `versions.h` cho phép: bản build Host có V0; bản build nvcc có V0 và V1. Lỗi parse/I/O và lỗi stage dùng ErrorCode trong exception nội bộ; main bắt sau khi RAII giải phóng buffer, in stderr và gọi `exit(EXIT_FAILURE)`. Lỗi stage có dạng `Error: [<Enum>] <tên stage> failed.`, ví dụ `Error: [InsufficientKeypoints] S4 match failed.` Không âm thầm trả identity H hoặc panorama đen như kết quả thành công khi S5/S6 thật lỗi.
 
 ## 9. Trạng thái bàn giao
 
@@ -237,9 +237,9 @@ Quy tắc:
 
 ### 11.1. Phạm vi hiện tại và quyền sở hữu
 
-P5-T12 cung cấp **luồng thử hạ tầng V1 với sáu hàm stub**, không thực hiện FAST, BRIEF, matching, RANSAC hay warping thật. S1–S5 trả về ngay; S6 chỉ copy ảnh A từ Device sang canvas Device để kiểm tra đường D2H và ghi ảnh. Khi chọn `--version 1`, chương trình luôn cảnh báo trên stderr rằng output là bản sao A và số đo không phải benchmark ghép ảnh. Không đưa kết quả stub vào bảng speedup hay dùng nó để nghiệm thu sáu stage GPU.
+P5-T12 dựng luồng thử hạ tầng V1 với sáu hàm stub. Từ P6-T01 (06/11/2026), `--version 1` chạy sáu stage CUDA thật qua module `src/v1/v1_pipeline.{h,cu}`; stub, cảnh báo scaffold và chữ "stubs" trong thông báo CLI đã bị xóa. Chi tiết dispatcher ở mục 11.8.
 
-`main.cu` sở hữu bộ nhớ thông qua `OwnedDeviceWorkspace`. `DeviceWorkspace` trong `common/common.h` chỉ giữ **con trỏ mượn**, metadata và capacity. Các kernel/stage không được giải phóng input hoặc giữ con trỏ sau khi workspace bị hủy. Ngoại lệ được chốt ở P5-T13: Host entry point S6 được quản lý allocation output `d_canvas` thay mặt owner theo kích thước H tính được; owner vẫn chịu trách nhiệm giải phóng cuối cùng. Các alias `imageA.data`, `imageB.data`, `grayA.data`, `grayB.data`, `canvas.image.data` cùng trỏ tới allocation gốc; chỉ giải phóng allocation gốc một lần.
+`V1DeviceOwner` trong `src/v1/v1_pipeline.h` sở hữu bộ nhớ Device (trước P6-T01 là `OwnedDeviceWorkspace` trong `main.cu`). `DeviceWorkspace` trong `common/common.h` chỉ giữ **con trỏ mượn**, metadata và capacity. Các kernel/stage không được giải phóng input hoặc giữ con trỏ sau khi workspace bị hủy. Ngoại lệ được chốt ở P5-T13: Host entry point S6 được quản lý allocation output `d_canvas` thay mặt owner theo kích thước H tính được; owner vẫn chịu trách nhiệm giải phóng cuối cùng. Các alias `imageA.data`, `imageB.data`, `grayA.data`, `grayB.data`, `canvas.image.data` cùng trỏ tới allocation gốc; chỉ giải phóng allocation gốc một lần.
 
 | Buffer | Kiểu dữ liệu / dung lượng | Bên ghi và bên đọc khi có stage thật |
 |---|---|---|
@@ -255,15 +255,15 @@ P5-T12 cung cấp **luồng thử hạ tầng V1 với sáu hàm stub**, không 
 | `d_panorama` | Alias của `d_canvas` khi S6 thật enqueue thành công; không sở hữu bộ nhớ | Caller chờ stream/event rồi dùng để D2H; không free alias |
 | `d_scratch` | Byte scratch; `scratch_capacity_bytes` | Chủ stage khai báo nhu cầu; Host owner cấp phát trước khi sử dụng |
 
-Counts là số phần tử hợp lệ, không phải capacity. S3 phải giữ keypoint/descriptor cùng chỉ số sau compaction; cập nhật counts tương ứng. Với cặp keypoint/descriptor đã mô tả, số phần tử của hai mảng phải khớp. Mỗi stage phải kiểm tra capacity trước khi ghi; báo trạng thái lỗi thay vì ghi vượt mảng. Gray ảnh A và B có thể khác kích thước. Scratch chưa được cấp phát trong scaffold, nên con trỏ là null và capacity bằng 0.
+Counts là số phần tử hợp lệ, không phải capacity. S3 phải giữ keypoint/descriptor cùng chỉ số sau compaction; cập nhật counts tương ứng. Với cặp keypoint/descriptor đã mô tả, số phần tử của hai mảng phải khớp. Mỗi stage phải kiểm tra capacity trước khi ghi; báo trạng thái lỗi thay vì ghi vượt mảng. Gray ảnh A và B có thể khác kích thước. `v1_prepare` cấp `d_scratch` một lần trước warm-up, dung lượng tính theo mục 11.8.
 
 Luồng **Device-resident**: hai ảnh gốc H2D ở đầu mỗi lượt chạy; S1 → S6 truyền con trỏ Device, không copy các mảng trung gian về Host; panorama D2H ở cuối. Chỉ counts, status, kích thước canvas hoặc metadata nhỏ được đọc về Host khi cần điều phối. Workspace là metadata launch trên Host, không tự copy toàn bộ workspace rồi dereference trên Device.
 
-Scaffold cấp canvas bằng kích thước A vì output thử là A. Module S6 thật trong `src/v1/v1_warp_blend.cu` đã tách setup/render: kernel setup công bố `DeviceCanvasInfo`, Host đợi metadata nhỏ cùng inverse H, kiểm tra overflow/giới hạn canvas rồi thay allocation output, cập nhật `d_canvas`, `d_panorama`, alias `canvas` và capacity. Không giả định capacity của scaffold đủ cho panorama thật. Chi phí điều phối/cấp phát canvas phụ thuộc H và copy metadata phải nằm trong end-to-end của lượt chạy; không giấu chúng trong warm-up. Nối module thật vào dispatcher và mở rộng pinned output theo canvas động thuộc P6.
+`v1_prepare` không cấp `d_canvas`; con trỏ để null cho tới khi S6 chạy. Module S6 trong `src/v1/v1_warp_blend.cu` đã tách setup/render: kernel setup công bố `DeviceCanvasInfo`, Host đợi metadata nhỏ cùng inverse H, kiểm tra overflow/giới hạn canvas rồi thay allocation output, cập nhật `d_canvas`, `d_panorama`, alias `canvas` và capacity. Chi phí điều phối/cấp phát canvas phụ thuộc H và copy metadata phải nằm trong end-to-end của lượt chạy; không giấu chúng trong warm-up. Vì vậy mỗi lượt đo, S6 gọi `cudaFree` canvas cũ rồi `cudaMalloc` canvas mới bên trong `S6_V1_ms`. Pinned output trên Host được cấp theo canvas ở mục 11.8.
 
 ### 11.2. Contract hàm và stream
 
-Sáu entry point tạm thời nằm trong `main.cu`, namespace `panorama`:
+Bảng điều phối trong `src/v1/v1_pipeline.cu` gọi sáu API thật, namespace `panorama`, header nằm trong `src/v1/`:
 
 ```cpp
 ErrorCode v1_preprocess(DeviceWorkspace&, const Config&, cudaStream_t);
@@ -271,14 +271,14 @@ ErrorCode v1_detect(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_describe(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_match(DeviceWorkspace&, const Config&, cudaStream_t);
 ErrorCode v1_homography(DeviceWorkspace&, const Config&, cudaStream_t);
-ErrorCode v1_scaffold_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t);
+ErrorCode v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t);
 ```
 
-Stage enqueue công việc trên stream được truyền vào và trả `ErrorCode`. Không ghi log trong vùng đo. Lỗi launch được kiểm tra ngay; lỗi bất đồng bộ được phát hiện khi chờ event/stream. Nếu kernel ghi lỗi thuật toán vào `d_counts->status` hoặc `d_canvas_info->status`, bên điều phối phải đọc và xử lý trước khi dùng output; scaffold chưa kiểm chứng lỗi thuật toán vì chưa có kernel thuật toán. Khi thay stub bằng implementation trong `src/v1/`, phải xóa định nghĩa stub tương ứng để tránh trùng symbol và bổ sung header công khai cho stage.
+Stage enqueue công việc trên stream được truyền vào và trả `ErrorCode`. Không ghi log trong vùng đo. Lỗi launch được kiểm tra ngay; lỗi bất đồng bộ được phát hiện khi chờ event/stream. Nếu kernel ghi lỗi thuật toán vào `d_counts->status` hoặc `d_canvas_info->status`, bên điều phối phải đọc và xử lý trước khi dùng output; cách dispatcher V1 làm việc này ghi ở mục 11.8.
 
-S6 thật có API `v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t)` trong [`v1/v1_warp_blend.h`](../src/v1/v1_warp_blend.h), được kiểm thử độc lập bằng dữ liệu V0 ở P5. CLI vẫn gọi hàm scaffold đã đổi tên để không dùng H chưa được S5 stub tính. S6 thật chờ metadata setup, nhưng không chờ render sau cùng: `Success` nghĩa là enqueue thành công; caller phải chờ stream/event trước D2H hoặc free. Lỗi config/geometry không công bố panorama; allocation cũ còn giữ trong `d_canvas` vẫn thuộc owner. Chi tiết tolerance và test ở [S6 mục 7.1](stages/s6-warp-blend.md#71-cài-đặt-và-kiểm-chứng-v1--p5-t13).
+S6 có API `v1_warp_blend(DeviceWorkspace&, const Config&, cudaStream_t)` trong [`v1/v1_warp_blend.h`](../src/v1/v1_warp_blend.h), được kiểm thử độc lập bằng dữ liệu V0 ở P5 và được CLI gọi từ P6-T01. S6 chờ metadata setup, nhưng không chờ render sau cùng: `Success` nghĩa là enqueue thành công; caller phải chờ stream/event trước D2H hoặc free. Lỗi config/geometry không công bố panorama; allocation cũ còn giữ trong `d_canvas` vẫn thuộc owner. Chi tiết tolerance và test ở [S6 mục 7.1](stages/s6-warp-blend.md#71-cài-đặt-và-kiểm-chứng-v1--p5-t13).
 
-V1 scaffold dùng một stream non-blocking, các stage thực hiện theo thứ tự. Không đặt synchronize thừa giữa sáu stage. Khi dùng thêm stream trong tương lai, chủ stage phải nối dependency bằng event trước khi stage sau đọc dữ liệu; event kết thúc stage phải bao phủ mọi nhánh.
+V1 dùng một stream non-blocking, các stage thực hiện theo thứ tự. Dispatcher không đặt synchronize nào giữa sáu stage; các lần chờ có sẵn nằm trong stage (S2 đọc số candidate, S3 nạp bảng BRIEF ở lần gọi đầu, S6 đọc metadata setup). Khi dùng thêm stream trong tương lai, chủ stage phải nối dependency bằng event trước khi stage sau đọc dữ liệu; event kết thúc stage phải bao phủ mọi nhánh.
 
 ### 11.3. CUDA_CHECK và giải phóng khi lỗi
 
@@ -288,12 +288,12 @@ V1 scaffold dùng một stream non-blocking, các stage thực hiện theo thứ
 
 ### 11.4. Timing và CSV V1
 
-Một lượt warm-up chạy đủ H2D → sáu stub → D2H, không gọi clock hoặc record event timing. Sau đó chạy N lượt đo (`--runs`, mặc định 5). Input đã decode, pinned staging, Device buffers, stream và events được chuẩn bị trước warm-up; chúng được tái sử dụng. CPU copy từ ảnh stb sang pinned input cũng nằm ngoài phép đo. Đây là chính sách chuẩn bị bộ nhớ của scaffold, cần ghi rõ khi so sánh với phiên bản khác.
+Một lượt warm-up chạy đủ H2D → sáu stage → D2H, không gọi clock hoặc record event timing. Sau đó chạy N lượt đo (`--runs`, mặc định 5). Input đã decode, pinned input, Device buffers trừ canvas, stream và events được chuẩn bị trước warm-up; pinned output được cấp trong warm-up theo canvas (mục 11.8). Tất cả được tái sử dụng. CPU copy từ ảnh stb sang pinned input cũng nằm ngoài phép đo. Đây là chính sách chuẩn bị bộ nhớ của V1, cần ghi rõ khi so sánh với phiên bản khác.
 
 - **GPU stage timing:** dùng `cudaEventRecord` trước/sau stage trên cùng stream; sau khi event cuối hoàn tất mới gọi `cudaEventElapsedTime`. `stage_ms[0..5]` tương ứng S1_V1 đến S6_V1. S1–S3 của implementation thật phải bao gồm cả A và B. Đây là elapsed của toàn stage, có thể bao gồm memory operations và khoảng chờ, không mặc định là kernel busy time.
 - **Transfer timing:** cặp events riêng đo `h2d_ms` của hai ảnh và `d2h_ms` của panorama. Dùng pinned Host buffers và `cudaMemcpy2DAsync`; stride luôn là byte.
 - **End-to-end:** `std::chrono::high_resolution_clock` bao từ trước H2D đến sau `cudaEventSynchronize` của event D2H cuối. Đây là thời gian Host quan sát toàn pipeline đã đồng bộ, **không phải CPU timer dùng để suy ra thời gian kernel bất đồng bộ**. H2D, sáu stage, D2H và overhead điều phối trong lượt chạy đều nằm trong khoảng này. Đọc/ghi file ảnh, log, xuất CSV và tính average/min nằm ngoài.
-- **Kernel-only total:** scaffold không launch compute kernel, nên `total_kernel_ms = 0`; copy Device-to-Device của S6 không phải kernel. Không cộng sáu stage elapsed rồi gọi đó là kernel-only total. Khi tích hợp kernel thật, phải bổ sung phép đo kernel-only và tổng hợp trường này trước khi công bố benchmark V1; số 0 hiện tại chỉ mô tả stub.
+- **Kernel-only total:** V1 chưa đo trường này, CLI vẫn in `Total_Kernel_ms = 0` với nghĩa "chưa đo". Không cộng sáu stage elapsed rồi gọi đó là kernel-only total, vì span của S2 và S6 còn chứa lần chờ Host và `cudaMalloc` canvas. Ngày 06/11/2026, Thành đề nghị báo lại cho cả Nhóm để cùng quyết định cách đo (event quanh từng kernel trong code stage, số liệu nsys hay cách khác). Trước khi có quyết định, bảng V1 không dùng cột kernel.
 
 CSV V1 có 11 cột; CSV V0 vẫn có 8 cột để công cụ giữa kỳ tiếp tục hoạt động:
 
@@ -301,18 +301,18 @@ CSV V1 có 11 cột; CSV V0 vẫn có 8 cột để công cụ giữa kỳ tiế
 Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
 ```
 
-`Total_ms` là `TimingStats::end_to_end_ms`. `Average` và `Minimum` tổng hợp độc lập từng cột của N lượt đo, không gồm warm-up. Trường H2D/D2H cũ trong bản nháp (`host_to_device_ms`, `device_to_host_ms`) được đổi tên thành `h2d_ms`, `d2h_ms`; dữ liệu V0 và CSV V0 không đổi. Công cụ đa phiên bản của P5-T05 cần nhận biết header V1; parser V0 hiện tại không dùng để đọc CSV V1. Giá trị thời gian stub không được dùng tính speedup.
+`Total_ms` là `TimingStats::end_to_end_ms`. `Average` và `Minimum` tổng hợp độc lập từng cột của N lượt đo, không gồm warm-up. Trường H2D/D2H cũ trong bản nháp (`host_to_device_ms`, `device_to_host_ms`) được đổi tên thành `h2d_ms`, `d2h_ms`; dữ liệu V0 và CSV V0 không đổi. Công cụ đa phiên bản của P5-T05 cần nhận biết header V1; parser V0 hiện tại không dùng để đọc CSV V1. Số đo của bản stub trước P6-T01 không được dùng tính speedup.
 
 ### 11.5. Build và kiểm chứng
 
 ```bash
 python3 scripts/build.py --compiler nvcc --require-t4
 ./build/stitch <left.jpg> <right.jpg> <v0.png> --version 0
-./build/stitch <left.jpg> <right.jpg> <stub.png> --version 1 --runs 5 --debug
+./build/stitch <left.jpg> <right.jpg> <v1.png> --version 1 --runs 5 --debug
 python3 tests/run_tests.py --compiler nvcc --require-t4
 ```
 
-V0 phải giữ nguyên ảnh kết quả và schema CSV. Output PNG của V1 scaffold phải có cùng pixel RGB và kích thước với ảnh A đã decode, không phải panorama. Kiểm tra thêm lỗi thiếu GPU, allocation/cleanup, event timing, số dòng CSV và average/min. Log kiểm tra cục bộ phải ghi GPU thực tế; chỉ đánh dấu nghiệm thu chính thức sau build/test trên Colab T4 và merge PR.
+V0 phải giữ nguyên ảnh kết quả và schema CSV. Đoạn dưới mô tả lần kiểm tra bản scaffold ngày 30/10; khi đó output PNG của V1 là bản sao ảnh A. Kết quả kiểm chứng pipeline V1 thật ở mục 11.8. Kiểm tra thêm lỗi thiếu GPU, allocation/cleanup, event timing, số dòng CSV và average/min. Log kiểm tra cục bộ phải ghi GPU thực tế; chỉ đánh dấu nghiệm thu chính thức sau build/test trên Colab T4 và merge PR.
 
 Kiểm tra cục bộ ngày 30/10/2026: WSL Ubuntu, GTX 1650, nvcc 12.6.85, target `sm_75`; build Host g++ 13 và build CUDA đều đạt. Bộ V0 đạt 13 suite / 45.256 checks; bộ Python chạy 67 test thuộc 5 suite, có 1 test skip. V0 trên site1 small, default 5 runs, giữ CSV 8 cột và PNG khớp từng byte với baseline trước thay đổi, kể cả khi ẩn GPU. V1 stub được kiểm tra CSV 11 cột, average/min, H2D/D2H, output khớp ảnh A giải mã bằng stb, lỗi thiếu GPU và lỗi CUDA chủ động để kiểm tra unwind. Đây là bằng chứng kiểm tra cục bộ, chưa thay thế nghiệm thu Colab T4. Log/script thử cục bộ nằm trong `build/gpu_contract_*`, không đưa dữ liệu thực nghiệm vào Git.
 
@@ -326,7 +326,7 @@ Hai API thật nằm trong `src/v1/s4/v1_match.h` và `src/v1/s5/v1_homography.h
 
 Caller sở hữu scratch, cấp phát theo `v1_match_scratch_bytes()` và `v1_homography_scratch_bytes()`; S4/S5 có thể dùng chung buffer bằng dung lượng lớn hơn khi chạy nối tiếp trên cùng stream. S5 yêu cầu căn chỉnh 16 byte. Stage không giải phóng hoặc thay con trỏ workspace. Return code phản ánh lỗi Host/launch; caller phải đợi stream/event và kiểm tra `d_counts->status` để nhận lỗi thuật toán.
 
-Scaffold trong `main.cu` giữ hai hàm riêng `v1_stub_match`, `v1_stub_homography` trong bảng điều phối. Vì S1–S3 chưa phát sinh feature, chương trình chính chưa gọi hai API thật và vẫn cảnh báo sáu stub. Cách đặt tên này cho phép link module S4/S5 mà không trùng symbol, đồng thời giữ smoke test hạ tầng của P5-T12. Việc đổi bảng điều phối sang sáu stage thật thuộc P6.
+Trong P5, scaffold của `main.cu` giữ hai hàm riêng `v1_stub_match`, `v1_stub_homography` để link được module S4/S5 mà không trùng symbol. P6-T01 đã xóa hai stub này và gọi API thật (mục 11.8).
 
 S5 cung cấp diagnostics và inlier mask dưới dạng con trỏ Device mượn trong scratch. Chỉ đọc sau khi stream hoàn tất và trước khi scratch được dùng lại. Không chuyển STL container qua Device. Ngưỡng so H CPU–GPU do Đế xác nhận ngày 31/10/2026: RMSE ≤ 0,0001 px, Max ≤ 0,001 px trên lưới 20×20 của ảnh B; match, sample prefix và mask phải khớp chính xác. Ngưỡng ground truth giữ RMSE ≤ 0,5 px và Max ≤ 1 px.
 
@@ -334,6 +334,42 @@ S5 cung cấp diagnostics và inlier mask dưới dạng con trỏ Device mượ
 
 Thành (23120166) bổ sung ngày 03/11/2026 cho P5-T03, P5-T06, P5-T07. Ba API thật nằm trong `src/v1/s1/v1_preprocess.h`, `src/v1/s2/v1_detect.h` và `src/v1/s3/v1_describe.h`, giữ chữ ký `ErrorCode(DeviceWorkspace&, const Config&, cudaStream_t)` như mục 11.2. `DeviceWorkspace`, `DeviceCounts` và các kiểu truyền dữ liệu không thay đổi.
 
-Scaffold trong `main.cu` đổi ba hàm stub thành `v1_stub_preprocess`, `v1_stub_detect`, `v1_stub_describe`, cùng cách làm với S4/S5 ở mục 11.6. `scripts/build.py` gom mọi file `.cu` trong `src/v1/`, nên đổi tên là cần thiết để link module thật mà không trùng symbol. Bảng điều phối vẫn gọi stub và vẫn cảnh báo sáu stub; việc đổi sang sáu stage thật thuộc P6.
+Scaffold trong `main.cu` đổi ba hàm stub thành `v1_stub_preprocess`, `v1_stub_detect`, `v1_stub_describe`, cùng cách làm với S4/S5 ở mục 11.6. `scripts/build.py` gom mọi file `.cu` trong `src/v1/`, nên đổi tên là cần thiết để link module thật mà không trùng symbol. P6-T01 đã xóa các stub này (mục 11.8).
 
 Mỗi stage xử lý cả A và B nối tiếp trên cùng stream và dùng lại một vùng scratch cho hai ảnh. Caller gọi hàm `v1_<stage>_scratch_bytes()` của stage cho từng ảnh, lấy giá trị lớn nhất rồi cấp phát `d_scratch` trước vùng đo; khi các stage chạy nối tiếp, chúng có thể dùng chung một buffer có dung lượng bằng giá trị lớn nhất của mọi stage. Stage không cấp phát hoặc giải phóng bộ nhớ Device. Return code phản ánh lỗi Host/launch; lỗi thuật toán ghi vào `d_counts->status` như S4/S5. Chữ ký của từng hàm scratch và ngưỡng so với V0 ghi trong tài liệu stage tương ứng.
+
+### 11.8. Pipeline V1 tích hợp (P6-T01)
+
+Thành (23120166) bổ sung ngày 06/11/2026 cho P6-T01, làm thay Chương theo quyết định của Nhóm. Dispatcher nằm trong `src/v1/v1_pipeline.{h,cu}`, đặt song song với `src/v0/v0_pipeline.{h,cpp}`. `main.cu` chỉ còn phần CLI, H2D/D2H, timing và in CSV.
+
+| Hàm | Việc làm |
+|---|---|
+| `v1_prepare` | Ngoài vùng đo: kiểm tra ảnh và `max_keypoints`, nâng giới hạn stack Device lên 32768 byte cho S5 (mục 11 của [tài liệu S5](stages/s5-homography.md) giao việc này cho bên gọi), cấp mọi buffer Device trừ canvas, xóa `d_counts`, `d_canvas_info`, `d_homography` về 0 |
+| `v1_scratch_bytes` | Lấy max của `v1_<stage>_scratch_bytes()` cho S1–S3 trên cả A và B, S4 theo `descriptor_capacityA`, S5 theo `match_capacity`, rồi làm tròn lên bội 16. Trả 0 khi một stage báo kích thước không hợp lệ; riêng S2 được phép cần 0 byte khi một cạnh ảnh không quá 30 |
+| `v1_run_stages` | Gọi S1 → S6 trên một stream, record event quanh từng stage khi đo |
+| `v1_read_counts` | Copy `d_counts` về Host và chờ stream |
+| `v1_collect_diagnostics` | Sau lượt cuối, đọc counts, H, báo cáo S5 trong scratch và kích thước canvas cho `--debug` |
+
+Mỗi lượt chạy bắt đầu bằng `cudaMemsetAsync(d_counts, 0)`, vì S3–S5 bỏ qua công việc khi `d_counts->status` đã có lỗi. Lệnh này nằm trong end-to-end nhưng ngoài mọi stage span.
+
+Xử lý lỗi theo hai đường. Lỗi phía Host hoặc lỗi launch của một stage được báo kèm tên stage, giống V0. Lỗi thuật toán của S3, S4, S5 chỉ có trên Device. Khi đó S5 để H bằng ma trận 0 và S6 trả lỗi; dispatcher đọc `d_counts->status` (S6 đã chờ stream) và báo mã lỗi này với thông điệp `Device-side check in S3-S5 failed.`. Nhờ vậy ca thiếu keypoint ra `InsufficientKeypoints` chứ không ra lỗi hình học của S6. Sau mỗi lượt thành công, dispatcher đọc lại `d_counts->status` ngoài cửa sổ đo.
+
+Pinned output trên Host chỉ có kích thước khi S6 đã tính canvas từ H. Lượt warm-up cấp buffer này ngay sau khi S6 trả về, ngoài vùng đo. Lượt đo nào cho canvas khác warm-up (kích thước, stride hoặc offset) thì dừng với `InvalidCanvas`; D2H không thể ghi quá buffer. V1 tất định nên lỗi này chưa xuất hiện trong lần kiểm chứng nào.
+
+Với `--debug`, V1 in ra stderr đúng các dòng của V0 ở mục 10: kích thước ảnh, Config, số keypoint sau S2 (đọc trong warm-up, tốn thêm một lần chờ stream ngoài vùng đo) và sau S3, số match, báo cáo S5, `[debug] H(B->A)=` và canvas. Phần in dùng chung một hàm cho V0 và V1; output debug của V0 không đổi.
+
+Kiểm chứng trên Colab Tesla T4, nvcc 13.0.88, `sm_75`, ngày 06/11/2026, commit `f3b1861`:
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Build bằng `scripts/build.py` (`-Wall -Wextra -Werror`) | Đạt |
+| `tests/run_tests.py --group all` | 14 suite V0 / 45284 checks, 8 suite GPU / 33730 checks, 7 suite Python / 105 test đạt |
+| V0 so với bản build từ `main` (site1 small, site3 large) | CSV header, PNG và stderr `--debug` giống từng byte |
+| V1 so với V0 trên 10 cấu hình dataset chạy được | H giống V0 ở 9 chữ số in ra (sai lệch 0 trên lưới 20×20), canvas và offset giống, pixel lệch tối đa 0 |
+| Challenge medium và large | V0 và V1 cùng lỗi `NumericalFailure` ở S6, exit code 1 |
+| Sáu cặp synthetic, V0 và V1 | Cả 12 lượt `ok`; V1 lớn nhất RMSE 0,088 px, Max 0,209 px, trùng V0 |
+| Ca biên: ảnh 24×24, ảnh xám phẳng, hai ảnh nhiễu, hai site khác nhau | Mã lỗi và exit code của V1 giống V0 trong cả bốn ca |
+| `compute-sanitizer --tool memcheck --leak-check full`, `--runs 2` | site1 small, site3 large, ảnh 24×24 và challenge medium: 0 lỗi, 0 byte rò rỉ |
+| `run_benchmark.py --versions 1 --runs 2` (bản của PR #30) | Không bị coi là scaffold, CSV 11 cột trên 9 cấu hình chuẩn |
+
+Bộ synthetic ở lần này sinh từ `raw/tuan/standard1_left_b3.jpg` (8160×6144), ảnh dự phòng cùng cảnh standard1 của Tuấn, vì phiên Colab không tải được `standard1_left.jpg` do Drive giới hạn lượt tải. Số liệu benchmark của lần chạy thử chỉ để kiểm tra công cụ, không phải số đo chính thức của P6-T03.

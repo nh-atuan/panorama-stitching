@@ -186,8 +186,8 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
       <td>Chạy bộ benchmark chính thức V0 vs V1 trên Colab T4 và vẽ biểu đồ speedup</td>
       <td>P6-T01</td>
       <td>Đo trước baseline V0 trên 4 cặp ảnh dataset ở 3 độ phân giải (5 runs + warm-up); đo V1 khi có bản build pipeline; xuất đầy đủ CSV <code>&lt;out&gt;/v&lt;k&gt;/&lt;site&gt;/&lt;size&gt;.csv</code> theo schema 11 cột; chạy <code>scripts/plot_benchmark.py</code> tạo biểu đồ so sánh speedup V1/V0.</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p6</code>; đo V0 độc lập ngay từ ngày đầu.</td>
+      <td>Đang làm</td>
+      <td>06/11: Thành chọn đo cả 4 cặp; bảng chính vẫn là 3 site chuẩn, challenge đo bổ sung qua cờ <code>--include-challenge</code>, cấu hình lỗi ghi vào <code>failures.csv</code>. Task không sửa code stage nên dùng nhánh <code>thanh/shared-benchmark-challenge</code> thay cho <code>thanh/p6</code>, PR #30: thêm challenge, chặn số đo của V1 stub, kiểm tra header CSV theo phiên bản, speedup từng stage. Colab T4 (commit <code>5fb4fd9</code>): build đạt, 7 suite Python (125 test), 14 suite V0 (45284 checks), 8 suite GPU (33730 checks) đạt. Chạy thử V0 trên dataset cuối kỳ: 154 giây, challenge medium/large lỗi <code>NumericalFailure</code>; số này chỉ là chạy thử, không dùng cho bảng chính thức. Phần đo V1 chờ P6-T01.</td>
     </tr>
     <tr>
       <td rowspan="2">Đế</td>

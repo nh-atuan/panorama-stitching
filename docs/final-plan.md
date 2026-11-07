@@ -8,6 +8,8 @@
 Tài liệu đi kèm:
 
 - [Bảng công việc](task-board.md): danh sách task theo từng giai đoạn, người phụ trách, hạn và trạng thái.
+- [Nhật ký tối ưu APOD](apod-log.md): theo dõi chu trình APOD và speedup các phiên bản V0–V3+.
+- [Quy ước lưu trữ thực nghiệm](results-guide.md): cấu trúc thư mục trên Google Drive [CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing).
 - [Kế hoạch giữa kỳ](archive/midterm-plan.md): các quy ước nền tảng của bản tuần tự V0 ở giai đoạn P0–P4.
 - [Interface chung](interface.md) và [Dataset](dataset.md): contract dữ liệu và quy định bộ ảnh thử nghiệm.
 - [Đề cuối kỳ](specs/CSC14120_2026_Final%20Project.md): bản chép nguyên văn từ PDF của môn học.
@@ -84,8 +86,8 @@ Kết quả cần có khi kết thúc `P7`:
 
 - kernel S5 V2 tối ưu trong `src/v2/s5/` và `v2_pipeline` hoàn chỉnh build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đơn vị và test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
 - cơ chế đo thời gian `cudaEvent_t` cho `Total_Kernel_ms` và các stage trong `src/main.cu` hoàn tất, xuất đủ 11 cột CSV;
-- bộ benchmark V2 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v2/`;
-- báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) cho kernel S5 V2, cập nhật nhật ký `APOD_LOG.md` và hoàn thiện tài liệu báo cáo V2.
+- bộ benchmark V2 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v2/` ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing));
+- báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) cho kernel S5 V2, cập nhật nhật ký [docs/apod-log.md](apod-log.md) và hoàn thiện tài liệu báo cáo V2.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

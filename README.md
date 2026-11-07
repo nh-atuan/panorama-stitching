@@ -17,10 +17,17 @@ Mốc hiện tại là giai đoạn cuối kỳ (các phiên bản song song CUD
 | `docs/archive/` | Tài liệu lưu trữ giai đoạn giữa kỳ: `midterm-plan.md` và `midterm-task-board.md` (P0–P4) |
 | `docs/dataset.md` | Quy định chụp ảnh, danh sách địa điểm và cặp ảnh ứng viên, yêu cầu chuẩn bị dataset |
 | `docs/interface.md` | Contract dữ liệu chung giữa các stage và pipeline |
+| `docs/apod-log.md` | Nhật ký tối ưu hóa song song theo chu trình APOD (V0 → V3+) |
+| `docs/results-guide.md` | Quy ước và hướng dẫn lưu trữ kết quả thực nghiệm trên Google Drive |
 | `docs/specs/` | Đề bài môn học chép từ PDF (`CSC14120_2026_Final Project_MidTerm.md`, `CSC14120_2026_Final Project.md`) |
 | `src/` | Toàn bộ mã nguồn C/C++/CUDA của chương trình `stitch` (`common/`, `v0/`, `v1/`...) |
 | `tests/` | Bộ bài kiểm thử tự động C++/CUDA/Python và công cụ trung gian (`run_tests.py`) |
 | `scripts/` | Script hỗ trợ build đa nền tảng (`build.py`), benchmark và chuẩn bị dữ liệu |
+
+## Tài nguyên chung trên Google Drive
+
+- **Bộ ảnh Dataset cuối kỳ chính thức:** [dataset/ trên Google Drive](https://drive.google.com/drive/folders/1HOvnly1k1QHOsV17qLzSAG4ihszNzCqO?usp=sharing) (chi tiết cấu hình ở [docs/dataset.md](docs/dataset.md)).
+- **Kho lưu trữ kết quả thực nghiệm:** [CSC14120_Group16_Results trên Google Drive](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing) (quy ước tổ chức ở [docs/results-guide.md](docs/results-guide.md), nhật ký APOD ở [docs/apod-log.md](docs/apod-log.md)).
 
 ## Bắt đầu
 

@@ -251,7 +251,7 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>P7-T03</td>
       <td>Đo benchmark V2 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V2</td>
       <td>P7-T01, P7-T02</td>
-      <td>Đo thời gian V2 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0 và V1; thu thập trace timeline NSYS và chỉ số NCU cho kernel S5 V2; xuất đủ CSV và biểu đồ speedup vào Drive <code>v2/</code>; cập nhật <code>APOD_LOG.md</code> và hoàn thành mục báo cáo V2 trong <code>docs/report/</code></td>
+      <td>Đo thời gian V2 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0 và V1; thu thập trace timeline NSYS và chỉ số NCU cho kernel S5 V2; xuất đủ CSV và biểu đồ speedup vào Drive <a href="https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing"><code>v2/</code></a> (xem <a href="results-guide.md">hướng dẫn</a>); cập nhật <a href="apod-log.md">apod-log.md</a> và hoàn thành mục báo cáo V2 trong <code>docs/report/</code></td>
       <td>Chưa làm</td>
       <td></td>
     </tr>
@@ -288,4 +288,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 06/11 | Nhóm đồng ý để Thành làm thay P6-T01 (ghép `v1_pipeline`) vì task chưa bắt đầu sau 05/11; dòng `Authors:` ghi Thành, code chuyển từ `main.cu` giữ tên Chương. `Total_Kernel_ms` của V1 tạm để 0 (chưa đo); cách đo kernel time được báo lại cho cả Nhóm để cùng quyết định |
 | 06/11 | Tuấn (nhóm trưởng) review và merge PR #31 vào main gỡ nghẽn pipeline V1; Tuấn tiếp quản các task P6-T04 (đo NCU kernel) và P6-T05 (đo NSYS, phân tích ca lỗi challenge, báo cáo bottleneck V1) của Đế trên nhánh `tuan/p6` do Đế bận; dòng `Authors:` ở tài liệu và test mới ghi Tuấn |
 | 07/11 | Nhóm trưởng chốt kế hoạch Phase 7 (hạn 10/11, Thứ 3): nhịp chạy sprint 3 ngày/version để mở rộng lên V4, V5, V6 mà vẫn giữ đủ 11 ngày chuẩn bị bài nộp cuối; áp dụng chu trình APOD chọn S5 (Homography RANSAC) làm mục tiêu tối ưu của V2 do chiếm 90–98% thời gian V1; phân công cân bằng kỹ thuật: Tuấn (kernel S5 V2), Thành (timer cudaEvent & v2_pipeline), Chương (test tích hợp V2 & compute-sanitizer T4), Đế (benchmark V2, profiling Nsight & báo cáo APOD V2); không đo lại V0 trong P7 |
-| 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package (`results/CSC14120_Group16_Results/{v0, v1, v2...}`) và nhật ký `APOD_LOG.md` |
+| 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing)), quy ước chi tiết tại [docs/results-guide.md](results-guide.md) và nhật ký APOD tại [docs/apod-log.md](apod-log.md) |

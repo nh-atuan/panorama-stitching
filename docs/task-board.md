@@ -234,7 +234,7 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Thiết kế và cài đặt tối ưu kernel S5 V2 trong <code>src/v2/s5/</code></td>
       <td>P6-T01</td>
       <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật; build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (dung sai số học) trên 6 cặp synthetic; đạt bài test đơn vị của stage</td>
-      <td>Chưa làm</td>
+      <td>Chờ review</td>
       <td></td>
     </tr>
     <tr>

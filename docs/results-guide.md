@@ -28,11 +28,15 @@ CSC14120_Group16_Results/
 │   ├── benchmark/
 │   └── profiling/
 │
-├── v4/                     <- Thư mục dự phòng (nếu nhóm mở rộng thêm V4)
+├── v4/
 │   ├── benchmark/
 │   └── profiling/
-│
-└── final_comparison/       <- Lượt đo tổng hợp cuối cùng cho toàn bộ phiên bản trên 1 phiên Colab T4 duy nhất
+├── v5/
+│   ├── benchmark/
+│   └── profiling/
+└── v6/
+    ├── benchmark/
+    └── profiling/
 ```
 
 ---
@@ -51,8 +55,5 @@ Phục vụ cung cấp bằng chứng định lượng cho Mục 5 (V1) và Mụ
 - **Ảnh chụp màn hình (Bắt buộc):** Ảnh `.png` chụp trực quan timeline Nsight Systems (chỉ ra hotspot chiếm thời gian) và biểu đồ Nsight Compute (SOL DRAM, SOL SM, Warp Stalls). Các file ảnh này sẽ được chèn trực tiếp vào Notebook báo cáo `Group16_Final.ipynb` và slide thuyết trình.
 - **File trace Nsight:** File `.nsys-rep` và `.ncu-rep` gốc (nén thành file `.zip` nếu dung lượng lớn) để lưu trữ đối chứng.
 
-### 3. Thư mục `final_comparison/` (Phục vụ Mục 7 của Notebook)
-Đề bài yêu cầu: *"All versions in one comparison table must be measured on the same GPU in the same Colab session"*.
-- Thư mục này **dành riêng cho Phase 9** ở lượt chạy tổng hợp cuối cùng (đo đồng thời tất cả các phiên bản V0, V1, V2, V3... trong cùng 1 phiên Colab duy nhất).
-- Chứa bảng speedup tổng hợp (`speedup.csv`, `speedup.md`), biểu đồ speedup toàn pipeline và log chi tiết của phiên đo chung. Không ném các kết quả đo lẻ tẻ của từng sprint vào đây.
+Lưu ý: Bảng so sánh tổng hợp cuối cùng giữa tất cả các phiên bản (Mục 7 của đề bài) sẽ được sinh tự động trực tiếp bên trong notebook `Group16_Final.ipynb` khi chạy `Runtime -> Run all` trên cùng một phiên Colab nộp bài, không cần lưu trữ thư mục so sánh riêng biệt trên Drive.
 

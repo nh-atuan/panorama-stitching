@@ -15,6 +15,8 @@ Tài liệu theo dõi các chu trình tối ưu hóa song song theo quy trình *
 | **v2** | Parallel RANSAC & Inlier Reduction (S5) | S5 chiếm 98% runtime V1 do 1-thread DLT & launch overhead; song song hóa giả thuyết DLT và inlier reduction sẽ gỡ nghẽn | | | | | (keep / revert) |
 | **v3** | Shared Memory Tiling (S4) | S4 bị memory-bound do đọc lặp Global Memory; nạp descriptor B vào Shared Memory sẽ giảm DRAM traffic | | | | | (keep / revert) |
 | **v4** | Shared Memory Halo Tiling (S2) | S2 đọc phân tán vòng tròn FAST; tile hóa ảnh kèm halo buffer giảm uncoalesced và warp divergence | | | | | (keep / revert) |
+| **v5** | Texture Memory / Scanlines (S6) | S6 bị memory latency do truy cập phân tán khi inverse warp; dùng Texture cache sẽ tăng spatial locality | | | | | (keep / revert) |
+| **v6** | Pinned Memory & Dual Streams | Xử lý ảnh A và B đồng thời ở H2D và S1–S3 qua 2 CUDA streams | | | | | (keep / revert) |
 
 ---
 

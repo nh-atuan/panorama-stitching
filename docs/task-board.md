@@ -209,6 +209,64 @@ Các công việc được tách độc lập để làm song song ngay từ đ�
   </tbody>
 </table>
 
+## P7 - Tối ưu và profiling V2
+
+Hạn của giai đoạn: **10/11 (Thứ 3)**.
+
+Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize → Deploy) tập trung tối ưu hóa kernel S5 (Homography RANSAC), giải quyết điểm nghẽn chiếm 90–98% thời gian của V1. Các thành viên triển khai song song: Tuấn tối ưu kernel S5; Thành bổ sung timer `cudaEvent` đo `Total_Kernel_ms` và ghép `v2_pipeline`; Chương xây dựng suite kiểm tra tích hợp V2 và nghiệm thu an toàn bộ nhớ; Đế chạy benchmark V2, thu thập profiling Nsight và hoàn thành báo cáo APOD V2.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tuấn</td>
+      <td>P7-T01</td>
+      <td>Thiết kế và cài đặt tối ưu kernel S5 V2 trong <code>src/v2/s5/</code></td>
+      <td>P6-T01</td>
+      <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật; build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (dung sai số học) trên 6 cặp synthetic; đạt bài test đơn vị của stage</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Thành</td>
+      <td>P7-T02</td>
+      <td>Bổ sung cơ chế đo thời gian <code>cudaEvent_t</code> trong <code>src/main.cu</code> và ghép nối <code>src/v2/v2_pipeline</code></td>
+      <td>P6-T01</td>
+      <td>Gắn <code>cudaEventRecord</code> quanh các kernel stage trên Device để đo chuẩn <code>Total_Kernel_ms</code>, H2D, D2H; ghép <code>src/v2/v2_pipeline.{h,cu}</code> gọi S5 V2 mới và tái sử dụng S1–S4, S6 từ <code>src/v1/</code>; CLI <code>./stitch ... --version 2</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đế</td>
+      <td>P7-T03</td>
+      <td>Đo benchmark V2 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V2</td>
+      <td>P7-T01, P7-T02</td>
+      <td>Đo thời gian V2 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0 và V1; thu thập trace timeline NSYS và chỉ số NCU cho kernel S5 V2; xuất đủ CSV và biểu đồ speedup vào Drive <code>v2/</code>; cập nhật <code>APOD_LOG.md</code> và hoàn thành mục báo cáo V2 trong <code>docs/report/</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Chương</td>
+      <td>P7-T04</td>
+      <td>Xây dựng suite kiểm tra tích hợp CLI V2 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
+      <td>P7-T01, P7-T02</td>
+      <td>Tạo suite C++/CUDA <code>tests/gpu/test_gpu_v2_pipeline.cu</code> đối chiếu H và canvas của V2 với V0/V1 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
 ## Quyết định đã chốt
 
 Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình làm.
@@ -229,3 +287,5 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 03/11 | Chốt hạn chót nội bộ cho P6-T01 (Chương): phải hoàn thành ghép `v1_pipeline` và mở PR chậm nhất trong 2 ngày (05/11, Thứ 5) để gỡ nghẽn cho các task phụ thuộc (Tuấn chạy compute-sanitizer, Thành đo benchmark V1, Đế thu thập NSYS toàn pipeline); lưu ý Chương xử lý cấp phát động buffer output Host tránh tràn bộ nhớ khi canvas mở rộng |
 | 06/11 | Nhóm đồng ý để Thành làm thay P6-T01 (ghép `v1_pipeline`) vì task chưa bắt đầu sau 05/11; dòng `Authors:` ghi Thành, code chuyển từ `main.cu` giữ tên Chương. `Total_Kernel_ms` của V1 tạm để 0 (chưa đo); cách đo kernel time được báo lại cho cả Nhóm để cùng quyết định |
 | 06/11 | Tuấn (nhóm trưởng) review và merge PR #31 vào main gỡ nghẽn pipeline V1; Tuấn tiếp quản các task P6-T04 (đo NCU kernel) và P6-T05 (đo NSYS, phân tích ca lỗi challenge, báo cáo bottleneck V1) của Đế trên nhánh `tuan/p6` do Đế bận; dòng `Authors:` ở tài liệu và test mới ghi Tuấn |
+| 07/11 | Nhóm trưởng chốt kế hoạch Phase 7 (hạn 10/11, Thứ 3): nhịp chạy sprint 3 ngày/version để mở rộng lên V4, V5, V6 mà vẫn giữ đủ 11 ngày chuẩn bị bài nộp cuối; áp dụng chu trình APOD chọn S5 (Homography RANSAC) làm mục tiêu tối ưu của V2 do chiếm 90–98% thời gian V1; phân công cân bằng kỹ thuật: Tuấn (kernel S5 V2), Thành (timer cudaEvent & v2_pipeline), Chương (test tích hợp V2 & compute-sanitizer T4), Đế (benchmark V2, profiling Nsight & báo cáo APOD V2); không đo lại V0 trong P7 |
+| 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package (`results/CSC14120_Group16_Results/{v0, v1, v2...}`) và nhật ký `APOD_LOG.md` |

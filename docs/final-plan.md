@@ -63,7 +63,7 @@ flowchart LR
 |---|---|---|
 | P5 | Khung GPU, dataset và từng stage V1 | Đã lập, kết thúc 02/11 (Thứ 2) |
 | P6 | Ghép pipeline, benchmark và profiling V1 | Đã lập, kết thúc 08/11 (Chủ nhật) |
-| P7 | Tối ưu và profiling V2 | Lập sau khi hoàn thành P6 |
+| P7 | Tối ưu và profiling V2 | Đã lập, kết thúc 10/11 (Thứ 3) |
 | P8 | Tối ưu và profiling V3 | Lập sau khi hoàn thành P7 |
 | P9 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P8, hoàn tất trước 03/12 (Thứ 5) |
 
@@ -79,6 +79,13 @@ Kết quả cần có khi kết thúc `P6`:
 - pipeline `v1_pipeline` hoàn chỉnh trong `src/main.cu` chạy trọn vẹn 6 stage trên GPU, đạt toàn bộ bài test đối chiếu và `compute-sanitizer` 0 lỗi;
 - bộ benchmark chính thức V0 vs V1 trên dataset cuối kỳ ở cả 3 độ phân giải hoàn thành trên Colab T4, xuất đủ CSV 11 cột và biểu đồ speedup;
 - báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) chỉ rõ bottleneck của V1, phân tích ca thất bại `challenge` và đề xuất phương án tối ưu cho V2 (P7).
+
+Kết quả cần có khi kết thúc `P7`:
+
+- kernel S5 V2 tối ưu trong `src/v2/s5/` và `v2_pipeline` hoàn chỉnh build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đơn vị và test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
+- cơ chế đo thời gian `cudaEvent_t` cho `Total_Kernel_ms` và các stage trong `src/main.cu` hoàn tất, xuất đủ 11 cột CSV;
+- bộ benchmark V2 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v2/`;
+- báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) cho kernel S5 V2, cập nhật nhật ký `APOD_LOG.md` và hoàn thiện tài liệu báo cáo V2.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

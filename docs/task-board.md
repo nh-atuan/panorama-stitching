@@ -261,8 +261,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Xây dựng suite kiểm tra tích hợp CLI V2 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P7-T01, P7-T02</td>
       <td>Tạo suite C++/CUDA <code>tests/gpu/test_gpu_v2_pipeline.cu</code> đối chiếu H và canvas của V2 với V0/V1 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Đang làm</td>
-      <td>07/11 đã nối suite vào pipeline V2 thật. Suite đạt 175 checks trên GTX 1650, gồm sáu cặp synthetic. <a href="../Group16_P7_V2_Verification.ipynb">Notebook Colab T4</a> nhận gói source tích hợp để chạy 12 cấu hình và memcheck. Theo dõi bằng chứng tại <a href="report/p7-v2-verification.md">báo cáo P7-T04</a>.</td>
+      <td>Chờ review</td>
+      <td>08/11 Colab Tesla T4 đạt 7/7 cổng. Sáu cặp synthetic đạt ngưỡng; 12/12 cấu hình thật khớp trạng thái V0/V1/V2, cả 10 ca có panorama khớp canvas và Max RGB = 0. Hai lượt memcheck exit 0, 0 lỗi và 0 byte rò rỉ. Source đã chạy khớp commit <code>bc1226f</code>. <a href="report/p7-v2-verification.md">Báo cáo P7-T04</a> ghi kết quả và gói <code>Group16_P7_T04_Evidence_20261108T030144Z.zip</code> để đính kèm PR.</td>
     </tr>
   </tbody>
 </table>

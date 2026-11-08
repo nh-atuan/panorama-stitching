@@ -1,6 +1,7 @@
 // Authors: Le Thuong De (23120232)
 // External source: none
 // Device batching and prefix replay implement the team's S5 stage design.
+#include "common/kernel_timing.cuh"
 #include "v1/s5/v1_homography_workspace.cuh"
 #include "v1/common/v1_nvtx.cuh"
 #include <cmath>
@@ -174,22 +175,22 @@ ErrorCode v1_homography_with_batch_size(DeviceWorkspace& w,const Config& c,cudaS
     if(!required || !w.d_scratch || w.scratch_capacity_bytes<required ||
        reinterpret_cast<std::uintptr_t>(w.d_scratch)%16u)return ErrorCode::AllocationFailed;
     std::size_t bytes=0;const homography_gpu::Scratch s=homography_gpu::layout(w.d_scratch,w.match_capacity,batch,bytes);
-    prepare_homography<<<1,1,0,stream>>>(w,s,c);
-    if(w.match_capacity)gather_points<<<static_cast<unsigned>((w.match_capacity+127)/128),128,0,stream>>>(w,s);
+    PANORAMA_LAUNCH_KERNEL(stream, prepare_homography<<<1,1,0,stream>>>(w,s,c));
+    if(w.match_capacity)PANORAMA_LAUNCH_KERNEL(stream, gather_points<<<static_cast<unsigned>((w.match_capacity+127)/128),128,0,stream>>>(w,s));
     for(int first=0;first<c.ransac_iters;first+=batch) {
         const int computed=std::min(batch,c.ransac_iters-first);
         {
             V1NvtxRange range("S5.fit_score");
-            compute_hypotheses<<<computed,128,0,stream>>>(w,s,c,first);
+            PANORAMA_LAUNCH_KERNEL(stream, compute_hypotheses<<<computed,128,0,stream>>>(w,s,c,first));
         }
         {
             V1NvtxRange range("S5.commit_prefix");
-            commit_prefix<<<1,1,0,stream>>>(w,s,c,first,computed);
+            PANORAMA_LAUNCH_KERNEL(stream, commit_prefix<<<1,1,0,stream>>>(w,s,c,first,computed));
         }
     }
     {
         V1NvtxRange range("S5.refit");
-        refit_homography<<<1,1,0,stream>>>(w,s,c);
+        PANORAMA_LAUNCH_KERNEL(stream, refit_homography<<<1,1,0,stream>>>(w,s,c));
     }
     return cudaPeekAtLastError()==cudaSuccess?ErrorCode::Success:ErrorCode::CudaFailure;
 }

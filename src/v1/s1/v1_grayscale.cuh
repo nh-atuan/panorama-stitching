@@ -4,6 +4,7 @@
 #ifndef GROUP16_V1_GRAYSCALE_CUH
 #define GROUP16_V1_GRAYSCALE_CUH
 
+#include "common/kernel_timing.cuh"
 #include "common/common.h"
 #include <cuda_runtime.h>
 #include <cstddef>
@@ -36,9 +37,9 @@ inline void launch_grayscale(const Image& input, const GrayImage& gray, cudaStre
     const dim3 block(kGrayBlockX, kGrayBlockY);
     const dim3 grid((static_cast<unsigned>(input.width) + kGrayBlockX - 1) / kGrayBlockX,
                     (static_cast<unsigned>(input.height) + kGrayBlockY - 1) / kGrayBlockY);
-    grayscale_kernel<<<grid, block, 0, stream>>>(input.data, input.stride,
+    PANORAMA_LAUNCH_KERNEL(stream, grayscale_kernel<<<grid, block, 0, stream>>>(input.data, input.stride,
                                                  reinterpret_cast<unsigned char*>(gray.data), gray.stride,
-                                                 input.width, input.height);
+                                                 input.width, input.height));
 }
 
 }  // namespace v1_s1

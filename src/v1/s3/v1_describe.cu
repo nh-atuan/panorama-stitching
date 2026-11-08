@@ -1,6 +1,7 @@
 // Authors: Tran Huu Kim Thanh (23120166)
 // External source: none
 
+#include "common/kernel_timing.cuh"
 #include "v1/s3/v1_describe.h"
 #include "common/brief_pattern.h"
 #include "common/image_layout.h"
@@ -96,15 +97,15 @@ ErrorCode describe_one(const ImageJob& job, DeviceCounts* counts, const V1Gaussi
     V1NvtxRange range("S3.brief_compact");
     const std::uint32_t capacity = static_cast<std::uint32_t>(job.capacity);
     const unsigned grid = blocks_for(job.capacity);
-    v1_s3::validate_kernel<<<1, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, capacity);
-    v1_s3::keep_flags_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, gray.width,
-                                                                   gray.height, keep);
-    v1_s3::exclusive_scan_kernel<<<1, v1_s3::kScanThreads, 0, stream>>>(counts, job.count, keep, total);
-    v1_s3::describe_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, smoothed_data,
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::validate_kernel<<<1, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, capacity));
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::keep_flags_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, gray.width,
+                                                                   gray.height, keep));
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::exclusive_scan_kernel<<<1, v1_s3::kScanThreads, 0, stream>>>(counts, job.count, keep, total));
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::describe_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, job.count, job.keypoints, smoothed_data,
                                                                  gray.width, gray.height, keep, job.descriptors,
-                                                                 compacted);
-    v1_s3::copy_back_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, total, compacted, job.keypoints);
-    v1_s3::publish_kernel<<<1, 1, 0, stream>>>(counts, total, job.image_a);
+                                                                 compacted));
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::copy_back_kernel<<<grid, v1_s3::kThreads, 0, stream>>>(counts, total, compacted, job.keypoints));
+    PANORAMA_LAUNCH_KERNEL(stream, v1_s3::publish_kernel<<<1, 1, 0, stream>>>(counts, total, job.image_a));
     return cudaPeekAtLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;
 }
 

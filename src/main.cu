@@ -22,14 +22,16 @@
 #include <stdexcept>
 
 #ifdef __CUDACC__
+#include "common/kernel_timing.cuh"
 #include "v1/v1_pipeline.h"
+#include "v2/v2_pipeline.h"
 #endif
 
 namespace {
 
 const char* const kUsage =
     "Usage: ./stitch <left_image> <right_image> <output_image> "
-    "--version <0|1> [--runs N] [--debug]";
+    "--version <0|1|2> [--runs N] [--debug]";
 
 class ProgramError : public std::runtime_error {
 public:
@@ -133,7 +135,7 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
              "supported versions in this build: " +
-             std::string(panorama::is_supported_version(1) ? "0, 1." : "0."),
+             std::string(panorama::is_supported_version(2) ? "0, 1, 2." : "0."),
              panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
@@ -253,14 +255,15 @@ struct TimingSummary {
     }
 };
 
-void print_timing(const std::string& label, const TimingStats& timing, bool gpu = false) {
+void print_timing(const std::string& label, const TimingStats& timing, int version = 0) {
     std::cout << label;
     for (std::size_t stage = 0; stage < kStageCount; ++stage) std::cout << ',' << timing.stage_ms[stage];
-    std::cout << ',' << timing.end_to_end_ms;
-    if (gpu) {
+    if (version < 2) std::cout << ',' << timing.end_to_end_ms;
+    if (version != 0) {
         std::cout << ',' << timing.h2d_ms << ',' << timing.d2h_ms
                   << ',' << timing.total_kernel_ms;
     }
+    if (version == 2) std::cout << ',' << timing.end_to_end_ms;
     std::cout << '\n';
 }
 
@@ -320,7 +323,7 @@ void print_diagnostics(const Image& left, const Image& right, const Config& conf
 }
 
 #ifdef __CUDACC__
-struct V1Events {
+struct GpuEvents {
     CudaEvent h2d_start, h2d_stop, d2h_start, d2h_stop;
     CudaEvent stage_start[kStageCount], stage_stop[kStageCount];
 };
@@ -356,11 +359,11 @@ void reserve_host_panorama(const Panorama& canvas, HostPanorama& output) {
 
 // One H2D -> S1..S6 -> D2H run on `stream`. The warm-up (measure = false) sizes the pinned
 // output from the canvas; a timed run fails when S6 gives another canvas.
-TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
-                        const std::uint8_t* host_a, const std::uint8_t* host_b,
-                        HostPanorama& output, cudaStream_t stream, V1Events& events,
-                        bool measure, DeviceCounts* after_s2) {
-    using Clock = std::chrono::high_resolution_clock;
+TimingStats run_gpu_once(int version, DeviceWorkspace& workspace, const Config& config,
+                         const std::uint8_t* host_a, const std::uint8_t* host_b,
+                         HostPanorama& output, cudaStream_t stream, GpuEvents& events,
+                         KernelTiming& kernels, bool measure, DeviceCounts* after_s2) {
+    using Clock = std::chrono::steady_clock;
     Clock::time_point start;
     // Chrono measures synchronized Host-observed end-to-end only, never kernels.
     // The caller drains the stream before entry; completion is awaited below.
@@ -384,7 +387,13 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
     }
     trace.after_s2 = after_s2;
     V1StageFailure failure;
-    const ErrorCode status = v1_run_stages(workspace, config, stream, trace, failure);
+    kernels.reset();
+    ErrorCode status;
+    {
+        KernelTimingScope scope(kernels);
+        const auto run_stages = version == 2 ? v2_run_stages : v1_run_stages;
+        status = run_stages(workspace, config, stream, trace, failure);
+    }
     if (failure.on_device) fail("Device-side check in S3-S5 failed.", status);
     check_stage(status, failure.stage);
     // S6 has waited for its setup kernel, so the canvas geometry is already on the Host.
@@ -412,10 +421,7 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
         for (std::size_t i = 0; i < kStageCount; ++i) {
             timing.stage_ms[i] = events.stage_stop[i].elapsed_since(events.stage_start[i]);
         }
-        // Kernel-only time is not measured yet (0 = not measured). Stage spans also hold
-        // Host waits (S2 candidate count, S6 setup) and S6's canvas cudaMalloc, so their
-        // sum is not a kernel total. The team decides how to measure this field.
-        timing.total_kernel_ms = 0.0;
+        timing.total_kernel_ms = kernels.milliseconds();
     }
     // Outside the timed window: S3-S5 report algorithm errors on the Device only.
     const DeviceCounts counts = v1_read_counts(workspace, stream);
@@ -425,7 +431,8 @@ TimingStats run_v1_once(DeviceWorkspace& workspace, const Config& config,
     return timing;
 }
 
-HomographyReport v1_homography_report(const V1HomographyDiagnostics& s5, const Config& config) {
+template<class Diagnostics>
+HomographyReport gpu_homography_report(const Diagnostics& s5, const Config& config) {
     HomographyReport report;
     report.success = true;  // Read only after a run that finished without error.
     report.seed = config.seed;
@@ -448,7 +455,8 @@ HomographyReport v1_homography_report(const V1HomographyDiagnostics& s5, const C
     return report;
 }
 
-DebugSummary v1_debug_summary(const DeviceCounts& after_s2, const V1Diagnostics& diagnostics) {
+template<class Diagnostics>
+DebugSummary gpu_debug_summary(const DeviceCounts& after_s2, const Diagnostics& diagnostics) {
     DebugSummary summary;
     summary.detected_a = after_s2.keypointsA;
     summary.detected_b = after_s2.keypointsB;
@@ -463,22 +471,31 @@ DebugSummary v1_debug_summary(const DeviceCounts& after_s2, const V1Diagnostics&
     return summary;
 }
 
-int run_v1(const CliOptions& options, OutputFormat format, const Image& left,
-           const Image& right, const Config& config) {
+template<class Diagnostics>
+void print_gpu_diagnostics(const Image& left, const Image& right, const Config& config,
+                           const DeviceCounts& after_s2, const Diagnostics& diagnostics) {
+    print_diagnostics(left, right, config, gpu_debug_summary(after_s2, diagnostics),
+                      gpu_homography_report(diagnostics.s5, config));
+}
+
+int run_gpu(const CliOptions& options, OutputFormat format, const Image& left,
+            const Image& right, const Config& config) {
+    const int version = options.version;
     int device = 0;
     cudaDeviceProp properties;
     CUDA_CHECK(cudaGetDevice(&device));
     CUDA_CHECK(cudaGetDeviceProperties(&properties, device));
     if (options.debug) {
-        std::cerr << "[debug] GPU=" << properties.name << " version=1 seed=" << config.seed
+        std::cerr << "[debug] GPU=" << properties.name << " version=" << version << " seed=" << config.seed
                   << " runs=" << options.runs << '\n'
                   << "[debug] One warm-up (not timed).\n";
     }
     // Declaration order ensures stream completion before pinned/device buffers die,
     // including exceptions during a partially queued run.
     V1DeviceOwner owner;
-    const ErrorCode prepared = v1_prepare(left, right, config, owner);
-    if (prepared != ErrorCode::Success) fail("Cannot prepare the V1 pipeline buffers.", prepared);
+    const auto prepare = version == 2 ? v2_prepare : v1_prepare;
+    const ErrorCode prepared = prepare(left, right, config, owner);
+    if (prepared != ErrorCode::Success) fail("Cannot prepare the GPU pipeline buffers.", prepared);
     const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
     const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
     PinnedBuffer<std::uint8_t> input_a(bytes_a), input_b(bytes_b);
@@ -486,31 +503,37 @@ int run_v1(const CliOptions& options, OutputFormat format, const Image& left,
     std::copy(right.data, right.data + bytes_b, input_b.get());
     HostPanorama output;
     CudaStream stream;
-    V1Events events;
+    GpuEvents events;
+    KernelTiming kernels;
     DeviceCounts after_s2;
-    run_v1_once(owner.view, config, input_a.get(), input_b.get(), output, stream.get(), events,
-                false, options.debug ? &after_s2 : nullptr);
+    run_gpu_once(version, owner.view, config, input_a.get(), input_b.get(), output, stream.get(),
+                 events, kernels, false, options.debug ? &after_s2 : nullptr);
+    kernels.prepare();
     TimingSummary summary;
     std::cout.imbue(std::locale::classic());
-    std::cout << std::fixed << std::setprecision(9)
-              << "Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,"
-                 "Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
+    const char* header = version == 2 ?
+        "Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms\n" :
+        "Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,"
+        "Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
+    std::cout << std::fixed << std::setprecision(9) << header;
     for (int index = 0; index < options.runs; ++index) {
-        const TimingStats timing = run_v1_once(owner.view, config, input_a.get(), input_b.get(),
-                                               output, stream.get(), events, true, nullptr);
+        const TimingStats timing = run_gpu_once(version, owner.view, config, input_a.get(), input_b.get(),
+                                                output, stream.get(), events, kernels, true, nullptr);
         summary.add(timing);
-        print_timing(std::to_string(index + 1), timing, true);
+        print_timing(std::to_string(index + 1), timing, version);
     }
     Image result = owner.view.canvas.image;
     result.data = output.pixels->get();
     save_image(options.output_image, format, result);  // Disk I/O is outside timing.
-    print_timing("Average", summary.average, true);
-    print_timing("Minimum", summary.minimum, true);
+    print_timing("Average", summary.average, version);
+    print_timing("Minimum", summary.minimum, version);
     if (options.debug) {
         std::cout.flush();  // Keep the CSV block and the stderr diagnostics apart.
-        const V1Diagnostics diagnostics = v1_collect_diagnostics(owner.view, stream.get());
-        print_diagnostics(left, right, config, v1_debug_summary(after_s2, diagnostics),
-                          v1_homography_report(diagnostics.s5, config));
+        if (version == 2) {
+            print_gpu_diagnostics(left, right, config, after_s2, v2_collect_diagnostics(owner.view, stream.get()));
+        } else {
+            print_gpu_diagnostics(left, right, config, after_s2, v1_collect_diagnostics(owner.view, stream.get()));
+        }
     }
     std::cout.flush();
     if (!std::cout) throw std::runtime_error("Cannot write benchmark CSV to stdout.");
@@ -529,7 +552,7 @@ int run(int argc, char** argv) {
         fail("Cannot build the V0 configuration.", ErrorCode::InvalidConfig);
     }
 #ifdef __CUDACC__
-    if (options.version == 1) return run_v1(options, format, left.view, right.view, config);
+    if (options.version != 0) return run_gpu(options, format, left.view, right.view, config);
 #endif
     V0Workspace workspace;
     Stage stage = Stage::Preprocess;

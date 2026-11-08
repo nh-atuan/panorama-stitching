@@ -55,14 +55,18 @@ else:
     h2d = spec.get("h2d", 0.5)
     d2h = spec.get("d2h", 0.5)
     kernel_total = sum(stages)
-    row = ",".join(f"{value:.9f}" for value in [*stages, total, h2d, d2h, kernel_total])
+    columns = [h2d, d2h, kernel_total, total] if version == 2 else [total, h2d, d2h, kernel_total]
+    row = ",".join(f"{value:.9f}" for value in [*stages, *columns])
     if spec.get("scaffold"):
         print("Warning: V1 is an infrastructure scaffold with six stubs. Timings are not a benchmark.",
               file=sys.stderr)
     print("[debug] GPU=Tesla T4 version=%d runs=%d seed=16" % (version, runs), file=sys.stderr)
     print("[debug] Config: gaussian_sigma=2 seed=16", file=sys.stderr)
-    stage_names = ",".join(f"S{index}_V{version}_ms" for index in range(1, 7))
-    print(f"Run_Index,{stage_names},Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms")
+    if version == 2:
+        print("Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms")
+    else:
+        stage_names = ",".join(f"S{index}_V{version}_ms" for index in range(1, 7))
+        print(f"Run_Index,{stage_names},Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms")
 for index in range(1, count + 1):
     print(f"{index},{row}")
 print(f"Average,{row}")

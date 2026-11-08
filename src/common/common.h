@@ -96,7 +96,7 @@ constexpr std::size_t kStageCount = 6;
 
 struct TimingStats {
     // Entries follow Stage order. S1-S3 each include both images A and B.
-    // V0: CPU stage elapsed; V1: CUDA event spans (CSV S1_V1_ms..S6_V1_ms).
+    // V0: CPU stage elapsed; V1/V2: CUDA event spans around stages.
     // A stage span can include copies; do not equate its sum with kernel busy time.
     double stage_ms[kStageCount] = {};
     double total_kernel_ms = 0.0;

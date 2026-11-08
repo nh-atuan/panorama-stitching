@@ -1,6 +1,7 @@
 // Authors: Thanh Chuong (23120195)
 // External source: none
 
+#include "common/kernel_timing.cuh"
 #include "v1/v1_warp_blend.h"
 
 // Keep Host-only V0 builds independent of CUDA headers and the runtime.
@@ -268,8 +269,8 @@ ErrorCode v1_warp_blend(DeviceWorkspace& workspace, const Config& config, cudaSt
     SetupMetadata* device_metadata = nullptr;
     cudaError_t status = cudaMalloc(reinterpret_cast<void**>(&device_metadata), sizeof(SetupMetadata));
     if (status != cudaSuccess) return cuda_status(status);
-    setup_kernel<<<1, 1, 0, stream>>>(workspace.imageA, workspace.imageB, workspace.d_homography,
-                                     config, device_metadata, workspace.d_canvas_info);
+    PANORAMA_LAUNCH_KERNEL(stream, setup_kernel<<<1, 1, 0, stream>>>(workspace.imageA, workspace.imageB, workspace.d_homography,
+                                     config, device_metadata, workspace.d_canvas_info));
     status = cudaGetLastError();
     SetupMetadata metadata = {};
     // Step 2: a small D2H read, ordered on the caller's stream (not the default stream).
@@ -318,12 +319,12 @@ ErrorCode v1_warp_blend(DeviceWorkspace& workspace, const Config& config, cudaSt
     const dim3 block(32, 8);
     const dim3 grid_a((workspace.imageA.width + block.x - 1) / block.x,
                        (workspace.imageA.height + block.y - 1) / block.y);
-    copy_a_kernel<<<grid_a, block, 0, stream>>>(workspace.imageA, canvas, info.offset_x, info.offset_y);
+    PANORAMA_LAUNCH_KERNEL(stream, copy_a_kernel<<<grid_a, block, 0, stream>>>(workspace.imageA, canvas, info.offset_x, info.offset_y));
     status = cudaGetLastError();
     if (status != cudaSuccess) return discard_canvas(workspace, stream, cuda_status(status));
     const dim3 grid_canvas((info.width + block.x - 1) / block.x, (info.height + block.y - 1) / block.y);
-    gather_b_kernel<<<grid_canvas, block, 0, stream>>>(workspace.imageA, workspace.imageB, canvas,
-                                                    info, metadata.inverse, config.homography_epsilon);
+    PANORAMA_LAUNCH_KERNEL(stream, gather_b_kernel<<<grid_canvas, block, 0, stream>>>(workspace.imageA, workspace.imageB, canvas,
+                                                    info, metadata.inverse, config.homography_epsilon));
     status = cudaGetLastError();
     if (status != cudaSuccess) return discard_canvas(workspace, stream, cuda_status(status));
 

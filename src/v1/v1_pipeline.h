@@ -53,6 +53,15 @@ struct V1StageFailure {
     bool on_device = false;
 };
 
+// Shared orchestration for GPU variants that replace only the homography stage.
+using HomographyScratchBytes = std::size_t (*)(std::size_t);
+using GpuStage = ErrorCode (*)(DeviceWorkspace&, const Config&, cudaStream_t);
+
+ErrorCode prepare_gpu_pipeline(const Image& left, const Image& right, const Config& config,
+                               V1DeviceOwner& owner, HomographyScratchBytes homography_scratch);
+ErrorCode run_gpu_stages(DeviceWorkspace& workspace, const Config& config, cudaStream_t stream,
+                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography);
+
 // Enqueues S1..S6 on `stream`. The caller resets d_counts before the run, uploads both
 // images first and awaits the stream before using the canvas.
 // A Host-side or launch error returns that code with failure.stage set. An algorithm error
@@ -65,12 +74,29 @@ ErrorCode v1_run_stages(DeviceWorkspace& workspace, const Config& config, cudaSt
 DeviceCounts v1_read_counts(const DeviceWorkspace& workspace, cudaStream_t stream);
 
 // Debug values of the last completed run, read back outside timing.
-struct V1Diagnostics {
+template<class HomographyDiagnostics>
+struct GpuDiagnostics {
     DeviceCounts counts;
     Homography homography;
-    V1HomographyDiagnostics s5;
+    HomographyDiagnostics s5;
     Panorama canvas;  // Geometry only; canvas.image.data is a Device pointer.
 };
+
+using V1Diagnostics = GpuDiagnostics<V1HomographyDiagnostics>;
+
+template<class HomographyDiagnostics>
+GpuDiagnostics<HomographyDiagnostics> collect_gpu_diagnostics(
+    const DeviceWorkspace& workspace, cudaStream_t stream, const HomographyDiagnostics* s5) {
+    GpuDiagnostics<HomographyDiagnostics> diagnostics;
+    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.counts, workspace.d_counts, sizeof(diagnostics.counts),
+                               cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.homography, workspace.d_homography,
+                               sizeof(diagnostics.homography), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.s5, s5, sizeof(diagnostics.s5), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+    diagnostics.canvas = workspace.canvas;
+    return diagnostics;
+}
 
 // The S5 report lives in scratch, which S6 does not touch, so after a full run it still
 // holds that run's values. Waits for `stream`.

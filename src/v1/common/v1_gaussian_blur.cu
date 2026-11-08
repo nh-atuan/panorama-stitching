@@ -1,6 +1,7 @@
 // Authors: Tran Huu Kim Thanh (23120166)
 // External source: none
 
+#include "common/kernel_timing.cuh"
 #include "v1/common/v1_gaussian_blur.h"
 #include "common/image_layout.h"
 #include <cstddef>
@@ -71,10 +72,10 @@ ErrorCode v1_gaussian_blur(const GrayImage& src, const GrayImage& dst, float* te
     const dim3 block(kBlockX, kBlockY);
     const dim3 grid((static_cast<unsigned>(src.width) + kBlockX - 1) / kBlockX,
                     (static_cast<unsigned>(src.height) + kBlockY - 1) / kBlockY);
-    blur_rows<<<grid, block, 0, stream>>>(reinterpret_cast<const unsigned char*>(src.data), src.stride,
-                                          temp, src.width, src.height, weights);
-    blur_columns<<<grid, block, 0, stream>>>(temp, reinterpret_cast<unsigned char*>(dst.data), dst.stride,
-                                             dst.width, dst.height, weights);
+    PANORAMA_LAUNCH_KERNEL(stream, blur_rows<<<grid, block, 0, stream>>>(reinterpret_cast<const unsigned char*>(src.data), src.stride,
+                                          temp, src.width, src.height, weights));
+    PANORAMA_LAUNCH_KERNEL(stream, blur_columns<<<grid, block, 0, stream>>>(temp, reinterpret_cast<unsigned char*>(dst.data), dst.stride,
+                                             dst.width, dst.height, weights));
     return cudaPeekAtLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;
 }
 

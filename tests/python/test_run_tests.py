@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-# Authors: Tran Huu Kim Thanh (23120166)
+# Authors: Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195)
 # External source: none
 
 """Tests for tests/run_tests.py; compile lines are only inspected, so no GPU or nvcc is needed."""
 
 import contextlib
 import io
+import json
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 
@@ -51,6 +53,17 @@ class GpuCommandTest(unittest.TestCase):
         command = self.command("gpu_s5")
         self.assertNotIn("-Xlinker=--wrap=cudaMalloc", command)
         self.assertNotIn("build/stb_impl.o", command)
+
+    def test_v2_links_real_s5_in_both_modes_and_requires_both_integration_files(self):
+        for files in (set(), {run_tests.V2_PIPELINE_HEADER},
+                      {run_tests.V2_PIPELINE_HEADER, run_tests.V2_PIPELINE_SOURCE}):
+            with mock.patch.object(Path, "is_file", autospec=True,
+                                   side_effect=lambda path: path.relative_to(ROOT).as_posix() in files):
+                command = self.command(run_tests.V2_PIPELINE_SUITE)
+            self.assertIn("src/v2/s5/v2_homography.cu", command)
+            self.assertIn("build/stb_impl.o", command)
+            self.assertEqual("-DV2_PIPELINE_AVAILABLE" in command, len(files) == 2)
+            self.assertEqual(run_tests.V2_PIPELINE_SOURCE in command, len(files) == 2)
 
     def test_stb_is_not_built_with_strict_warnings(self):
         command = run_tests.gpu_stb_command("nvcc", "build/stb_impl.o")
@@ -116,6 +129,31 @@ class MainTest(unittest.TestCase):
     def test_gpu_suite_outside_its_group_is_rejected(self):
         with self.assertRaises(RuntimeError):
             self.run_main(["--group", "v0", "--suite", "gpu_s6"])
+
+    def test_v2_options_cannot_silently_target_another_suite(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            self.run_main(["--group", "gpu", "--suite", "gpu_s6", "--require-v2-pipeline"])
+
+
+class V2SyntheticArgumentsTest(unittest.TestCase):
+    def test_all_six_truth_matrices_are_forwarded_and_direction_is_enforced(self):
+        matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1]
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            for case in ("translation", "projective"):
+                (root / case).mkdir()
+                for size in ("small", "medium", "large"):
+                    truth_path = root / case / f"{size}_truth.json"
+                    truth = {"case": case, "size": size, "direction": "B->A", "H_gt": matrix}
+                    truth_path.write_text(json.dumps(truth), encoding="utf-8")
+            arguments = run_tests.v2_synthetic_arguments(root)
+            self.assertEqual(arguments.count("--synthetic-pair"), 6)
+            self.assertEqual(arguments[1], "translation/small")
+            self.assertEqual(arguments[-9:], [str(value) for value in matrix])
+            truth["direction"] = "A->B"
+            truth_path.write_text(json.dumps(truth), encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "Invalid synthetic truth"):
+                run_tests.v2_synthetic_arguments(root)
 
 
 if __name__ == "__main__":

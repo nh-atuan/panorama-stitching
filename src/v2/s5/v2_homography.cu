@@ -2,6 +2,7 @@
 // Adapted from: src/v1/s5/v1_homography.cu by Le Thuong De (23120232)
 // Changes: V2 parallel all-inlier refit, parallel Jacobi SVD and optimized shared-memory hypothesis scoring.
 
+#include "common/kernel_timing.cuh"
 #include "v2/s5/v2_homography_workspace.cuh"
 #include "v2/s5/v2_homography_refit.cuh"
 #include "v1/common/v1_nvtx.cuh"
@@ -335,25 +336,25 @@ ErrorCode v2_homography_with_batch_size(DeviceWorkspace& w, const Config& c, cud
     std::size_t bytes = 0;
     const homography_v2::Scratch s = homography_v2::layout(w.d_scratch, w.match_capacity, batch, bytes);
 
-    prepare_homography<<<1, 256, 0, stream>>>(w, s, c);
+    PANORAMA_LAUNCH_KERNEL(stream, prepare_homography<<<1, 256, 0, stream>>>(w, s, c));
     if (w.match_capacity)
-        gather_points<<<static_cast<unsigned>((w.match_capacity + 127) / 128), 128, 0, stream>>>(w, s);
+        PANORAMA_LAUNCH_KERNEL(stream, gather_points<<<static_cast<unsigned>((w.match_capacity + 127) / 128), 128, 0, stream>>>(w, s));
 
     for (int first = 0; first < c.ransac_iters; first += batch) {
         const int computed = std::min(batch, c.ransac_iters - first);
         {
             V1NvtxRange range("S5_V2.fit_score");
-            compute_hypotheses<<<computed, 128, 0, stream>>>(w, s, c, first);
+            PANORAMA_LAUNCH_KERNEL(stream, compute_hypotheses<<<computed, 128, 0, stream>>>(w, s, c, first));
         }
         {
             V1NvtxRange range("S5_V2.commit_prefix");
-            commit_prefix<<<1, 1, 0, stream>>>(w, s, c, first, computed);
+            PANORAMA_LAUNCH_KERNEL(stream, commit_prefix<<<1, 1, 0, stream>>>(w, s, c, first, computed));
         }
     }
 
     {
         V1NvtxRange range("S5_V2.refit");
-        refit_homography<<<1, 256, 0, stream>>>(w, s, c);
+        PANORAMA_LAUNCH_KERNEL(stream, refit_homography<<<1, 256, 0, stream>>>(w, s, c));
     }
 
     return cudaGetLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;

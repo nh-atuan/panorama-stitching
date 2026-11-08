@@ -286,20 +286,28 @@ V1 dùng một stream non-blocking, các stage thực hiện theo thứ tự. Di
 
 `device_allocate<T>` chỉ nhận con trỏ rỗng, kiểm tra overflow `count * sizeof(T)`, và giữ con trỏ rỗng khi allocation thất bại. Count bằng 0 không cấp phát. `device_free<T>` cho phép null, reset con trỏ sau khi free và không ném exception trong destructor; lỗi cleanup được báo stderr. Ownership không copy được. Không dùng `cudaDeviceReset` để dọn một workspace vì thao tác đó phá cả tài nguyên CUDA khác trong context.
 
-### 11.4. Timing và CSV V1
+### 11.4. Timing và CSV V1/V2
 
 Một lượt warm-up chạy đủ H2D → sáu stage → D2H, không gọi clock hoặc record event timing. Sau đó chạy N lượt đo (`--runs`, mặc định 5). Input đã decode, pinned input, Device buffers trừ canvas, stream và events được chuẩn bị trước warm-up; pinned output được cấp trong warm-up theo canvas (mục 11.8). Tất cả được tái sử dụng. CPU copy từ ảnh stb sang pinned input cũng nằm ngoài phép đo. Đây là chính sách chuẩn bị bộ nhớ của V1, cần ghi rõ khi so sánh với phiên bản khác.
 
 - **GPU stage timing:** dùng `cudaEventRecord` trước/sau stage trên cùng stream; sau khi event cuối hoàn tất mới gọi `cudaEventElapsedTime`. `stage_ms[0..5]` tương ứng S1_V1 đến S6_V1. S1–S3 của implementation thật phải bao gồm cả A và B. Đây là elapsed của toàn stage, có thể bao gồm memory operations và khoảng chờ, không mặc định là kernel busy time.
 - **Transfer timing:** cặp events riêng đo `h2d_ms` của hai ảnh và `d2h_ms` của panorama. Dùng pinned Host buffers và `cudaMemcpy2DAsync`; stride luôn là byte.
-- **End-to-end:** `std::chrono::high_resolution_clock` bao từ trước H2D đến sau `cudaEventSynchronize` của event D2H cuối. Đây là thời gian Host quan sát toàn pipeline đã đồng bộ, **không phải CPU timer dùng để suy ra thời gian kernel bất đồng bộ**. H2D, sáu stage, D2H và overhead điều phối trong lượt chạy đều nằm trong khoảng này. Đọc/ghi file ảnh, log, xuất CSV và tính average/min nằm ngoài.
-- **Kernel-only total:** V1 chưa đo trường này, CLI vẫn in `Total_Kernel_ms = 0` với nghĩa "chưa đo". Không cộng sáu stage elapsed rồi gọi đó là kernel-only total, vì span của S2 và S6 còn chứa lần chờ Host và `cudaMalloc` canvas. Ngày 06/11/2026, Thành đề nghị báo lại cho cả Nhóm để cùng quyết định cách đo (event quanh từng kernel trong code stage, số liệu nsys hay cách khác). Trước khi có quyết định, bảng V1 không dùng cột kernel.
+- **End-to-end:** `std::chrono::steady_clock` đo từ trước H2D đến sau `cudaEventSynchronize` của event D2H cuối. Đồng hồ đơn điệu giữ phép đo ổn định khi đồng hồ hệ thống được hiệu chỉnh. H2D, sáu stage, D2H và overhead điều phối trong lượt chạy đều nằm trong khoảng này. Đọc/ghi file ảnh, log, xuất CSV và tính average/min nằm ngoài.
+- **Kernel-only total:** Từ P7-T02, `Total_Kernel_ms` của V1 và V2 là tổng elapsed của các cặp CUDA events đặt ngay trước và sau từng kernel launch trên cùng stream. Warm-up chỉ đếm launch để cấp sẵn event pairs ngoài vùng đo. Các lượt đo tái sử dụng event pairs và đọc kết quả sau đồng bộ D2H. Phép đo tách các lần copy, memset, cấp phát canvas và chờ giữa các kernel khỏi tổng kernel. Đây là phép đo bằng event, chịu độ phân giải và chi phí ghi event. Khi so V1/V2, chạy lại cả hai trên cùng snapshot và cùng phiên Colab T4. [CUDA Event Management](https://docs.nvidia.com/cuda/cuda-runtime-api/cuda_runtime_api/group__CUDART__EVENT.html)
 
 CSV V1 có 11 cột; CSV V0 vẫn có 8 cột để công cụ giữa kỳ tiếp tục hoạt động:
 
 ```csv
 Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
 ```
+
+CSV V2 dùng schema nghiệm thu P7-T04, được `run_benchmark.py` và `verify_v2_dataset.py` đọc theo phiên bản.
+
+```csv
+Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms
+```
+
+`src/v2/v2_pipeline.{h,cu}` dùng lại owner, scratch theo dung lượng lớn nhất, stream và dispatcher của V1. V2 chọn scratch và hàm homography của S5 V2. Các stage còn lại dùng chung kernel. CLI V1 và V2 cấp pinned output từ kích thước canvas của warm-up và dùng lại buffer trong các lượt đo.
 
 `Total_ms` là `TimingStats::end_to_end_ms`. `Average` và `Minimum` tổng hợp độc lập từng cột của N lượt đo, không gồm warm-up. Trường H2D/D2H cũ trong bản nháp (`host_to_device_ms`, `device_to_host_ms`) được đổi tên thành `h2d_ms`, `d2h_ms`; dữ liệu V0 và CSV V0 không đổi. Công cụ đa phiên bản của P5-T05 cần nhận biết header V1; parser V0 hiện tại không dùng để đọc CSV V1. Số đo của bản stub trước P6-T01 không được dùng tính speedup.
 
@@ -309,6 +317,7 @@ Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,Total_ms,H2D_ms,
 python3 scripts/build.py --compiler nvcc --require-t4
 ./build/stitch <left.jpg> <right.jpg> <v0.png> --version 0
 ./build/stitch <left.jpg> <right.jpg> <v1.png> --version 1 --runs 5 --debug
+./build/stitch <left.jpg> <right.jpg> <v2.png> --version 2 --runs 5 --debug
 python3 tests/run_tests.py --compiler nvcc --require-t4
 ```
 

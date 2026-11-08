@@ -4,6 +4,7 @@
 #ifndef GROUP16_V1_TOPK_SORT_CUH
 #define GROUP16_V1_TOPK_SORT_CUH
 
+#include "common/kernel_timing.cuh"
 #include "common/common.h"
 #include "v1/s2/v1_nms.cuh"
 #include <cuda_runtime.h>
@@ -62,10 +63,10 @@ __global__ void write_keypoints_kernel(const unsigned long long* keys, std::uint
 inline cudaError_t sort_keys(unsigned long long* keys, std::uint32_t count, cudaStream_t stream) {
     if (count < 2) return cudaSuccess;
     const std::uint32_t n = next_power_of_two(count);
-    if (n > count) pad_keys_kernel<<<blocks_for(n - count), kSortThreads, 0, stream>>>(keys, count, n);
+    if (n > count) PANORAMA_LAUNCH_KERNEL(stream, pad_keys_kernel<<<blocks_for(n - count), kSortThreads, 0, stream>>>(keys, count, n));
     for (std::uint32_t k = 2; k <= n; k <<= 1) {
         for (std::uint32_t j = k >> 1; j > 0; j >>= 1) {
-            bitonic_step_kernel<<<blocks_for(n), kSortThreads, 0, stream>>>(keys, n, j, k);
+            PANORAMA_LAUNCH_KERNEL(stream, bitonic_step_kernel<<<blocks_for(n), kSortThreads, 0, stream>>>(keys, n, j, k));
         }
     }
     return cudaPeekAtLastError();

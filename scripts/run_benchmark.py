@@ -6,8 +6,8 @@
 
 Supports V0 Sequential and GPU versions (V1 Basic CUDA, V2, V3 Optimized).
 The CSV header must match the version (docs/interface.md, section 11.4): V0 prints 8 columns
-(S<i>_ms, Total_ms); V1 and later print S<i>_V<k>_ms, Total_ms, H2D_ms, D2H_ms and
-Total_Kernel_ms. A run whose stderr says that V1 is still the infrastructure scaffold is
+(S<i>_ms, Total_ms); V1 prints S<i>_V1_ms followed by Total_ms and GPU timings.
+V2 prints S<i>_ms followed by GPU timings and Total_ms. A run whose stderr reports a scaffold is
 rejected, because stub timings must not give a speedup.
 
 The main benchmark uses the three standard sites. --include-challenge also runs the challenge
@@ -161,6 +161,8 @@ def version_columns(version):
     """CSV header that stitch prints for `version` (docs/interface.md, section 11.4)."""
     if version == 0:
         return ["Run_Index", *BASE_STAGE_COLUMNS, "Total_ms"]
+    if version == 2:
+        return ["Run_Index", *BASE_STAGE_COLUMNS, *CUDA_EXTRA_COLUMNS, "Total_ms"]
     stages = [f"S{index}_V{version}_ms" for index in range(1, 7)]
     return ["Run_Index", *stages, "Total_ms", *CUDA_EXTRA_COLUMNS]
 
@@ -187,37 +189,33 @@ def parse_version_csv(text, runs=5, version=0):
     if any(len(row) != len(header) for row in rows[1:]):
         raise ValueError("Unexpected timing column count")
 
+    timing_keys = [*BASE_STAGE_COLUMNS, "Total_ms"]
+    if version == 2:
+        timing_keys = [*BASE_STAGE_COLUMNS, *CUDA_EXTRA_COLUMNS, "Total_ms"]
+    elif is_gpu:
+        timing_keys.extend(CUDA_EXTRA_COLUMNS)
     measurements = []
     for row in rows[1:runs + 1]:
         numbers = [float(val) for val in row[1:]]
         if any(not math.isfinite(val) or val < 0 for val in numbers):
             raise ValueError("Non-finite or negative timing")
-        if sum(numbers[:6]) > numbers[6] + STAGE_SUM_TOLERANCE_MS:
+        item = dict(zip(timing_keys, numbers))
+        if sum(numbers[:6]) > item["Total_ms"] + STAGE_SUM_TOLERANCE_MS:
             raise ValueError("Total_ms is smaller than the sum of the stage times")
-        item = {
-            "S1_ms": numbers[0], "S2_ms": numbers[1], "S3_ms": numbers[2],
-            "S4_ms": numbers[3], "S5_ms": numbers[4], "S6_ms": numbers[5],
-            "Total_ms": numbers[6],
-            "H2D_ms": numbers[7] if is_gpu else 0.0,
-            "D2H_ms": numbers[8] if is_gpu else 0.0,
-            "Total_Kernel_ms": numbers[9] if is_gpu else numbers[6],
-        }
+        if not is_gpu:
+            item.update(H2D_ms=0.0, D2H_ms=0.0, Total_Kernel_ms=item["Total_ms"])
         measurements.append(item)
 
     avg_row = [float(val) for val in rows[runs + 1][1:]]
     min_row = [float(val) for val in rows[runs + 2][1:]]
 
-    all_keys = [*BASE_STAGE_COLUMNS, "Total_ms"]
-    if is_gpu:
-        all_keys.extend(CUDA_EXTRA_COLUMNS)
-
-    calculated_avg = {key: sum(m[key] for m in measurements) / runs for key in all_keys}
-    calculated_min = {key: min(m[key] for m in measurements) for key in all_keys}
+    calculated_avg = {key: sum(m[key] for m in measurements) / runs for key in timing_keys}
+    calculated_min = {key: min(m[key] for m in measurements) for key in timing_keys}
     if not is_gpu:
         calculated_avg.update(H2D_ms=0.0, D2H_ms=0.0, Total_Kernel_ms=calculated_avg["Total_ms"])
         calculated_min.update(H2D_ms=0.0, D2H_ms=0.0, Total_Kernel_ms=calculated_min["Total_ms"])
 
-    for idx, key in enumerate(all_keys):
+    for idx, key in enumerate(timing_keys):
         if not math.isclose(avg_row[idx], calculated_avg[key], rel_tol=1e-5, abs_tol=1e-5):
             raise ValueError(f"Reported average disagrees with measured runs for {key}")
         if not math.isclose(min_row[idx], calculated_min[key], rel_tol=1e-5, abs_tol=1e-5):

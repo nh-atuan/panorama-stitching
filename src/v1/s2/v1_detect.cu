@@ -1,6 +1,7 @@
 // Authors: Tran Huu Kim Thanh (23120166)
 // External source: none
 
+#include "common/kernel_timing.cuh"
 #include "v1/s2/v1_detect.h"
 #include "common/feature_border.h"
 #include "common/image_layout.h"
@@ -86,10 +87,10 @@ ErrorCode detect_one(const GrayImage& gray, Keypoint* keypoints, std::uint32_t* 
                 cudaMemsetAsync(scores, 0, layout.pixels * sizeof(float), stream) != cudaSuccess) {
                 return ErrorCode::CudaFailure;
             }
-            v1_s2::fast_score_kernel<<<grid, block, 0, stream>>>(pixels, gray.stride, gray.width, gray.height,
-                                                                config.fast_threshold, scores);
-            v1_s2::nms_kernel<<<grid, block, 0, stream>>>(scores, gray.width, gray.height, d_count, keys,
-                                                         layout.capacity);
+            PANORAMA_LAUNCH_KERNEL(stream, v1_s2::fast_score_kernel<<<grid, block, 0, stream>>>(pixels, gray.stride, gray.width, gray.height,
+                                                                config.fast_threshold, scores));
+            PANORAMA_LAUNCH_KERNEL(stream, v1_s2::nms_kernel<<<grid, block, 0, stream>>>(scores, gray.width, gray.height, d_count, keys,
+                                                         layout.capacity));
             if (cudaPeekAtLastError() != cudaSuccess ||
                 cudaMemcpyAsync(&candidates, d_count, sizeof(candidates), cudaMemcpyDeviceToHost, stream) !=
                     cudaSuccess ||
@@ -102,11 +103,11 @@ ErrorCode detect_one(const GrayImage& gray, Keypoint* keypoints, std::uint32_t* 
         V1NvtxRange range("S2.top_n");
         if (v1_s2::sort_keys(keys, candidates, stream) != cudaSuccess) return ErrorCode::CudaFailure;
         if (kept > 0) {
-            v1_s2::write_keypoints_kernel<<<v1_s2::blocks_for(kept), v1_s2::kSortThreads, 0, stream>>>(
-                keys, kept, static_cast<std::uint32_t>(gray.width), keypoints);
+            PANORAMA_LAUNCH_KERNEL(stream, v1_s2::write_keypoints_kernel<<<v1_s2::blocks_for(kept), v1_s2::kSortThreads, 0, stream>>>(
+                keys, kept, static_cast<std::uint32_t>(gray.width), keypoints));
         }
     }
-    publish_count_kernel<<<1, 1, 0, stream>>>(count_field, kept);
+    PANORAMA_LAUNCH_KERNEL(stream, publish_count_kernel<<<1, 1, 0, stream>>>(count_field, kept));
     return cudaPeekAtLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;
 }
 

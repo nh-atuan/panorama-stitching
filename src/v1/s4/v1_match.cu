@@ -2,6 +2,7 @@
 // External source: none
 // Implements the team's S4 design; V0 remains the independent scalar reference.
 
+#include "common/kernel_timing.cuh"
 #include "v1/s4/v1_match.h"
 #include "v1/s4/v1_match_internal.cuh"
 #include "v1/common/v1_nvtx.cuh"
@@ -93,19 +94,19 @@ ErrorCode v1_match_with_block_size(DeviceWorkspace& w, const Config& config, cud
         return ErrorCode::AllocationFailed;
     TopTwo* pairs = reinterpret_cast<TopTwo*>(w.d_scratch);
     std::uint32_t* prefix = bytes ? reinterpret_cast<std::uint32_t*>(pairs + w.descriptor_capacityA) : nullptr;
-    validate_matching<<<1, 1, 0, stream>>>(w);
+    PANORAMA_LAUNCH_KERNEL(stream, validate_matching<<<1, 1, 0, stream>>>(w));
     if (w.descriptor_capacityA) {
         {
             V1NvtxRange range("S4.nearest_two");
-            nearest_two<<<static_cast<unsigned>(w.descriptor_capacityA), threads, 0, stream>>>(w, pairs);
+            PANORAMA_LAUNCH_KERNEL(stream, nearest_two<<<static_cast<unsigned>(w.descriptor_capacityA), threads, 0, stream>>>(w, pairs));
         }
         {
             V1NvtxRange range("S4.prefix");
-            prefix_matching<<<1, 1, 0, stream>>>(w, pairs, prefix);
+            PANORAMA_LAUNCH_KERNEL(stream, prefix_matching<<<1, 1, 0, stream>>>(w, pairs, prefix));
         }
         {
             V1NvtxRange range("S4.scatter");
-            scatter_matching<<<static_cast<unsigned>((w.descriptor_capacityA + threads - 1) / threads), threads, 0, stream>>>(w, pairs, prefix);
+            PANORAMA_LAUNCH_KERNEL(stream, scatter_matching<<<static_cast<unsigned>((w.descriptor_capacityA + threads - 1) / threads), threads, 0, stream>>>(w, pairs, prefix));
         }
     }
     return cudaPeekAtLastError() == cudaSuccess ? ErrorCode::Success : ErrorCode::CudaFailure;

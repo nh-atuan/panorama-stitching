@@ -243,8 +243,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Bổ sung cơ chế đo thời gian <code>cudaEvent_t</code> trong <code>src/main.cu</code> và ghép nối <code>src/v2/v2_pipeline</code></td>
       <td>P6-T01</td>
       <td>Gắn <code>cudaEventRecord</code> quanh các kernel stage trên Device để đo chuẩn <code>Total_Kernel_ms</code>, H2D, D2H; ghép <code>src/v2/v2_pipeline.{h,cu}</code> gọi S5 V2 mới và tái sử dụng S1–S4, S6 từ <code>src/v1/</code>; CLI <code>./stitch ... --version 2</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>Chương triển khai thay Thành phần pipeline V2, CLI và CUDA event timing. V2 gọi S5 V2, dùng lại S1–S4/S6 của V1. Colab T4 ngày 08/11 xác nhận build <code>sm_75</code>, CLI production, CSV 11 cột và các dòng tổng hợp đạt. Bàn giao cùng P7-T04 qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/34">PR #34</a>. Xem <a href="report/p7-v2-verification.md">báo cáo nghiệm thu</a>.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -261,8 +261,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Xây dựng suite kiểm tra tích hợp CLI V2 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P7-T01, P7-T02</td>
       <td>Tạo suite C++/CUDA <code>tests/gpu/test_gpu_v2_pipeline.cu</code> đối chiếu H và canvas của V2 với V0/V1 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>08/11 Colab Tesla T4 đạt 7/7 cổng. Sáu cặp synthetic đạt ngưỡng. Cả 12 cấu hình thật khớp trạng thái V0/V1/V2, 10 ca có panorama khớp canvas và Max RGB = 0. Hai lượt memcheck exit 0, 0 lỗi và 0 byte rò rỉ. Source đã chạy khớp commit <code>bc1226f</code>. <a href="report/p7-v2-verification.md">Báo cáo P7-T04</a> ghi kết quả và tên gói bằng chứng. Bàn giao qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/34">PR #34</a>.</td>
     </tr>
   </tbody>
 </table>

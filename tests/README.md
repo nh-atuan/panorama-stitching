@@ -50,6 +50,28 @@ python tests/run_tests.py --compiler g++
 python tests/run_tests.py --list
 ```
 
+### Kiểm thử tích hợp V2 (P7-T04)
+
+Suite `gpu_v2_pipeline` liên kết S5 V2 thật. Khi có `src/v2/v2_pipeline.{h,cu}`, suite gọi `v2_prepare` và `v2_run_stages` giống CLI, chờ stream rồi đọc H và canvas trên Device. Bản source trước tích hợp dùng dispatcher riêng của test và ghi `test-only dispatcher smoke`. Cờ `--require-v2-pipeline` chỉ chấp nhận chế độ production.
+
+```bash
+# Smoke test trên Colab T4 trước khi tích hợp P7-T02.
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v2_pipeline --require-t4
+
+# Nghiệm thu sau P7-T02 với sáu fixture translation/projective và dataset cuối kỳ.
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v2_pipeline \
+  --require-t4 --require-v2-pipeline --v2-synthetic-dir results/synthetic \
+  --v2-dataset-dir dataset
+
+# Kiểm tra bộ nhớ với pipeline chính thức, các fixture nhúng và dataset cuối kỳ.
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 \
+  build/tests_gpu/gpu_v2_pipeline --require-v2-pipeline --dataset dataset
+```
+
+Tạo `results/synthetic` bằng `scripts/make_synthetic_pair.py` với ảnh nguồn synthetic của nhóm. Nếu không truyền `--v2-synthetic-dir`, suite dùng sáu fixture tịnh tiến nhúng. Khi chỉ định dataset, suite yêu cầu đủ 12 cấu hình, gồm hai ca lỗi dự kiến `challenge/medium` và `challenge/large`. Để thử một cặp chuẩn, có thể truyền hai đường dẫn ảnh vào executable.
+
+Suite kiểm tra lần lượt trạng thái, sai số chiếu B→A, hình học canvas và RGB. Ngưỡng synthetic là RMSE ≤ 0,5 px và Max ≤ 1 px trên lưới 20×20 lọc bằng ground truth. Độ lệch chiếu giữa phiên bản phải dưới 0,1 px. Kích thước và offset phải khớp chính xác, sai số RGB tối đa là 1 mức mỗi kênh. Khi RGB vượt ngưỡng, suite chạy lại S6 với cùng H để phân biệt ảnh hưởng từ H với lỗi lấy mẫu hoặc bàn giao canvas. Lệnh CLI `stitch --version 2` và CSV timing cần kiểm tra cùng dispatcher của P7-T02.
+
 ## 4. Công cụ phát triển trong `tests/tools/`
 
 - Kiểm tra hoặc sinh lại bảng mẫu BRIEF `src/common/brief_pattern.cpp` (seed 16):

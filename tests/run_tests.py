@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166)
+# Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195)
 # External source: none
 
 """Unified test runner for C++/CUDA suites (V0 and future GPU stages) and Python script tests."""
 
 import argparse
+import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -53,6 +55,10 @@ V1_ALL_SOURCES = [
     "src/v1/v1_warp_blend.cu",
     "src/v1/v1_pipeline.cu",
 ]
+
+V2_PIPELINE_SUITE = "gpu_v2_pipeline"
+V2_PIPELINE_SOURCE = "src/v2/v2_pipeline.cu"
+V2_PIPELINE_HEADER = "src/v2/v2_pipeline.h"
 
 V0_SUITES = {
     "preprocess": [*COMMON_BLUR, "src/v0/v0_preprocess.cpp", "tests/v0/test_v0_preprocess.cpp"],
@@ -146,11 +152,17 @@ GPU_SUITES = {
         *V1_ALL_SOURCES,
         "tests/gpu/test_gpu_v1_pipeline.cu",
     ],
+    V2_PIPELINE_SUITE: [
+        *V0_ALL_SOURCES,
+        *V1_ALL_SOURCES,
+        "src/v2/s5/v2_homography.cu",
+        "tests/gpu/test_gpu_v2_pipeline.cu",
+    ],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {"gpu_s6": ["-Xlinker=--wrap=cudaMalloc"]}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
-GPU_STB_SUITES = {"gpu_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline"}
+GPU_STB_SUITES = {"gpu_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline", V2_PIPELINE_SUITE}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
 GPU_COMPILE_FLAGS = [
@@ -172,6 +184,7 @@ PYTHON_SUITES = [
     "test_profiling_scripts.py",
     "test_run_tests.py",
     "test_v1_cli.py",
+    "test_verify_v2_dataset.py",
 ]
 
 
@@ -193,12 +206,16 @@ def gpu_stb_command(compiler, stb_object):
 
 def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.platform):
     """Compile line of one GPU suite; V0 sources get the same host flags as the official build."""
+    v2_pipeline = []
+    if name == V2_PIPELINE_SUITE and all((ROOT / path).is_file() for path in (V2_PIPELINE_SOURCE, V2_PIPELINE_HEADER)):
+        v2_pipeline = ["-DV2_PIPELINE_AVAILABLE", V2_PIPELINE_SOURCE]
     return [
         compiler,
         *GPU_COMPILE_FLAGS,
         f"-Xcompiler=-Wall,-Wextra,-Werror,{GPU_HOST_FLAGS}",
         "-Isrc",
         "-Itests",
+        *v2_pipeline,
         *GPU_SUITES[name],
         *([str(stb_object)] if name in GPU_STB_SUITES else []),
         *GPU_LINK_FLAGS.get(name, []),
@@ -329,6 +346,27 @@ def run_python_group(base_env):
     print(f"PASS python suites: {len(PYTHON_SUITES)}, total tests: {total_tests}", flush=True)
 
 
+def v2_synthetic_arguments(folder):
+    """Pass the existing generator's six B->A matrices to the C++ integration test."""
+    arguments = []
+    for case in ("translation", "projective"):
+        for size in ("small", "medium", "large"):
+            prefix = folder.resolve() / case / size
+            truth_path = prefix.with_name(f"{size}_truth.json")
+            try:
+                truth = json.loads(truth_path.read_text(encoding="utf-8"))
+                matrix = truth["H_gt"]
+                if (truth["direction"] != "B->A" or truth["case"] != case or truth["size"] != size or
+                        not isinstance(matrix, list) or len(matrix) != 9 or
+                        not all(type(value) in (float, int) and math.isfinite(value) for value in matrix)):
+                    raise ValueError("expected nine finite coefficients for this B->A fixture")
+            except (KeyError, TypeError, ValueError, OverflowError) as error:
+                raise RuntimeError(f"Invalid synthetic truth {truth_path}: {error}") from error
+            arguments.extend(["--synthetic-pair", f"{case}/{size}", str(prefix.with_name(f"{size}_left.png")),
+                              str(prefix.with_name(f"{size}_right.png")), *(str(value) for value in matrix)])
+    return arguments
+
+
 def run_gpu_group(args, environment):
     compiler = shutil.which(args.compiler)
     if not compiler or Path(compiler).stem.lower() != "nvcc":
@@ -341,6 +379,14 @@ def run_gpu_group(args, environment):
     build = ROOT / "build/tests_gpu"
     build.mkdir(parents=True, exist_ok=True)
     selected = [name for name in (args.suite or GPU_SUITES) if name in GPU_SUITES]
+    v2_arguments = []
+    if V2_PIPELINE_SUITE in selected:
+        if args.require_v2_pipeline:
+            v2_arguments.append("--require-v2-pipeline")
+        if args.v2_dataset_dir:
+            v2_arguments.extend(["--dataset", str(args.v2_dataset_dir.resolve())])
+        if args.v2_synthetic_dir:
+            v2_arguments.extend(v2_synthetic_arguments(args.v2_synthetic_dir))
     stb_object = build / "stb_impl.o"
     if GPU_STB_SUITES.intersection(selected):
         run(gpu_stb_command(compiler, stb_object), environment)
@@ -348,8 +394,11 @@ def run_gpu_group(args, environment):
     for name in selected:
         binary = build / name
         print(f"Build/run [gpu]: {name}", flush=True)
-        run(gpu_suite_command(compiler, name, binary, stb_object), environment)
-        output = run([str(binary)], environment)
+        command = gpu_suite_command(compiler, name, binary, stb_object)
+        if name == V2_PIPELINE_SUITE and args.require_v2_pipeline and "-DV2_PIPELINE_AVAILABLE" not in command:
+            raise RuntimeError("Production V2 pipeline source and header are required")
+        run(command, environment)
+        output = run([str(binary), *(v2_arguments if name == V2_PIPELINE_SUITE else [])], environment)
         count = parse_pass_count(output)
         if count is None:
             raise RuntimeError(f"GPU suite {name} did not report a PASS count")
@@ -373,6 +422,9 @@ def main(argv=None):
     )
     parser.add_argument("--suite", choices=tuple(V0_SUITES)+tuple(GPU_SUITES), action="append", help="run selected C++/CUDA suites")
     parser.add_argument("--require-t4", action="store_true", help="verify Tesla T4 before official build")
+    parser.add_argument("--require-v2-pipeline", action="store_true", help="reject the test-only V2 dispatcher")
+    parser.add_argument("--v2-synthetic-dir", type=Path, help="six translation/projective pairs from make_synthetic_pair.py")
+    parser.add_argument("--v2-dataset-dir", type=Path, help="official 4-pair dataset at all 3 resolutions")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
     parser.add_argument("--list", action="store_true", help="list the available suites and exit")
     args = parser.parse_args(argv)
@@ -383,6 +435,10 @@ def main(argv=None):
 
     if args.suite and (args.group == "python" or (args.group == "v0" and any(n in GPU_SUITES for n in args.suite)) or (args.group == "gpu" and any(n in V0_SUITES for n in args.suite))):
         raise RuntimeError("Selected --suite does not belong to --group")
+    if args.require_v2_pipeline or args.v2_synthetic_dir or args.v2_dataset_dir:
+        if (args.group not in {"all", "gpu"} or (args.suite and V2_PIPELINE_SUITE not in args.suite) or
+                not is_nvcc(args.compiler)):
+            parser.error("V2 options require the gpu_v2_pipeline suite and nvcc")
 
     print("Validation: Colab T4 required" if args.require_t4 else "Validation: local, not official Colab T4")
     print(f"Host: {platform.platform()}, CPU: {platform.processor() or 'unknown'}", flush=True)

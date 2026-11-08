@@ -37,11 +37,9 @@ GrayImage packed_gray(float* data, const Image& rgb) {
 // with the same value its tests and driver use.
 constexpr std::size_t kV1StackBytes = 32768;
 
-// Order of the dispatch table and of the CSV columns S1_V1_ms..S6_V1_ms.
-typedef ErrorCode (*StageFunction)(DeviceWorkspace&, const Config&, cudaStream_t);
-const StageFunction kStages[kStageCount] = {
-    v1_preprocess, v1_detect, v1_describe, v1_match, v1_homography, v1_warp_blend
-};
+std::size_t v1_s5_scratch(std::size_t capacity) {
+    return v1_homography_scratch_bytes(capacity);
+}
 
 }  // namespace
 
@@ -63,7 +61,8 @@ V1DeviceOwner::~V1DeviceOwner() {
     device_free(view.d_imageA);
 }
 
-std::size_t v1_scratch_bytes(const Image& a, const Image& b, std::size_t feature_capacity) {
+static std::size_t gpu_scratch_bytes(const Image& a, const Image& b, std::size_t feature_capacity,
+                                    HomographyScratchBytes homography_scratch) {
     std::size_t needed = 0;
     bool valid = true;
     auto take = [&](std::size_t bytes, bool zero_allowed) {
@@ -78,18 +77,27 @@ std::size_t v1_scratch_bytes(const Image& a, const Image& b, std::size_t feature
         take(v1_describe_scratch_bytes(image->width, image->height, feature_capacity), false);
     }
     take(v1_match_scratch_bytes(feature_capacity), feature_capacity == 0);
-    take(v1_homography_scratch_bytes(feature_capacity), false);
+    take(homography_scratch(feature_capacity), false);
     const std::size_t alignment = 16;
     if (!valid || needed > std::numeric_limits<std::size_t>::max() - (alignment - 1)) return 0;
     return (needed + alignment - 1) / alignment * alignment;
 }
 
+std::size_t v1_scratch_bytes(const Image& a, const Image& b, std::size_t feature_capacity) {
+    return gpu_scratch_bytes(a, b, feature_capacity, v1_s5_scratch);
+}
+
 ErrorCode v1_prepare(const Image& left, const Image& right, const Config& config,
                      V1DeviceOwner& owner) {
+    return prepare_gpu_pipeline(left, right, config, owner, v1_s5_scratch);
+}
+
+ErrorCode prepare_gpu_pipeline(const Image& left, const Image& right, const Config& config,
+                               V1DeviceOwner& owner, HomographyScratchBytes homography_scratch) {
     if (!valid_rgb(left) || !valid_rgb(right)) return ErrorCode::InvalidImage;
     if (config.max_keypoints <= 0) return ErrorCode::InvalidConfig;
     const std::size_t features = static_cast<std::size_t>(config.max_keypoints);
-    const std::size_t scratch = v1_scratch_bytes(left, right, features);
+    const std::size_t scratch = gpu_scratch_bytes(left, right, features, homography_scratch);
     if (!scratch) return ErrorCode::InvalidImage;
 
     std::size_t stack_bytes = 0;
@@ -143,11 +151,19 @@ DeviceCounts v1_read_counts(const DeviceWorkspace& workspace, cudaStream_t strea
 
 ErrorCode v1_run_stages(DeviceWorkspace& workspace, const Config& config, cudaStream_t stream,
                         const V1StageTrace& trace, V1StageFailure& failure) {
+    return run_gpu_stages(workspace, config, stream, trace, failure, v1_homography);
+}
+
+ErrorCode run_gpu_stages(DeviceWorkspace& workspace, const Config& config, cudaStream_t stream,
+                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography) {
+    const GpuStage stages[kStageCount] = {
+        v1_preprocess, v1_detect, v1_describe, v1_match, homography, v1_warp_blend
+    };
     failure = V1StageFailure();
     for (std::size_t i = 0; i < kStageCount; ++i) {
         const Stage stage = static_cast<Stage>(i);
         if (trace.stage_start) trace.stage_start[i].record(stream);
-        const ErrorCode status = kStages[i](workspace, config, stream);
+        const ErrorCode status = stages[i](workspace, config, stream);
         if (status != ErrorCode::Success) {
             failure.stage = stage;
             if (stage == Stage::WarpBlend) {
@@ -170,16 +186,7 @@ ErrorCode v1_run_stages(DeviceWorkspace& workspace, const Config& config, cudaSt
 }
 
 V1Diagnostics v1_collect_diagnostics(const DeviceWorkspace& workspace, cudaStream_t stream) {
-    V1Diagnostics diagnostics;
-    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.counts, workspace.d_counts, sizeof(DeviceCounts),
-                               cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.homography, workspace.d_homography,
-                               sizeof(Homography), cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaMemcpyAsync(&diagnostics.s5, v1_homography_diagnostics(workspace),
-                               sizeof(V1HomographyDiagnostics), cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
-    diagnostics.canvas = workspace.canvas;
-    return diagnostics;
+    return collect_gpu_diagnostics(workspace, stream, v1_homography_diagnostics(workspace));
 }
 
 }  // namespace panorama

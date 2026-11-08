@@ -243,8 +243,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Bổ sung cơ chế đo thời gian <code>cudaEvent_t</code> trong <code>src/main.cu</code> và ghép nối <code>src/v2/v2_pipeline</code></td>
       <td>P6-T01</td>
       <td>Gắn <code>cudaEventRecord</code> quanh các kernel stage trên Device để đo chuẩn <code>Total_Kernel_ms</code>, H2D, D2H; ghép <code>src/v2/v2_pipeline.{h,cu}</code> gọi S5 V2 mới và tái sử dụng S1–S4, S6 từ <code>src/v1/</code>; CLI <code>./stitch ... --version 2</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>07/11 Chương triển khai pipeline V2, CLI và CUDA event timing trên <code>chuong/p7</code>. V2 gọi S5 V2, dùng lại S1–S4/S6 của V1; V1/V2 cùng đo thời gian kernel và parser đọc đúng CSV từng phiên bản. Đã build và kiểm tra cục bộ, chờ bằng chứng Colab T4 và review.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -261,8 +261,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Xây dựng suite kiểm tra tích hợp CLI V2 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P7-T01, P7-T02</td>
       <td>Tạo suite C++/CUDA <code>tests/gpu/test_gpu_v2_pipeline.cu</code> đối chiếu H và canvas của V2 với V0/V1 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>07/11 đã nối suite vào pipeline V2 thật. Suite đạt 175 checks trên GTX 1650, gồm sáu cặp synthetic. <a href="../Group16_P7_V2_Verification.ipynb">Notebook Colab T4</a> nhận gói source tích hợp để chạy 12 cấu hình và memcheck. Theo dõi bằng chứng tại <a href="report/p7-v2-verification.md">báo cáo P7-T04</a>.</td>
     </tr>
   </tbody>
 </table>

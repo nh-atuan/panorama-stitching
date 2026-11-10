@@ -252,8 +252,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Đo benchmark V2 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V2</td>
       <td>P7-T01, P7-T02</td>
       <td>Đo thời gian V2 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0 và V1; thu thập trace timeline NSYS và chỉ số NCU cho kernel S5 V2; xuất đủ CSV và biểu đồ speedup vào Drive <a href="https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing"><code>v2/</code></a> (xem <a href="results-guide.md">hướng dẫn</a>); cập nhật <a href="apod-log.md">apod-log.md</a> và hoàn thành mục báo cáo V2 trong <code>docs/report/</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>10/11: Benchmark V2 (5 runs + warm-up), đối chiếu V0 P6 chính thức và V1 P7 cùng phiên; 4 trace NSYS, 8 report NCU, CSV/biểu đồ và báo cáo APOD tại <a href="report/p7-t03-v2-apod.md">docs/report/p7-t03-v2-apod.md</a>. Đã bổ sung 1 ảnh PNG NSYS và 4 PDF NCU; người phụ trách xác nhận đã upload gói kết quả lên Drive chung <code>v2/</code>.</td>
     </tr>
     <tr>
       <td>Chương</td>

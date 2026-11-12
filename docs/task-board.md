@@ -234,8 +234,8 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
       <td>Thiết kế và cài đặt tối ưu kernel S5 V2 trong <code>src/v2/s5/</code></td>
       <td>P6-T01</td>
       <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật; build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (dung sai số học) trên 6 cặp synthetic; đạt bài test đơn vị của stage</td>
-      <td>Chờ review</td>
-      <td></td>
+      <td>Xong</td>
+      <td>07/11, nhánh <code>tuan/p7</code>: tối ưu song song hóa All-Inlier Refit và Jacobi SVD; PR #33 đã merge vào <code>main</code>. Colab T4: đạt các fixture đơn vị, H nhất quán với V0 trên 6 cặp synthetic.</td>
     </tr>
     <tr>
       <td>Thành</td>
@@ -267,6 +267,64 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
   </tbody>
 </table>
 
+## P8 - Tối ưu vi kiến trúc S5 và profiling V3
+
+Hạn của giai đoạn: **15/11 (Chủ nhật)**.
+
+Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5 (Homography RANSAC), tập trung giải quyết bài toán Occupancy thấp (~25%) và chi phí launch tuần tự của kernel <code>compute_hypotheses</code> được ghi nhận từ báo cáo NCU của V2. Các thành viên triển khai song song theo thứ tự phụ trách: Tuấn tối ưu vi kiến trúc kernel S5 V3; Thành ghép <code>v3_pipeline</code> và CLI <code>--version 3</code>; Đế chạy benchmark V3, thu thập profiling Nsight và hoàn thành báo cáo APOD V3; Chương xây dựng suite kiểm tra tích hợp V3 và nghiệm thu an toàn bộ nhớ trên Colab T4.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tuấn</td>
+      <td>P8-T01</td>
+      <td>Thiết kế và cài đặt tối ưu vi kiến trúc kernel S5 V3 trong <code>src/v3/s5/</code></td>
+      <td>P7-T01</td>
+      <td>Người làm tự lựa chọn giải pháp kỹ thuật tối ưu vi kiến trúc để giải quyết bài toán Occupancy thấp (~25%) và overhead điều phối của <code>compute_hypotheses</code> trong S5 V2; build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (dung sai số học) trên 6 cặp synthetic; đạt bài test đơn vị của stage</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Thành</td>
+      <td>P8-T02</td>
+      <td>Ghép nối <code>src/v3/v3_pipeline</code> và mở rộng CLI <code>--version 3</code></td>
+      <td>P8-T01</td>
+      <td>Người làm tự thiết kế kiến trúc điều phối và quản lý workspace; đảm bảo timer <code>cudaEvent_t</code> đo chuẩn xác <code>Total_Kernel_ms</code>, H2D, D2H và từng stage mà không tạo overhead; ghép <code>src/v3/v3_pipeline.{h,cu}</code> gọi S5 V3 mới và tái sử dụng S1–S4, S6 từ <code>src/v1/</code>; CLI <code>./stitch ... --version 3</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đế</td>
+      <td>P8-T03</td>
+      <td>Đo benchmark V3 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V3</td>
+      <td>P8-T01, P8-T02</td>
+      <td>Đo thời gian V3 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0, V1 và V2; người làm tự lựa chọn các metric NCU/NSYS để phân tích vi kiến trúc kernel S5 V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v3/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V3 trong <code>docs/report/</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Chương</td>
+      <td>P8-T04</td>
+      <td>Xây dựng suite kiểm tra tích hợp CLI V3 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
+      <td>P8-T01, P8-T02</td>
+      <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
 ## Quyết định đã chốt
 
 Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình làm.
@@ -289,3 +347,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 06/11 | Tuấn (nhóm trưởng) review và merge PR #31 vào main gỡ nghẽn pipeline V1; Tuấn tiếp quản các task P6-T04 (đo NCU kernel) và P6-T05 (đo NSYS, phân tích ca lỗi challenge, báo cáo bottleneck V1) của Đế trên nhánh `tuan/p6` do Đế bận; dòng `Authors:` ở tài liệu và test mới ghi Tuấn |
 | 07/11 | Nhóm trưởng chốt kế hoạch Phase 7 (hạn 10/11, Thứ 3): nhịp chạy sprint 3 ngày/version để mở rộng lên V4, V5, V6 mà vẫn giữ đủ 11 ngày chuẩn bị bài nộp cuối; áp dụng chu trình APOD chọn S5 (Homography RANSAC) làm mục tiêu tối ưu của V2 do chiếm 90–98% thời gian V1; phân công cân bằng kỹ thuật: Tuấn (kernel S5 V2), Thành (timer cudaEvent & v2_pipeline), Chương (test tích hợp V2 & compute-sanitizer T4), Đế (benchmark V2, profiling Nsight & báo cáo APOD V2); không đo lại V0 trong P7 |
 | 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing)), quy ước chi tiết tại [docs/results-guide.md](results-guide.md) và nhật ký APOD tại [docs/apod-log.md](apod-log.md) |
+| 12/11 | Chốt kế hoạch Phase 8 (hạn 15/11, Chủ nhật): sprint 3 ngày tập trung tối ưu vi kiến trúc kernel S5 V3 (giải quyết nút thắt Occupancy và launch overhead của `compute_hypotheses`); phân công theo thứ tự stage: Tuấn (kernel S5 V3), Thành (v3_pipeline & CLI), Đế (benchmark V3, profiling Nsight & báo cáo APOD V3), Chương (test tích hợp V3 & compute-sanitizer T4); các thành viên tự quyết định giải pháp kỹ thuật trong phạm vi module mình phụ trách; xác nhận hoàn tất nghiệm thu P7-T01 |

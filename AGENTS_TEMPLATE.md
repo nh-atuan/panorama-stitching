@@ -29,6 +29,7 @@ Agent phải đọc và tuân thủ các nguồn sau, theo thứ tự ưu tiên 
 4. Task đang làm trong `docs/task-board.md`, được xác định bằng mã task dạng `P<số giai đoạn>-T<số thứ tự>`.
 5. Các tài liệu liên quan khác trong `docs/`: `dataset.md`, `interface.md` và `docs/stages/*.md` khi đã có.
 6. Khuôn mẫu này và các quy tắc riêng của thành viên.
+7. Tài liệu và kiến thức môn học trong [thư mục slides bài giảng](https://drive.google.com/drive/folders/1sHsuSd1-3yqEo98fjir2iUOF_opcPAct?usp=sharing): tra cứu và vận dụng các kiến thức đã được học vào các phiên bản tối ưu của đồ án (`V1`, `V2`, `V3`...).
 
 Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ảnh hưởng, chỉ ra chỗ mâu thuẫn kèm trích dẫn cụ thể và hỏi người dùng.
 

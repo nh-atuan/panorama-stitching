@@ -271,7 +271,7 @@ Giai đoạn P7 áp dụng chu trình APOD (Assess → Parallelize → Optimize 
 
 Hạn của giai đoạn: **15/11 (Chủ nhật)**.
 
-Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5 (Homography RANSAC), tập trung giải quyết bài toán Occupancy thấp (~25%) và chi phí launch tuần tự của kernel <code>compute_hypotheses</code> được ghi nhận từ báo cáo NCU của V2. Các thành viên triển khai song song theo thứ tự phụ trách: Tuấn tối ưu vi kiến trúc kernel S5 V3; Thành ghép <code>v3_pipeline</code> và CLI <code>--version 3</code>; Đế chạy benchmark V3, thu thập profiling Nsight và hoàn thành báo cáo APOD V3; Chương xây dựng suite kiểm tra tích hợp V3 và nghiệm thu an toàn bộ nhớ trên Colab T4.
+Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5 (Homography RANSAC), tập trung giải quyết bài toán Occupancy thấp (~25%) và chi phí launch tuần tự của kernel <code>compute_hypotheses</code> được ghi nhận từ báo cáo NCU của V2. Tuấn tối ưu kernel S5 V3. Thành ghép <code>v3_pipeline</code> và CLI <code>--version 3</code>. Đế chạy benchmark, profiling Nsight và lập báo cáo APOD V3. Chương và Thành cùng phụ trách P8-T04. Chương bàn giao bộ kiểm thử và notebook, Thành chạy nghiệm thu trên Colab T4 sau khi có bản tích hợp.
 
 <table>
   <thead>
@@ -314,13 +314,13 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td></td>
     </tr>
     <tr>
-      <td>Chương</td>
+      <td>Chương, Thành</td>
       <td>P8-T04</td>
       <td>Xây dựng suite kiểm tra tích hợp CLI V3 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Bị chặn</td>
+      <td><strong>Phần Chương: Xong.</strong> Đã bàn giao suite, harness CLI, <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> và <a href="report/p8-v3-verification.md">báo cáo</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37 (draft)</a>. <strong>Phần Thành:</strong> Sau khi tích hợp P8-T01/P8-T02, điền SHA production và header CSV, chạy notebook trên T4 để kiểm tra 6 synthetic, 12 cấu hình ảnh thật, CLI/CSV/D2H và hai lượt memcheck. Thành lưu ZIP bằng chứng, cập nhật báo cáo và chuyển task sang <code>Chờ review</code> khi đạt nghiệm thu.</td>
     </tr>
   </tbody>
 </table>

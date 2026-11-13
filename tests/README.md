@@ -72,6 +72,33 @@ Tạo `results/synthetic` bằng `scripts/make_synthetic_pair.py` với ảnh ng
 
 Suite kiểm tra lần lượt trạng thái, sai số chiếu B→A, hình học canvas và RGB. Ngưỡng synthetic là RMSE ≤ 0,5 px và Max ≤ 1 px trên lưới 20×20 lọc bằng ground truth. Độ lệch chiếu giữa phiên bản phải dưới 0,1 px. Kích thước và offset phải khớp chính xác, sai số RGB tối đa là 1 mức mỗi kênh. Khi RGB vượt ngưỡng, suite chạy lại S6 với cùng H để phân biệt ảnh hưởng từ H với lỗi lấy mẫu hoặc bàn giao canvas. Lệnh CLI `stitch --version 2` và CSV timing cần kiểm tra cùng dispatcher của P7-T02.
 
+### Kiểm thử tích hợp V3 (P8-T04)
+
+Runner phát hiện `src/v3/v3_pipeline.{h,cu}` và link các nguồn trong `src/v3/` cùng pipeline V0–V2. Suite dự kiến gọi `v3_prepare` và `v3_run_stages` theo contract workspace và stream của V2. Khi thiếu file production, yêu cầu chạy V3 trực tiếp trả lỗi P8-T02, còn lượt chạy toàn bộ GPU suite ghi rõ V3 được bỏ qua. Khi có đủ hai file, lỗi build, link hoặc test V3 làm runner thất bại.
+
+Suite V2/V3 dùng chung cách nạp ảnh, fixture tịnh tiến nhúng, ma trận ảnh thật, `make_v0_config` và phép đo. Cùng một `Config` và seed RANSAC được truyền cho mọi phiên bản trong một ca. Seed tạo ảnh synthetic là dữ liệu riêng của fixture. Suite đợi stream kết thúc trước khi đọc H hoặc sao chép panorama từ Device.
+
+V3 kiểm tra theo thứ tự trạng thái → H → canvas → RGB. Hai ca challenge dự kiến trả `NumericalFailure` kết thúc sau bước trạng thái. Ngưỡng ground truth là RMSE ≤ 0,5 px và Max ≤ 1 px, tính khoảng cách Euclid sau chiếu B→A trên lưới 20×20 của ảnh B. Với synthetic, tập điểm Q chỉ lấy các điểm mà H_gt chiếu vào ảnh A. Với ảnh thật, dùng toàn bộ lưới B. Sai lệch chiếu cực đại giữa V3 và mỗi bản V0/V1/V2 phải < 0,1 px. Canvas phải khớp width, height và offset chính xác. RGB được so trên cả canvas, gồm nền đen và bỏ qua padding, với sai lệch tối đa ≤ 1 mức/kênh.
+
+```bash
+# Smoke test sau khi T01/T02 đã bàn giao, dùng fixture nhúng và ca lỗi.
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v3_pipeline --require-t4
+
+# Nghiệm thu với đúng bộ synthetic P7 và toàn bộ dataset cuối kỳ.
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v3_pipeline \
+  --require-t4 --v3-synthetic-dir results/synthetic --v3-dataset-dir dataset
+
+# Memcheck suite và đường CLI production trên T4.
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 \
+  ./build/tests_gpu/gpu_v3_pipeline
+python3 scripts/build.py --require-t4 --out-dir build
+compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 \
+  ./build/stitch dataset/site1/small_left.jpg dataset/site1/small_right.jpg \
+  build/p8-v3-site1-small.png --version 3 --runs 1
+```
+
+Lượt nghiệm thu yêu cầu cả sáu fixture translation/projective và 12 cấu hình ảnh thật. Sau khi Thành tích hợp CLI, kiểm tra thêm header và các hàng CSV của `--version 3` theo `version_columns(3)` trong `scripts/run_benchmark.py`, thống nhất schema nếu contract production thay đổi. Lưu SHA, manifest ảnh, kết quả từng ca và hai log memcheck trước khi cập nhật task board.
+
 ## 4. Công cụ phát triển trong `tests/tools/`
 
 - Kiểm tra hoặc sinh lại bảng mẫu BRIEF `src/common/brief_pattern.cpp` (seed 16):

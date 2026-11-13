@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -65,6 +66,30 @@ class GpuCommandTest(unittest.TestCase):
             self.assertEqual("-DV2_PIPELINE_AVAILABLE" in command, len(files) == 2)
             self.assertEqual(run_tests.V2_PIPELINE_SOURCE in command, len(files) == 2)
 
+    def test_v3_requires_both_integration_files_and_links_real_sources(self):
+        with TemporaryDirectory() as directory, mock.patch.object(run_tests, "ROOT", Path(directory)):
+            root = Path(directory)
+            for name in (run_tests.V3_PIPELINE_HEADER, run_tests.V3_PIPELINE_SOURCE,
+                         "src/v3/s5/v3_homography.cu"):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+                if name == run_tests.V3_PIPELINE_HEADER:
+                    with self.assertRaisesRegex(RuntimeError, "Production V3 pipeline"):
+                        self.command(run_tests.V3_PIPELINE_SUITE)
+            command = self.command(run_tests.V3_PIPELINE_SUITE)
+            for value in ("-arch=sm_75", "-DV3_PIPELINE_AVAILABLE", run_tests.V3_PIPELINE_SOURCE,
+                          run_tests.V2_PIPELINE_SOURCE, "src/v3/s5/v3_homography.cu", "build/stb_impl.o"):
+                self.assertIn(value, command)
+
+    def test_explicit_v3_fails_before_build_if_production_is_absent(self):
+        args = SimpleNamespace(suite=[run_tests.V3_PIPELINE_SUITE])
+        with mock.patch.object(run_tests, "v3_pipeline_available", return_value=False), \
+                mock.patch.object(run_tests, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "P8-T02"):
+                run_tests.run_gpu_group(args, {})
+        run.assert_not_called()
+
     def test_stb_is_not_built_with_strict_warnings(self):
         command = run_tests.gpu_stb_command("nvcc", "build/stb_impl.o")
         self.assertIn(run_tests.STB_SOURCE, command)
@@ -98,7 +123,7 @@ class MainTest(unittest.TestCase):
 
     def test_list_names_every_group_and_runs_nothing(self):
         text, v0, gpu, python = self.run_main(["--list"])
-        for name in ("preprocess", "gpu_s6", "gpu_reference", "test_run_tests.py"):
+        for name in ("preprocess", "gpu_s6", "gpu_reference", "gpu_v3_pipeline", "test_run_tests.py"):
             self.assertIn(name, text)
         for group in (v0, gpu, python):
             group.assert_not_called()
@@ -134,8 +159,12 @@ class MainTest(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             self.run_main(["--group", "gpu", "--suite", "gpu_s6", "--require-v2-pipeline"])
 
+    def test_v3_acceptance_requires_both_fixture_directories(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            self.run_main(["--group", "gpu", "--suite", "gpu_v3_pipeline", "--v3-dataset-dir", "dataset"])
 
-class V2SyntheticArgumentsTest(unittest.TestCase):
+
+class SyntheticArgumentsTest(unittest.TestCase):
     def test_all_six_truth_matrices_are_forwarded_and_direction_is_enforced(self):
         matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1]
         with TemporaryDirectory() as directory:
@@ -146,14 +175,14 @@ class V2SyntheticArgumentsTest(unittest.TestCase):
                     truth_path = root / case / f"{size}_truth.json"
                     truth = {"case": case, "size": size, "direction": "B->A", "H_gt": matrix}
                     truth_path.write_text(json.dumps(truth), encoding="utf-8")
-            arguments = run_tests.v2_synthetic_arguments(root)
+            arguments = run_tests.synthetic_arguments(root)
             self.assertEqual(arguments.count("--synthetic-pair"), 6)
             self.assertEqual(arguments[1], "translation/small")
             self.assertEqual(arguments[-9:], [str(value) for value in matrix])
             truth["direction"] = "A->B"
             truth_path.write_text(json.dumps(truth), encoding="utf-8")
             with self.assertRaisesRegex(RuntimeError, "Invalid synthetic truth"):
-                run_tests.v2_synthetic_arguments(root)
+                run_tests.synthetic_arguments(root)
 
 
 if __name__ == "__main__":

@@ -320,7 +320,7 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
       <td>Bị chặn</td>
-      <td><strong>Phần Chương: Xong.</strong> Đã bàn giao suite, harness CLI, <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> và <a href="report/p8-v3-verification.md">báo cáo</a>. <strong>Phần Thành:</strong> Sau khi tích hợp P8-T01/P8-T02, điền SHA production và header CSV, chạy notebook trên T4 để kiểm tra 6 synthetic, 12 cấu hình ảnh thật, CLI/CSV/D2H và hai lượt memcheck. Thành lưu ZIP bằng chứng, cập nhật báo cáo và chuyển task sang <code>Chờ review</code> khi đạt nghiệm thu.</td>
+      <td><strong>Phần Chương: Xong.</strong> Đã bàn giao suite, harness CLI, <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> và <a href="report/p8-v3-verification.md">báo cáo</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37 (draft)</a>. <strong>Phần Thành:</strong> Sau khi tích hợp P8-T01/P8-T02, điền SHA production và header CSV, chạy notebook trên T4 để kiểm tra 6 synthetic, 12 cấu hình ảnh thật, CLI/CSV/D2H và hai lượt memcheck. Thành lưu ZIP bằng chứng, cập nhật báo cáo và chuyển task sang <code>Chờ review</code> khi đạt nghiệm thu.</td>
     </tr>
   </tbody>
 </table>

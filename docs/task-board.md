@@ -292,8 +292,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Thiết kế và cài đặt tối ưu vi kiến trúc kernel S5 V3 trong <code>src/v3/s5/</code></td>
       <td>P7-T01</td>
       <td>Người làm tự lựa chọn giải pháp kỹ thuật tối ưu vi kiến trúc để giải quyết bài toán Occupancy thấp (~25%) và overhead điều phối của <code>compute_hypotheses</code> trong S5 V2; build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (dung sai số học) trên 6 cặp synthetic; đạt bài test đơn vị của stage</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>13/11, nhánh <code>tuan/p8</code>: tối ưu vi kiến trúc S5 V3 (warp shuffle MSAC reduction không tốn scratch toàn cục, ma trận SVD trong shared memory, launch bounds 128/4, batch size 128). Colab Tesla T4: build <code>sm_75</code> sạch, đạt toàn bộ 16.624 checks suite <code>gpu_v3_s5</code> (11 fixture đơn vị, max_cpu_gpu_px = 0); <code>compute-sanitizer</code> xác nhận 0 lỗi, 0 byte rò rỉ bộ nhớ.</td>
     </tr>
     <tr>
       <td>Thành</td>

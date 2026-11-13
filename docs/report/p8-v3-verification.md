@@ -4,7 +4,7 @@
 
 ## 1. Scope
 
-P8-T04 kiểm tra tính tương đương V0–V3, contract CLI và an toàn bộ nhớ trên Tesla T4. T01 cung cấp S5 V3, T02 cung cấp dispatcher và schema CSV production, T03 phụ trách benchmark hiệu năng. [Phân công P8](../task-board.md)
+P8-T04 kiểm tra tính tương đương V0–V3, contract CLI và an toàn bộ nhớ trên Tesla T4. Chương đã hoàn tất phần chuẩn bị suite, harness CLI, notebook và báo cáo. Thành tiếp nhận lượt chạy T4 và cập nhật bằng chứng sau khi tích hợp S5 V3 của T01 vào dispatcher T02. T03 phụ trách benchmark hiệu năng. [Phân công P8](../task-board.md)
 
 ## 2. Repository Baseline
 
@@ -81,7 +81,7 @@ Hai lượt **BLOCKED**. Kết quả cần exit 0 và đầy đủ tổng kết 
 
 ## 10. Reproduction
 
-Mở [notebook P8](../../Group16_P8_V3_Verification.ipynb), chọn T4, điền `PRODUCTION_SHA`, `VERIFICATION_REF` và `T02_CSV_HEADER`. Upload `dataset.zip` chính thức và `synthetic.zip` đã dùng ở P7, hoặc trỏ đến thư mục giải nén trong Colab. Chạy toàn bộ notebook. Các lệnh chính tương đương:
+Mở [notebook P8](../../Group16_P8_V3_Verification.ipynb), chọn T4, điền `PRODUCTION_SHA`, `VERIFICATION_REF` và `T02_CSV_HEADER`. Để trống `DATASET_INPUT` và `SYNTHETIC_INPUT` để notebook tải dữ liệu từ Drive. Notebook ưu tiên `dataset.zip` trong thư mục cuối kỳ, rồi thử chuẩn bị lại từ ảnh gốc theo quy trình P7 nếu cần. Synthetic được sinh từ ảnh nguồn của P7. Nếu Drive giới hạn tải hoặc dữ liệu tái tạo lệch hash, điền đường dẫn ZIP hoặc thư mục đúng bộ P7 vào ô cấu hình. Các lệnh chính tương đương:
 
 ```bash
 python3 scripts/build.py --compiler nvcc --require-t4 --out-dir build
@@ -102,7 +102,7 @@ Notebook xuất `Group16_V3_P8-T04_TeslaT4_Evidence_<checkout>_<UTC>.zip` và SH
 
 ## 11. Known Limitations
 
-Chờ SHA production và schema được Thành xác nhận. Các lượt GPU, CLI và sanitizer được giao cho Chương chạy từ Colab. Chưa có log V3, ảnh đầu ra V3 hoặc evidence ZIP để công bố. Trạng thái PR nghiệm thu chờ gói evidence và review ảnh challenge.
+Thành sẽ xác nhận SHA production và schema CSV, chạy notebook trên Colab T4 và ghi nhận chất lượng ảnh challenge/small. Chưa có log V3, ảnh đầu ra V3 hoặc evidence ZIP. PR bàn giao có thể được review ở trạng thái draft trong khi chờ bằng chứng nghiệm thu.
 
 ## 12. Final Acceptance Summary
 

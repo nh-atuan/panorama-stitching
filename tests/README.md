@@ -80,6 +80,8 @@ Suite V2/V3 dùng chung cách nạp ảnh, fixture tịnh tiến nhúng, ma tr�
 
 V3 kiểm tra theo thứ tự trạng thái → H → canvas → RGB. Hai ca challenge dự kiến trả `NumericalFailure` kết thúc sau bước trạng thái. Ngưỡng ground truth là RMSE ≤ 0,5 px và Max ≤ 1 px, tính khoảng cách Euclid sau chiếu B→A trên lưới 20×20 của ảnh B. Với synthetic, tập điểm Q chỉ lấy các điểm mà H_gt chiếu vào ảnh A. Với ảnh thật, dùng toàn bộ lưới B. Sai lệch chiếu cực đại giữa V3 và mỗi bản V0/V1/V2 phải < 0,1 px. Canvas phải khớp width, height và offset chính xác. RGB được so trên cả canvas, gồm nền đen và bỏ qua padding, với sai lệch tối đa ≤ 1 mức/kênh.
 
+Suite cũng yêu cầu H hữu hạn với `max(abs(H)) = 1` trong sai số float theo interface, canvas chứa toàn bộ A tại offset không âm và ít nhất một ca nghiệm thu có canvas lớn hơn A.
+
 ```bash
 # Smoke test sau khi T01/T02 đã bàn giao, dùng fixture nhúng và ca lỗi.
 python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v3_pipeline --require-t4
@@ -98,6 +100,13 @@ compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 \
 ```
 
 Lượt nghiệm thu yêu cầu cả sáu fixture translation/projective và 12 cấu hình ảnh thật. Sau khi Thành tích hợp CLI, kiểm tra thêm header và các hàng CSV của `--version 3` theo `version_columns(3)` trong `scripts/run_benchmark.py`, thống nhất schema nếu contract production thay đổi. Lưu SHA, manifest ảnh, kết quả từng ca và hai log memcheck trước khi cập nhật task board.
+
+`verify_v3_cli.py` chạy `site1/small` qua CLI V2 và V3, xác nhận canvas mở rộng chứa A, đọc hết PNG sau D2H và so RGB. Harness yêu cầu `challenge/medium` tái lập `NumericalFailure` ở S6, exit 1 và không xuất CSV/PNG. Hai ca lỗi CLI kiểm tra file thiếu và `--runs 0`. Log lưu argv, stdout, stderr, trạng thái và summary. Header V3 phải khớp parser benchmark hiện hành. Khi T02 bàn giao, đối chiếu parser với header production và contract được thống nhất trước khi dùng kết quả làm bằng chứng.
+
+```bash
+python3 scripts/verify_v3_cli.py --stitch build/stitch --dataset dataset \
+  --out results/p8-v3-cli-smoke --require-t4
+```
 
 ## 4. Công cụ phát triển trong `tests/tools/`
 

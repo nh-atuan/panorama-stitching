@@ -25,7 +25,29 @@ struct Summary {
     int panoramas = 0;
     int expected_failures = 0;
     int max_rgb = 0;
+    bool expanded_canvas = false;
 };
+
+constexpr double kNormalizedScaleTolerance = std::numeric_limits<float>::epsilon();
+
+void check_normalization(const Matrix& h, const std::string& label) {
+    double maximum = 0.0;
+    for (double value : h) {
+        require(std::isfinite(value), label + ": Tier 2 non-finite H coefficient");
+        maximum = std::max(maximum, std::abs(value));
+    }
+    require(std::abs(maximum - 1.0) <= kNormalizedScaleTolerance,
+            label + ": Tier 2 expected max(abs(H)) = 1 within float epsilon, got " +
+            std::to_string(maximum));
+}
+
+void check_image_a_coverage(const Panorama& canvas, const Image& a, const std::string& label) {
+    const auto right = static_cast<std::int64_t>(canvas.offset_x) + a.width;
+    const auto bottom = static_cast<std::int64_t>(canvas.offset_y) + a.height;
+    require(canvas.offset_x >= 0 && canvas.offset_y >= 0 &&
+                right <= canvas.image.width && bottom <= canvas.image.height,
+            label + ": Tier 3 canvas does not contain A at a valid offset: " + geometry(canvas));
+}
 
 std::string status_text(ErrorCode status) {
     const std::string code = std::to_string(static_cast<unsigned>(status));
@@ -106,11 +128,15 @@ void compare_case(const Image& a, const Image& b, const Config& config, const st
         as_matrix(v0.homography), read_homography(v1, labels[1]),
         read_homography(v2, labels[2]), read_homography(v3, labels[3]),
     };
+    for (int version = 0; version < 4; ++version) {
+        check_normalization(matrices[version], labels[version]);
+    }
+    ProjectionError candidate_truth;
     if (truth) {
         for (int version = 0; version < 4; ++version) {
             const std::string label = labels[version] + " Tier 2 vs H_gt";
             const ProjectionError error = projection_error(a, b, matrices[version], *truth, truth, label);
-            std::cout << label << ": " << metric_text(error) << '\n';
+            if (version == 3) candidate_truth = error;
             require(error.rmse <= kTruthRmsePx && error.maximum <= kTruthMaxPx,
                     label + ": " + metric_text(error) + "; expected RMSE <= " +
                     std::to_string(kTruthRmsePx) + " px and max <= " + std::to_string(kTruthMaxPx) + " px");
@@ -120,14 +146,14 @@ void compare_case(const Image& a, const Image& b, const Config& config, const st
     for (int version = 0; version < 3; ++version) {
         const std::string label = labels[version] + "/V3 Tier 2";
         drifts[version] = projection_error(a, b, matrices[3], matrices[version], truth, label);
-        const std::string result = label + ": " + metric_text(drifts[version]) +
-                                   "; expected max < " + std::to_string(kDriftPx) + " px";
-        std::cout << result << '\n';
-        require(drifts[version].maximum < kDriftPx, result);
+        require(drifts[version].maximum < kDriftPx,
+                label + ": " + metric_text(drifts[version]) +
+                "; expected max < " + std::to_string(kDriftPx) + " px");
     }
 
     // Tier 3: compare every canvas before downloading RGB.
     const Panorama canvases[] = {v0.panorama, v1.canvas, v2.canvas};
+    check_image_a_coverage(v3.canvas, a, labels[3]);
     for (int version = 0; version < 3; ++version) {
         check_canvas(canvases[version], v3.canvas, labels[version] + "/V3 Tier 3");
     }
@@ -156,9 +182,12 @@ void compare_case(const Image& a, const Image& b, const Config& config, const st
                 "; Tier 2 " + metric_text(drifts[version]) + "; Tier 3 exact " + geometry(v3.canvas));
     }
     summary.max_rgb = std::max(summary.max_rgb, case_max_rgb);
+    summary.expanded_canvas |= v3.canvas.image.width > a.width || v3.canvas.image.height > a.height;
     ++summary.panoramas;
-    std::cout << name << ": Tier 3 exact " << geometry(v3.canvas)
-              << "; Tier 4 max RGB delta=" << case_max_rgb << '\n';
+    std::cout << name << ": V3 max drift vs V0/V1/V2="
+              << drifts[0].maximum << '/' << drifts[1].maximum << '/' << drifts[2].maximum << " px";
+    if (truth) std::cout << "; V3 vs H_gt " << metric_text(candidate_truth);
+    std::cout << "; canvas=" << geometry(v3.canvas) << "; Max RGB=" << case_max_rgb << '\n';
 }
 
 }  // namespace
@@ -178,6 +207,9 @@ int main(int argc, char** argv) {
                                   const std::string& name, ErrorCode expected, const Matrix* truth) {
             compare_case(a, b, config, name, expected, truth, summary);
         });
+        if (acceptance) {
+            require(summary.expanded_canvas, "V3 acceptance did not verify any canvas larger than image A");
+        }
         std::cout << "PASS GPU V3 pipeline (" << (acceptance ? "full acceptance" : "smoke") << "): "
                   << gpu_test::checks() << " checks, " << summary.panoramas << " panoramas, "
                   << summary.expected_failures << " expected errors, max RGB error=" << summary.max_rgb << '\n';

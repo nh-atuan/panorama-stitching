@@ -319,8 +319,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Xây dựng suite kiểm tra tích hợp CLI V3 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>Đã chuẩn bị suite, harness CLI và <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a>. Chờ SHA tích hợp P8-T01/P8-T02, schema CSV và log T4 để nghiệm thu. Xem <a href="report/p8-v3-verification.md">báo cáo P8-T04</a>.</td>
     </tr>
   </tbody>
 </table>

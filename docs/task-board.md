@@ -310,8 +310,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Đo benchmark V3 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V3</td>
       <td>P8-T01, P8-T02</td>
       <td>Đo thời gian V3 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0, V1 và V2; người làm tự lựa chọn các metric NCU/NSYS để phân tích vi kiến trúc kernel S5 V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v3/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V3 trong <code>docs/report/</code></td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>16/11: Đế đã chạy <a href="../Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đế đang lưu CSV, trace, metric và biểu đồ vào Drive chung; chờ xác nhận bàn giao để nghiệm thu task.</td>
     </tr>
     <tr>
       <td>Chương, Thành</td>

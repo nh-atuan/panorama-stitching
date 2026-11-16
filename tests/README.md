@@ -108,6 +108,15 @@ python3 scripts/verify_v3_cli.py --stitch build/stitch --dataset dataset \
   --out results/p8-v3-cli-smoke --require-t4
 ```
 
+### Kiểm thử độc lập S6 V4 (P9-T08)
+
+`gpu_v4_s6` dùng bộ fixture đơn vị của `gpu_s6` với renderer V4. Chỉ định thư mục synthetic P7 để chạy thêm cả sáu cặp, mỗi cặp dùng chung H_gt B→A cho V0 và V4. Suite so mã trạng thái trước, rồi kiểm tra kích thước, offset, stride, dung lượng và alias canvas trước khi tải pixel về. Max RGB phải ≤ 1 mức/kênh. Khi thiếu đầu vào đã chỉ định, suite báo lỗi. Lệnh chỉ kiểm thử S6 nên chạy được trước khi tích hợp CLI V4.
+
+```bash
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v4_s6 \
+  --require-t4 --v4-synthetic-dir results/synthetic
+```
+
 ## 4. Công cụ phát triển trong `tests/tools/`
 
 - Kiểm tra hoặc sinh lại bảng mẫu BRIEF `src/common/brief_pattern.cpp` (seed 16):

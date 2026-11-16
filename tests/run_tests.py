@@ -129,6 +129,7 @@ GPU_SUITES = {
         "tests/gpu/test_gpu_v3_s5.cu",
     ],
     "gpu_s6": ["src/v0/v0_warp_blend.cpp", "src/v1/v1_warp_blend.cu", "tests/gpu/test_gpu_s6_warp_blend.cu"],
+    "gpu_v4_s6": ["src/v0/v0_warp_blend.cpp", "src/v4/s6/v4_warp_blend.cu", "tests/gpu/test_gpu_s6_warp_blend.cu"],
     "gpu_reference": [*V0_ALL_SOURCES, "tests/gpu/test_gpu_reference.cu"],
     "gpu_blur": [*COMMON_BLUR, "src/v1/common/v1_gaussian_blur.cu", "tests/gpu/test_gpu_gaussian_blur.cu"],
     "gpu_s1": [
@@ -177,9 +178,9 @@ GPU_SUITES = {
     ],
 }
 # Link options a suite needs in addition to its sources.
-GPU_LINK_FLAGS = {"gpu_s6": ["-Xlinker=--wrap=cudaMalloc"]}
+GPU_LINK_FLAGS = {name: ["-Xlinker=--wrap=cudaMalloc"] for name in ("gpu_s6", "gpu_v4_s6")}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
-GPU_STB_SUITES = {"gpu_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline",
+GPU_STB_SUITES = {"gpu_s6", "gpu_v4_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline",
                   V2_PIPELINE_SUITE, V3_PIPELINE_SUITE}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
@@ -244,6 +245,7 @@ def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.plat
         f"-Xcompiler=-Wall,-Wextra,-Werror,{GPU_HOST_FLAGS}",
         "-Isrc",
         "-Itests",
+        *(["-DGROUP16_TEST_S6_V4"] if name == "gpu_v4_s6" else []),
         *pipeline,
         *GPU_SUITES[name],
         *([str(stb_object)] if name in GPU_STB_SUITES else []),
@@ -427,6 +429,8 @@ def run_gpu_group(args, environment):
         v3_arguments = ["--require-v3-pipeline", "--dataset", str(args.v3_dataset_dir.resolve()),
                         *synthetic_arguments(args.v3_synthetic_dir)]
     suite_arguments = {V2_PIPELINE_SUITE: v2_arguments, V3_PIPELINE_SUITE: v3_arguments}
+    if args.v4_synthetic_dir:
+        suite_arguments["gpu_v4_s6"] = synthetic_arguments(args.v4_synthetic_dir)
     stb_object = build / "stb_impl.o"
     if GPU_STB_SUITES.intersection(selected):
         run(gpu_stb_command(compiler, stb_object), environment)
@@ -467,6 +471,7 @@ def main(argv=None):
     parser.add_argument("--v2-dataset-dir", type=Path, help="official 4-pair dataset at all 3 resolutions")
     parser.add_argument("--v3-synthetic-dir", type=Path, help="six P7 translation/projective fixtures for V3")
     parser.add_argument("--v3-dataset-dir", type=Path, help="official 4-pair dataset for V3 at all 3 resolutions")
+    parser.add_argument("--v4-synthetic-dir", type=Path, help="six P7 fixtures and their H_gt for standalone V4 S6")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
     parser.add_argument("--list", action="store_true", help="list the available suites and exit")
     args = parser.parse_args(argv)
@@ -487,6 +492,10 @@ def main(argv=None):
         if (args.group not in {"all", "gpu"} or (args.suite and V3_PIPELINE_SUITE not in args.suite) or
                 not is_nvcc(args.compiler)):
             parser.error("V3 options require the gpu_v3_pipeline suite and nvcc")
+    if args.v4_synthetic_dir:
+        if (args.group not in {"all", "gpu"} or (args.suite and "gpu_v4_s6" not in args.suite) or
+                not is_nvcc(args.compiler)):
+            parser.error("--v4-synthetic-dir requires the gpu_v4_s6 suite and nvcc")
 
     print("Validation: Colab T4 required" if args.require_t4 else "Validation: local, not official Colab T4")
     print(f"Host: {platform.platform()}, CPU: {platform.processor() or 'unknown'}", flush=True)

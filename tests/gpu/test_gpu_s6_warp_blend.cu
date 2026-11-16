@@ -1,7 +1,12 @@
 // Authors: Thanh Chuong (23120195)
 // External source: none
 
+#ifdef GROUP16_TEST_S6_V4
+#include "gpu/pipeline_test_support.cuh"
+#include "v4/s6/v4_warp_blend.h"
+#else
 #include "v1/v1_warp_blend.h"
+#endif
 #include "v0/v0_warp_blend.h"
 #include "common/cuda_utils.cuh"
 #include "common/stb_image.h"
@@ -30,6 +35,15 @@ extern "C" cudaError_t __wrap_cudaMalloc(void** pointer, std::size_t bytes) {
 
 namespace {
 using namespace panorama;
+#ifdef GROUP16_TEST_S6_V4
+constexpr auto warp_blend = v4_warp_blend;
+constexpr const char* kComparison = "V0/V4";
+constexpr bool kReportFixtures = true;
+#else
+constexpr auto warp_blend = v1_warp_blend;
+constexpr const char* kComparison = "V0/V1";
+constexpr bool kReportFixtures = false;
+#endif
 int checks = 0, comparisons = 0, largest_difference = 0;
 // Acceptance fixed before execution: exact geometry/status; <= 1 RGB code/channel.
 struct Tols {
@@ -129,7 +143,7 @@ struct HostCanvas {
 
 HostCanvas render(const Image& a, const Image& b, const Homography& h, const Config& config) {
     GpuFixture gpu(a, b, h);
-    GROUP16_REQUIRE(v1_warp_blend(gpu.workspace, config, gpu.stream.get()) == ErrorCode::Success,
+    GROUP16_REQUIRE(warp_blend(gpu.workspace, config, gpu.stream.get()) == ErrorCode::Success,
                     "Analytic fixture failed to render");
     HostCanvas result;
     result.pixels = download(gpu);
@@ -158,7 +172,7 @@ void expect_pixel(const HostCanvas& output, int x, int y, int value) {
 void expect_error(const Image& a, const Image& b, const Homography& h,
                   const Config& config, ErrorCode expected) {
     GpuFixture gpu(a, b, h);
-    GROUP16_REQUIRE(v1_warp_blend(gpu.workspace, config, gpu.stream.get()) == expected,
+    GROUP16_REQUIRE(warp_blend(gpu.workspace, config, gpu.stream.get()) == expected,
                     "Unexpected error status for independent failure oracle");
     GROUP16_REQUIRE(!gpu.workspace.d_panorama && !gpu.workspace.canvas.image.data &&
                     !gpu.workspace.d_canvas, "Failure published or allocated output");
@@ -204,6 +218,11 @@ void analytic_tests() {
     }
     const HostCanvas blend_black = render(black.image, white.image, identity(), config);
     expect_geometry(blend_black, 1, 1, 0, 0); expect_pixel(blend_black, 0, 0, 128);
+#ifdef GROUP16_TEST_S6_V4
+    const HostCanvas black_b = render(white.image, black.image, identity(), config);
+    expect_geometry(black_b, 1, 1, 0, 0);
+    expect_pixel(black_b, 0, 0, 128);
+#endif
 
     const HostCanvas max_dimension = render(black.image, white.image,
                                            matrix(1,0,9999,0,1,0,0,0,1), config);
@@ -222,11 +241,16 @@ void analytic_tests() {
     expect_error(a.image, b.image, invalid, config, ErrorCode::NumericalFailure);
 }
 
-bool compare(const Image& a, const Image& b, const Homography& h, const Config& config) {
+bool compare(const Image& a, const Image& b, const Homography& h, const Config& config,
+             const char* label = nullptr) {
     CpuOutput cpu;
     const ErrorCode expected = v0_warp_blend(a, b, h, cpu.value, config);
     GpuFixture gpu(a, b, h);
-    const ErrorCode actual = v1_warp_blend(gpu.workspace, config, gpu.stream.get());
+    const ErrorCode actual = warp_blend(gpu.workspace, config, gpu.stream.get());
+    if (label || actual != expected) {
+        std::cout << (label ? label : "fixture") << ": status " << kComparison << '='
+                  << static_cast<int>(expected) << '/' << static_cast<int>(actual) << std::endl;
+    }
     GROUP16_REQUIRE(actual == expected, "CPU/GPU status mismatch");
     ++comparisons;
     if (actual != ErrorCode::Success) {
@@ -240,16 +264,23 @@ bool compare(const Image& a, const Image& b, const Homography& h, const Config& 
     GROUP16_REQUIRE(output.offset_x == cpu.value.offset_x && output.offset_y == cpu.value.offset_y,
             "CPU/GPU offsets differ");
     GROUP16_REQUIRE(output.image.stride == cpu.value.image.stride, "CPU/GPU stride differs");
-    GROUP16_REQUIRE(gpu.workspace.d_panorama == gpu.workspace.d_canvas &&
-            output.image.data == gpu.workspace.d_canvas, "Output aliases differ");
+    const std::size_t expected_bytes = cpu.value.image.stride * cpu.value.image.height;
+    GROUP16_REQUIRE(gpu.workspace.d_canvas && gpu.workspace.d_panorama == gpu.workspace.d_canvas &&
+            output.image.data == gpu.workspace.d_canvas &&
+            gpu.workspace.canvas_capacity_bytes == expected_bytes, "Output aliases or canvas capacity differ");
     std::vector<std::uint8_t> pixels = download(gpu);
     int max_difference = 0;
     for (std::size_t i = 0; i < pixels.size(); ++i)
         max_difference = std::max(max_difference, std::abs(int(pixels[i]) - int(cpu.value.image.data[i])));
     largest_difference = std::max(largest_difference, max_difference);
+    if (label || max_difference > Tols::max_channel_error) {
+        std::cout << (label ? label : "fixture") << ": canvas=" << output.image.width << 'x'
+                  << output.image.height << " offset=(" << output.offset_x << ',' << output.offset_y
+                  << ") max RGB error=" << max_difference << std::endl;
+    }
     GROUP16_REQUIRE(max_difference <= Tols::max_channel_error, "CPU/GPU pixel error exceeds fixed threshold");
     // Repeated calls replace the old owning canvas and must remain deterministic.
-    GROUP16_REQUIRE(v1_warp_blend(gpu.workspace, config, gpu.stream.get()) == ErrorCode::Success, "Second run failed");
+    GROUP16_REQUIRE(warp_blend(gpu.workspace, config, gpu.stream.get()) == ErrorCode::Success, "Second run failed");
     GROUP16_REQUIRE(download(gpu) == pixels, "Repeated GPU output differs");
     std::vector<std::uint8_t> preserved_a(a.stride * a.height), preserved_b(b.stride * b.height);
     CUDA_CHECK(cudaMemcpy(preserved_a.data(), gpu.workspace.d_imageA, preserved_a.size(), cudaMemcpyDeviceToHost));
@@ -262,29 +293,37 @@ bool compare(const Image& a, const Image& b, const Homography& h, const Config& 
 void synthetic_tests() {
     Fixture a(4,3,5,100), b(4,3,7,20);
     const Config config = settings();
-    for (const Homography& h : {identity(), matrix(1,0,-2,0,1,-1,0,0,1),
-            matrix(1,0,2,0,1,1,0,0,1), matrix(1,0,0.5f,0,1,-0.25f,0,0,1),
+    compare(a.image, b.image, matrix(1,0,-2,0,1,-1,0,0,1), config,
+            kReportFixtures ? "Partial overlap" : nullptr);
+    compare(a.image, b.image, matrix(1,0,0.5f,0,1,-0.25f,0,0,1), config,
+            kReportFixtures ? "Fractional border" : nullptr);
+    for (const Homography& h : {identity(), matrix(1,0,2,0,1,1,0,0,1),
             matrix(0,-1,2,1,0,0,0,0,1), matrix(-1,0,0,0,-1,0,0,0,-1),
             matrix(1e-20f,0,0,0,1e-20f,0,0,0,1e-20f),
             matrix(1,0,0,0,1,0,0.25f,0,1)}) compare(a.image, b.image, h, config);
     Fixture black(1,1,3,0), white(1,1,5,255), line(3,1,4), column(1,5,7);
     compare(black.image, white.image, identity(), config);
     GpuFixture analytic(black.image, white.image, identity());
-    GROUP16_REQUIRE(v1_warp_blend(analytic.workspace, config, analytic.stream.get()) == ErrorCode::Success,
+    GROUP16_REQUIRE(warp_blend(analytic.workspace, config, analytic.stream.get()) == ErrorCode::Success,
             "Analytic black/white blend failed");
     GROUP16_REQUIRE(download(analytic) == std::vector<std::uint8_t>(3,128), "Black pixel excluded from blend");
     compare(line.image, column.image, identity(), config);
-    compare(black.image, white.image, matrix(1,0,2,0,1,0,0,0,1), config);
+    compare(black.image, white.image, matrix(1,0,2,0,1,0,0,0,1), config,
+            kReportFixtures ? "Disjoint images" : nullptr);
+#ifdef GROUP16_TEST_S6_V4
+    compare(white.image, black.image, identity(), config, "Valid black B");
+#endif
     for (float shift : {-5e-7f, -2e-6f, 5e-7f, 2e-6f})
         compare(line.image, line.image, matrix(1,0,shift,0,1,0,0,0,1), config);
-    for (const Homography& h : {Homography(), matrix(1,0,0,1,0,0,0,0,1),
+    compare(a.image, b.image, Homography(), config, kReportFixtures ? "Degenerate H" : nullptr);
+    for (const Homography& h : {matrix(1,0,0,1,0,0,0,0,1),
             matrix(1,0,0,0,1,0,0,0,1e-14f), matrix(1,0,0,0,1,0,1,0,-1),
             matrix(1,0,1,0,1,0,1,0,0), matrix(1,0,10001,0,1,0,0,0,1)})
         compare(a.image, b.image, h, config);
     Homography bad_h = identity(); bad_h.data[2] = std::numeric_limits<float>::quiet_NaN();
     compare(a.image, b.image, bad_h, config);
     bad_h = identity(); bad_h.data[2] = std::numeric_limits<float>::infinity();
-    compare(a.image, b.image, bad_h, config);
+    compare(a.image, b.image, bad_h, config, kReportFixtures ? "Non-finite H" : nullptr);
     Config invalid = config; invalid.max_canvas_pixels = 2;
     compare(a.image, b.image, identity(), invalid);
     invalid = config; invalid.homography_epsilon = 0;
@@ -303,37 +342,43 @@ void synthetic_tests() {
     for (int fault : {0,1}) {
         GpuFixture oom(a.image, b.image, identity());
         allocations_before_failure = fault;
-        const ErrorCode result = v1_warp_blend(oom.workspace, config, oom.stream.get());
+        const ErrorCode result = warp_blend(oom.workspace, config, oom.stream.get());
         allocations_before_failure = -1;
         GROUP16_REQUIRE(result == ErrorCode::AllocationFailed, "OOM did not return AllocationFailed");
         GROUP16_REQUIRE(!oom.workspace.d_canvas && !oom.workspace.d_panorama &&
                 !oom.workspace.canvas.image.data, "OOM published or leaked output");
-        GROUP16_REQUIRE(v1_warp_blend(oom.workspace, config, oom.stream.get()) == ErrorCode::Success,
+        GROUP16_REQUIRE(warp_blend(oom.workspace, config, oom.stream.get()) == ErrorCode::Success,
                 "Recovery after OOM failed");
         download(oom);
     }
     GpuFixture invalid_view(a.image, b.image, identity());
+#ifdef GROUP16_TEST_S6_V4
+    invalid_view.workspace.imageB.width = 0;
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
+                    "Zero width accepted");
+    invalid_view.workspace.imageB.width = b.image.width;
+#endif
     invalid_view.workspace.imageB.stride = 1;
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
             "Invalid stride accepted");
     invalid_view.workspace.imageB.stride = b.image.stride;
     invalid_view.workspace.imageB.channels = 1;
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
             "Non-RGB input accepted");
     invalid_view.workspace.imageB.channels = 3;
     invalid_view.workspace.imageB.stride = static_cast<std::size_t>(-1);
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidImage,
             "Overflowing stride accepted");
     invalid_view.workspace.imageB.stride = b.image.stride;
     Homography* saved_h = invalid_view.workspace.d_homography;
     invalid_view.workspace.d_homography = nullptr;
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidArgument,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::InvalidArgument,
             "Missing H accepted");
     invalid_view.workspace.d_homography = saved_h;
     Config bad = config; bad.homography_epsilon = 1;
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, bad, invalid_view.stream.get()) == ErrorCode::InvalidConfig,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, bad, invalid_view.stream.get()) == ErrorCode::InvalidConfig,
             "Invalid epsilon accepted");
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::Success,
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) == ErrorCode::Success,
             "Cannot recover valid workspace");
     download(invalid_view);
     // A geometry error invalidates output aliases but retains the allocation for
@@ -342,7 +387,7 @@ void synthetic_tests() {
     const Homography singular;
     CUDA_CHECK(cudaMemcpyAsync(saved_h, &singular, sizeof(singular), cudaMemcpyHostToDevice,
                                 invalid_view.stream.get()));
-    GROUP16_REQUIRE(v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) ==
+    GROUP16_REQUIRE(warp_blend(invalid_view.workspace, config, invalid_view.stream.get()) ==
                 ErrorCode::DegenerateHomography, "Singular H after a valid run accepted");
     GROUP16_REQUIRE(!invalid_view.workspace.d_panorama && !invalid_view.workspace.canvas.image.data &&
                 invalid_view.workspace.d_canvas == old_canvas, "Lost retained canvas ownership");
@@ -351,29 +396,59 @@ void synthetic_tests() {
                                 invalid_view.stream.get()));
     // OOM when replacing an existing canvas must leave no published output.
     allocations_before_failure = 1;
-    const ErrorCode replacement_oom = v1_warp_blend(invalid_view.workspace, config, invalid_view.stream.get());
+    const ErrorCode replacement_oom = warp_blend(invalid_view.workspace, config, invalid_view.stream.get());
     allocations_before_failure = -1;
     GROUP16_REQUIRE(replacement_oom == ErrorCode::AllocationFailed && !invalid_view.workspace.d_canvas &&
                 !invalid_view.workspace.d_panorama, "OOM while replacing output leaked ownership");
 }
 
+void compare_files(const char* left, const char* right, const Homography& h, const char* label) {
+    int aw, ah, ac, bw, bh, bc;
+    using StbImage = std::unique_ptr<stbi_uc, decltype(&stbi_image_free)>;
+    StbImage a(stbi_load(left, &aw, &ah, &ac, 3), stbi_image_free);
+    StbImage b(stbi_load(right, &bw, &bh, &bc, 3), stbi_image_free);
+    if (!a || !b) throw std::runtime_error(std::string("Cannot load image: ") + (a ? right : left));
+    Image image_a, image_b;
+    image_a.data = a.get(); image_a.width = aw; image_a.height = ah;
+    image_a.channels = 3; image_a.stride = static_cast<std::size_t>(aw) * 3;
+    image_b.data = b.get(); image_b.width = bw; image_b.height = bh;
+    image_b.channels = 3; image_b.stride = static_cast<std::size_t>(bw) * 3;
+    GROUP16_REQUIRE(compare(image_a, image_b, h, settings(), label),
+                    "File pair requires a valid H and an actual output comparison");
+}
+
+#ifdef GROUP16_TEST_S6_V4
+void supplied_synthetic_pairs(int argc, char** argv) {
+    if (argc == 1) {
+        std::cout << "Synthetic P7 file pairs: not requested (unit fixtures only)\n";
+        return;
+    }
+    const auto options = pipeline_test::parse_options(argc, argv, "--unused");
+    if (options.synthetic.empty() || options.require_production || !options.dataset.empty() || !options.pair.empty())
+        throw std::runtime_error("gpu_v4_s6 expects six --synthetic-pair groups");
+    for (const std::string kind : {"translation", "projective"}) {
+        for (const std::string size : {"small", "medium", "large"}) {
+            const std::string label = kind + "/" + size;
+            const auto has_label = [&](const pipeline_test::SyntheticFilePair& pair) { return pair.label == label; };
+            if (std::count_if(options.synthetic.begin(), options.synthetic.end(), has_label) != 1)
+                throw std::runtime_error("Expected exactly one synthetic fixture for " + label);
+            const auto& pair = *std::find_if(options.synthetic.begin(), options.synthetic.end(), has_label);
+            Homography h;
+            std::copy(pair.truth.begin(), pair.truth.end(), h.data);
+            compare_files(pair.left.c_str(), pair.right.c_str(), h, pair.label.c_str());
+        }
+    }
+    std::cout << "Synthetic P7 file pairs: 6/6 compared using supplied H_gt\n";
+}
+#else
 void real_pair(int argc, char** argv) {
     if (argc == 1) return;
     if (argc != 12) throw std::runtime_error("Usage: test_gpu_s6 [A B h00 h01 ... h22]");
-    int aw, ah, ac, bw, bh, bc;
-    using StbImage = std::unique_ptr<stbi_uc, decltype(&stbi_image_free)>;
-    StbImage a(stbi_load(argv[1], &aw, &ah, &ac, 3), stbi_image_free);
-    StbImage b(stbi_load(argv[2], &bw, &bh, &bc, 3), stbi_image_free);
-    if (!a || !b) throw std::runtime_error("Cannot load actual pair");
-    Fixture left(aw, ah), right(bw, bh);
-    std::copy(a.get(), a.get() + left.bytes.size(), left.bytes.data());
-    std::copy(b.get(), b.get() + right.bytes.size(), right.bytes.data());
     Homography h;
     for (int i = 0; i < 9; ++i) h.data[i] = std::stof(argv[i + 3]);
-    GROUP16_REQUIRE(compare(left.image, right.image, h, settings()),
-                    "Real pair requires a valid H and an actual output comparison");
-    std::cout << "Real pair: A=" << aw << 'x' << ah << " B=" << bw << 'x' << bh << '\n';
+    compare_files(argv[1], argv[2], h, "Real pair");
 }
+#endif
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -382,9 +457,15 @@ int main(int argc, char** argv) {
         cudaDeviceProp info;
         CUDA_CHECK(cudaGetDevice(&device)); CUDA_CHECK(cudaGetDeviceProperties(&info, device));
         std::cout << "GPU: " << info.name << '\n';
-        analytic_tests(); synthetic_tests(); real_pair(argc, argv);
+        analytic_tests();
+        synthetic_tests();
+#ifdef GROUP16_TEST_S6_V4
+        supplied_synthetic_pairs(argc, argv);
+#else
+        real_pair(argc, argv);
+#endif
         std::cout << "PASS: " << checks << " checks, " << comparisons
-                  << " V0/V1 comparisons; max RGB error=" << largest_difference
+                  << ' ' << kComparison << " comparisons; max RGB error=" << largest_difference
                   << ", threshold=" << Tols::max_channel_error << '\n';
         return 0;
     } catch (const std::exception& error) {

@@ -286,7 +286,7 @@ V1 dùng một stream non-blocking, các stage thực hiện theo thứ tự. Di
 
 `device_allocate<T>` chỉ nhận con trỏ rỗng, kiểm tra overflow `count * sizeof(T)`, và giữ con trỏ rỗng khi allocation thất bại. Count bằng 0 không cấp phát. `device_free<T>` cho phép null, reset con trỏ sau khi free và không ném exception trong destructor; lỗi cleanup được báo stderr. Ownership không copy được. Không dùng `cudaDeviceReset` để dọn một workspace vì thao tác đó phá cả tài nguyên CUDA khác trong context.
 
-### 11.4. Timing và CSV V1/V2
+### 11.4. Timing và CSV V1/V2/V3
 
 Một lượt warm-up chạy đủ H2D → sáu stage → D2H, không gọi clock hoặc record event timing. Sau đó chạy N lượt đo (`--runs`, mặc định 5). Input đã decode, pinned input, Device buffers trừ canvas, stream và events được chuẩn bị trước warm-up; pinned output được cấp trong warm-up theo canvas (mục 11.8). Tất cả được tái sử dụng. CPU copy từ ảnh stb sang pinned input cũng nằm ngoài phép đo. Đây là chính sách chuẩn bị bộ nhớ của V1, cần ghi rõ khi so sánh với phiên bản khác.
 
@@ -307,7 +307,13 @@ CSV V2 dùng schema nghiệm thu P7-T04, được `run_benchmark.py` và `verify
 Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms
 ```
 
-`src/v2/v2_pipeline.{h,cu}` dùng lại owner, scratch theo dung lượng lớn nhất, stream và dispatcher của V1. V2 chọn scratch và hàm homography của S5 V2. Các stage còn lại dùng chung kernel. CLI V1 và V2 cấp pinned output từ kích thước canvas của warm-up và dùng lại buffer trong các lượt đo.
+`src/v2/v2_pipeline.{h,cu}` dùng lại owner, scratch theo dung lượng lớn nhất, stream và dispatcher của V1. V2 chọn scratch và hàm homography của S5 V2. Các stage còn lại dùng chung kernel. CLI V1, V2 và V3 cấp pinned output từ kích thước canvas của warm-up và dùng lại buffer trong các lượt đo.
+
+Từ P8-T02 (16/11/2026), `--version 3` chạy `src/v3/v3_pipeline.{h,cu}`. Module này giống V2 ở mọi điểm trừ S5: scratch tính bằng `v3_homography_scratch_bytes` với batch 128, stage S5 là `v3_homography`, còn `--debug` đọc `V3HomographyDiagnostics`. Timing và `Total_Kernel_ms` đo như V1 và V2. CSV V3 giữ thứ tự cột của V1 và đổi hậu tố stage thành `_V3`, khớp với `version_columns(3)` trong `scripts/run_benchmark.py`:
+
+```csv
+Run_Index,S1_V3_ms,S2_V3_ms,S3_V3_ms,S4_V3_ms,S5_V3_ms,S6_V3_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
+```
 
 `Total_ms` là `TimingStats::end_to_end_ms`. `Average` và `Minimum` tổng hợp độc lập từng cột của N lượt đo, không gồm warm-up. Trường H2D/D2H cũ trong bản nháp (`host_to_device_ms`, `device_to_host_ms`) được đổi tên thành `h2d_ms`, `d2h_ms`; dữ liệu V0 và CSV V0 không đổi. Công cụ đa phiên bản của P5-T05 cần nhận biết header V1; parser V0 hiện tại không dùng để đọc CSV V1. Số đo của bản stub trước P6-T01 không được dùng tính speedup.
 

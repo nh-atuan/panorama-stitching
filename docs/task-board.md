@@ -310,8 +310,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Đo benchmark V3 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V3</td>
       <td>P8-T01, P8-T02</td>
       <td>Đo thời gian V3 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0, V1 và V2; người làm tự lựa chọn các metric NCU/NSYS để phân tích vi kiến trúc kernel S5 V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v3/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V3 trong <code>docs/report/</code></td>
-      <td>Đang làm</td>
-      <td>16/11: Đế đã chạy <a href="../Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đế đang lưu CSV, trace, metric và biểu đồ vào Drive chung; chờ xác nhận bàn giao để nghiệm thu task.</td>
+      <td>Xong</td>
+      <td>16/11: Đế đã chạy <a href="../Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đã cập nhật <code>apod-log.md</code> và hoàn tất bàn giao Drive chung <code>v3/</code>; PR #40 đã merge vào <code>main</code>.</td>
     </tr>
     <tr>
       <td>Chương, Thành</td>
@@ -321,6 +321,96 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
       <td>Xong</td>
       <td>Chương bàn giao suite, harness CLI và <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+## P9 - Tối ưu S6 V4 và chuẩn bị khung bài nộp cuối kỳ
+
+Hạn của giai đoạn: **19/11 (Thứ 5)**.
+
+Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu hóa kernel S6 (Single-pass Canvas Fusion) giải quyết điểm nghẽn mới lộ diện tại <code>site2/large</code> của V3, và chuẩn bị khung hạ tầng bài nộp cuối kỳ (khung slide thuyết trình Beamer và sườn notebook báo cáo 10 mục). Các thành viên làm việc độc lập ngay từ đầu giai đoạn: Tuấn và Đế phụ trách khung slide Beamer; Chương và Thành phụ trách sườn notebook <code>Group16_Final.ipynb</code>; Chương phát triển kernel S6 V4; Thành dựng scaffold pipeline và CLI <code>--version 4</code>; Tuấn xây dựng suite kiểm tra tích hợp CLI V4 và nghiệm thu memcheck; Đế đo benchmark V4, thu thập profiling Nsight và hoàn thành báo cáo APOD V4.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2">Tuấn</td>
+      <td>P9-T01</td>
+      <td>Xây dựng khung slide thuyết trình bằng LaTeX (Beamer) và chuẩn bị sơ bộ cho video thuyết trình (phối hợp cùng Đế)</td>
+      <td></td>
+      <td>Người làm toàn quyền tự quyết định cấu trúc, theme, bố cục và nội dung các slide Beamer theo ý tưởng của nhóm (đề bài không ràng buộc cố định bố cục slide); biên dịch PDF sạch lỗi, chừa sẵn khung cho hình ảnh và số liệu các phiên bản tối ưu; kèm chuẩn bị sơ bộ cho video thuyết trình (lập dàn ý kịch bản, phân bổ thời lượng 20–30 phút và chuẩn bị tài liệu trực quan, chưa quay video hoàn chỉnh); Tuấn phụ trách cấu trúc chung của slide, phần tổng quan/pipeline và dàn ý kịch bản video</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>tuan/p9</code></td>
+    </tr>
+    <tr>
+      <td>P9-T02</td>
+      <td>Xây dựng suite kiểm tra tích hợp CLI V4 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
+      <td>P9-T04, P9-T08</td>
+      <td>Người làm tự thiết kế kịch bản kiểm thử trong <code>tests/gpu/test_gpu_v4_pipeline.cu</code>; đối chiếu H, canvas và Max RGB ≤ 1 với V0/V1/V2/V3 trên 6 cặp synthetic và 12 cấu hình thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>tuan/p9</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Thành</td>
+      <td>P9-T03</td>
+      <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Chương)</td>
+      <td></td>
+      <td>Người làm tự thiết kế các hàm nạp dữ liệu, xuất bảng biểu và trực quan hóa kết quả; tích hợp với khung 10 mục của notebook; chuẩn bị sẵn code vẽ biểu đồ speedup đa phiên bản và hiển thị gallery</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>thanh/p9</code></td>
+    </tr>
+    <tr>
+      <td>P9-T04</td>
+      <td>Ghép nối <code>src/v4/v4_pipeline</code> và mở rộng CLI <code>--version 4</code></td>
+      <td>P9-T08</td>
+      <td>Người làm tự thiết kế điều phối pipeline; tạo trước scaffold CLI V4; tích hợp kernel S6 V4 mới và tái sử dụng S1–S4 V1, S5 V3; gắn timer <code>cudaEvent_t</code> đo chuẩn xác 11 cột CSV; CLI <code>./stitch ... --version 4</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>thanh/p9</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Đế</td>
+      <td>P9-T05</td>
+      <td>Đo benchmark V4 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V4</td>
+      <td>P9-T04, P9-T08</td>
+      <td>Người làm tự lựa chọn metric NCU/NSYS để phân tích hiệu quả giảm truy cập bộ nhớ của kernel S6 V4; đo thời gian V4 trên Colab T4 (5 runs + warm-up) cùng phiên với V0–V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v4/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V4 trong <code>docs/report/</code></td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>de/p9</code></td>
+    </tr>
+    <tr>
+      <td>P9-T06</td>
+      <td>Xây dựng nội dung khung slide thuyết trình bằng LaTeX (Beamer) và chuẩn bị tư liệu video (phối hợp cùng Tuấn)</td>
+      <td></td>
+      <td>Người làm toàn quyền tự quyết định cách trình bày nội dung trên slide Beamer; phối hợp cùng Tuấn trên cùng mã nguồn Beamer; Đế phụ trách nội dung phân tích hiệu năng, chu trình APOD, profiling Nsight và bài học rút ra; chuẩn bị sẵn các bảng số liệu mẫu và danh mục tư liệu biểu đồ/timeline phục vụ cho video thuyết trình sau này</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>de/p9</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Chương</td>
+      <td>P9-T07</td>
+      <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Thành)</td>
+      <td></td>
+      <td>Người làm tự thiết kế bố cục notebook theo chuẩn 10 mục của đề bài cuối kỳ; đưa sẵn các nội dung lý thuyết, phương pháp, phân tích V0–V3 từ <code>docs/report/</code> vào notebook; thiết lập cấu trúc cell chạy tuần tự từ trên xuống dưới sạch lỗi</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>chuong/p9</code></td>
+    </tr>
+    <tr>
+      <td>P9-T08</td>
+      <td>Thiết kế và cài đặt tối ưu kernel S6 V4 (Single-pass Canvas Fusion) trong <code>src/v4/s6/</code></td>
+      <td></td>
+      <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật (Single-pass fused canvas rendering gộp clear, copy A, gather B; thread 2D); build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (Max RGB ≤ 1) trên fixture đơn vị và 6 cặp synthetic; mở PR trước 18/11 (Thứ 4)</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>chuong/p9</code></td>
     </tr>
   </tbody>
 </table>
@@ -348,3 +438,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 07/11 | Nhóm trưởng chốt kế hoạch Phase 7 (hạn 10/11, Thứ 3): nhịp chạy sprint 3 ngày/version để mở rộng lên V4, V5, V6 mà vẫn giữ đủ 11 ngày chuẩn bị bài nộp cuối; áp dụng chu trình APOD chọn S5 (Homography RANSAC) làm mục tiêu tối ưu của V2 do chiếm 90–98% thời gian V1; phân công cân bằng kỹ thuật: Tuấn (kernel S5 V2), Thành (timer cudaEvent & v2_pipeline), Chương (test tích hợp V2 & compute-sanitizer T4), Đế (benchmark V2, profiling Nsight & báo cáo APOD V2); không đo lại V0 trong P7 |
 | 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing)), quy ước chi tiết tại [docs/results-guide.md](results-guide.md) và nhật ký APOD tại [docs/apod-log.md](apod-log.md) |
 | 12/11 | Chốt kế hoạch Phase 8 (hạn 15/11, Chủ nhật): sprint 3 ngày tập trung tối ưu vi kiến trúc kernel S5 V3 (giải quyết nút thắt Occupancy và launch overhead của `compute_hypotheses`); phân công theo thứ tự stage: Tuấn (kernel S5 V3), Thành (v3_pipeline & CLI), Đế (benchmark V3, profiling Nsight & báo cáo APOD V3), Chương (test tích hợp V3 & compute-sanitizer T4); các thành viên tự quyết định giải pháp kỹ thuật trong phạm vi module mình phụ trách; xác nhận hoàn tất nghiệm thu P7-T01 |
+| 16/11 | Chốt kế hoạch Phase 9 (hạn 19/11, Thứ 5): sprint 3 ngày kết hợp hai nhánh việc chạy song song: tối ưu kernel S6 V4 (Single-pass Canvas Fusion giải quyết điểm nghẽn mới lộ diện tại site2/large của V3) và chuẩn bị khung bài nộp cuối kỳ (khung slide Beamer do người làm tự quyết định bố cục, kèm chuẩn bị sơ bộ cho video thuyết trình, và sườn notebook Group16_Final.ipynb); phân công độc lập: Tuấn & Đế (khung slide Beamer & chuẩn bị tư liệu video), Chương & Thành (sườn notebook 10 mục), Chương (kernel S6 V4), Thành (v4_pipeline & CLI), Tuấn (test tích hợp V4 & memcheck T4), Đế (benchmark V4, profiling Nsight & báo cáo APOD V4); các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách; video thuyết trình chính thức sẽ thực hiện tập trung ở giai đoạn sau |

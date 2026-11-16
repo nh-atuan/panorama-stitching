@@ -57,8 +57,9 @@ flowchart LR
     P5["P5 Khung GPU, dataset và từng stage V1"] --> P6["P6 Ghép pipeline, benchmark và profiling V1"]
     P6 --> P7["P7 Tối ưu và profiling V2"]
     P7 --> P8["P8 Tối ưu và profiling V3"]
-    P8 --> P9["P9 Hoàn thiện báo cáo, slide và video"]
-    P9 --> END["03/12 (Thứ 5) Nộp bài"]
+    P8 --> P9["P9 Tối ưu S6 V4 và khung bài nộp"]
+    P9 --> P10["P10 Hoàn thiện báo cáo, slide và video"]
+    P10 --> END["03/12 (Thứ 5) Nộp bài"]
 ```
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
@@ -66,8 +67,9 @@ flowchart LR
 | P5 | Khung GPU, dataset và từng stage V1 | Đã lập, kết thúc 02/11 (Thứ 2) |
 | P6 | Ghép pipeline, benchmark và profiling V1 | Đã lập, kết thúc 08/11 (Chủ nhật) |
 | P7 | Tối ưu và profiling V2 | Đã lập, kết thúc 10/11 (Thứ 3) |
-| P8 | Tối ưu và profiling V3 | Lập sau khi hoàn thành P7 |
-| P9 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P8, hoàn tất trước 03/12 (Thứ 5) |
+| P8 | Tối ưu và profiling V3 | Đã lập, kết thúc 15/11 (Chủ nhật) |
+| P9 | Tối ưu S6 V4 và khung bài nộp | Đã lập, kết thúc 19/11 (Thứ 5) |
+| P10 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P9, hoàn tất trước 03/12 (Thứ 5) |
 
 Kết quả cần có khi kết thúc `P5`:
 
@@ -88,6 +90,19 @@ Kết quả cần có khi kết thúc `P7`:
 - cơ chế đo thời gian `cudaEvent_t` cho `Total_Kernel_ms` và các stage trong `src/main.cu` hoàn tất, xuất đủ 11 cột CSV;
 - bộ benchmark V2 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v2/` ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing));
 - báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) cho kernel S5 V2, cập nhật nhật ký [docs/apod-log.md](apod-log.md) và hoàn thiện tài liệu báo cáo V2.
+
+Kết quả cần có khi kết thúc `P8`:
+
+- kernel S5 V3 tối ưu vi kiến trúc (warp-shuffle MSAC reduction, SVD trong shared memory) trong `src/v3/s5/` và `v3_pipeline` hoàn chỉnh build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đơn vị và test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
+- bộ benchmark V3 trên dataset cuối kỳ hoàn thành trên Colab T4, đạt speedup trung bình nhân 1.85× so với V2; xuất CSV và biểu đồ speedup vào thư mục Drive `v3/`;
+- báo cáo profiling Nsight (`nsys` timeline, `ncu` kernel metrics) cho S5 V3, cập nhật nhật ký [docs/apod-log.md](apod-log.md) và hoàn thiện mục báo cáo APOD V3 (`docs/report/p8-t03-v3-apod.md`).
+
+Kết quả cần có khi kết thúc `P9`:
+
+- kernel S6 V4 (Single-pass Canvas Fusion) trong `src/v4/s6/` và `v4_pipeline` hoàn chỉnh build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đơn vị và test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
+- bộ benchmark V4 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v4/`; báo cáo profiling Nsight (`nsys`, `ncu`) cho kernel S6 V4, cập nhật [docs/apod-log.md](apod-log.md) và hoàn thiện mục báo cáo APOD V4;
+- khung slide thuyết trình hoàn chỉnh bằng LaTeX Beamer do người làm tự quyết định bố cục và phong cách thiết kế, biên dịch PDF sạch lỗi, kèm tài liệu chuẩn bị sơ bộ cho video thuyết trình;
+- sườn notebook báo cáo cuối kỳ `Group16_Final.ipynb` đầy đủ 10 mục theo cấu trúc chuẩn của đề bài, tích hợp sẵn các nội dung lý thuyết, phương pháp và phân tích các phiên bản trước.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

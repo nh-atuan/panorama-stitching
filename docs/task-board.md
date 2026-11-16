@@ -301,8 +301,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Ghép nối <code>src/v3/v3_pipeline</code> và mở rộng CLI <code>--version 3</code></td>
       <td>P8-T01</td>
       <td>Người làm tự thiết kế kiến trúc điều phối và quản lý workspace; đảm bảo timer <code>cudaEvent_t</code> đo chuẩn xác <code>Total_Kernel_ms</code>, H2D, D2H và từng stage mà không tạo overhead; ghép <code>src/v3/v3_pipeline.{h,cu}</code> gọi S5 V3 mới và tái sử dụng S1–S4, S6 từ <code>src/v1/</code>; CLI <code>./stitch ... --version 3</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>16/11, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a> vào <code>main</code>. Pipeline V3 gọi S5 V3 và tái sử dụng S1–S4, S6 của V1. Colab T4 xác nhận build <code>sm_75</code>, CLI <code>--version 3</code> và CSV 11 cột đạt kiểm tra. Xem <a href="report/p8-v3-verification.md#8-cli-and-csv-verification">kết quả CLI và CSV</a>.</td>
     </tr>
     <tr>
       <td>Đế</td>
@@ -319,8 +319,8 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>Xây dựng suite kiểm tra tích hợp CLI V3 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Bị chặn</td>
-      <td><strong>Phần Chương: Xong.</strong> Đã bàn giao suite, harness CLI, <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> và <a href="report/p8-v3-verification.md">báo cáo</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37 (draft)</a>. <strong>Phần Thành:</strong> Sau khi tích hợp P8-T01/P8-T02, điền SHA production và header CSV, chạy notebook trên T4 để kiểm tra 6 synthetic, 12 cấu hình ảnh thật, CLI/CSV/D2H và hai lượt memcheck. Thành lưu ZIP bằng chứng, cập nhật báo cáo và chuyển task sang <code>Chờ review</code> khi đạt nghiệm thu.</td>
+      <td>Xong</td>
+      <td>Chương bàn giao suite, harness CLI và <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
     </tr>
   </tbody>
 </table>

@@ -1,4 +1,4 @@
-<!-- Authors: Nguyen Ho Anh Tuan (23120185). External source: none. -->
+<!-- Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232). External source: none. -->
 
 # Nhật ký tối ưu hóa APOD (CSC14120 - Nhóm 16)
 
@@ -13,7 +13,7 @@ Tài liệu theo dõi các chu trình tối ưu hóa song song theo quy trình *
 | **v0** | CPU Sequential Baseline | Chuẩn tham chiếu CPU ban đầu | Theo từng size | 1.0x | - | Reference | Baseline |
 | **v1** | Basic CUDA (All stages) | Chuyển toàn bộ 6 stage lên GPU theo Device-resident để loại bỏ truyền nhận trung gian | S: 1.2x – 2.5x<br>M: 2.0x – 3.5x<br>L: 9.5x – 11.9x | 1.2x – 11.9x | 1.2x – 11.9x | Khớp V0 (pixel max diff = 0) | **Keep** |
 | **v2** | Parallel RANSAC & Inlier Reduction (S5) | P6 V1: S5 chiếm 89.86–99.17% ở 9 cặp chuẩn; V2 giảm S5 1.69–65.73× | Small: 21.51–372.63<br>Medium: 27.76–142.03<br>Large: 81.16–258.52 ms | 8.21–70.20× (V0 P6, lịch sử) | 1.59–43.18× (V1 cùng phiên P7) | P7-T04: synthetic đạt ngưỡng, H/canvas nhất quán; memcheck 0 lỗi | **Keep** |
-| **v3** | *(Chưa chốt)* | Lập sau khi hoàn thành V2 cùng số đo profiling | | | | | |
+| **v3** | Tối ưu vi kiến trúc S5: warp shuffle reduction, shared-memory DLT/SVD và batch scheduling | Giảm thời gian S5 và chi phí điều phối | 21.265–108.170 ms (9 cấu hình chuẩn) | 16.93–89.98×; trung bình nhân 43.10× | 0.99–2.53×; trung bình nhân 1.85× | P8-T04: nghiệm thu T4 đạt | Chờ phân tích profiling và bàn giao Drive |
 | **v4** | *(Chưa chốt)* | Lập sau khi hoàn thành V3 cùng số đo profiling | | | | | |
 | **v5** | *(Chưa chốt)* | Lập sau khi hoàn thành V4 cùng số đo profiling | | | | | |
 | **v6** | *(Chưa chốt)* | Lập sau khi hoàn thành V5 cùng số đo profiling | | | | | |

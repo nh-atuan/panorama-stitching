@@ -409,8 +409,8 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Thiết kế và cài đặt tối ưu kernel S6 V4 (Single-pass Canvas Fusion) trong <code>src/v4/s6/</code></td>
       <td></td>
       <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật (Single-pass fused canvas rendering gộp clear, copy A, gather B; thread 2D); build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (Max RGB ≤ 1) trên fixture đơn vị và 6 cặp synthetic; mở PR trước 18/11 (Thứ 4)</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>chuong/p9</code></td>
+      <td>Chờ review</td>
+      <td>16/11: hoàn tất kernel và bộ test S6 V4 trên nhánh <code>chuong/p9</code>. Build <code>sm_75</code> và kiểm thử trên GTX 1650 đạt, gồm 6/6 cặp synthetic dùng cùng <code>H_gt</code>, canvas/offset khớp và Max RGB = 0. <a href="https://github.com/nh-atuan/panorama-stitching/pull/41">PR #41</a> đang mở. Kiểm thử chấp nhận V4 trên Colab T4 thuộc P9-T02.</td>
     </tr>
   </tbody>
 </table>

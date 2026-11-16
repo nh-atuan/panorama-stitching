@@ -521,6 +521,31 @@ Các ý tưởng có điều kiện khác, chỉ khảo sát khi profiling chỉ
 
 Hardware texture bilinear chỉ là ứng viên có điều kiện: NVIDIA nêu trọng số nội suy có 8 bit phần lẻ và quy ước tọa độ x-0.5, y-0.5 [R9, mục 15.2]. Với tâm pixel nguyên của S6, texture không normalized cần chuyển đúng half-texel. Không hứa kết quả bit-identical với bilinear số thực tự tính. Nếu dùng, cần ngưỡng consistency đã chốt, kiểm thử mask/biên và tính chi phí tài nguyên; không tự dùng `--use_fast_math` như thay thế miễn phí.
 
+### 6.4. Giao diện S6 V4 và thiết kế gộp lượt dựng canvas
+
+Ở V1–V3, S6 chạy kernel setup một thread để tính hình học và H nghịch đảo, đọc metadata nhỏ về Host, kiểm tra giới hạn rồi cấp phát canvas. Phần dựng ảnh gồm `cudaMemsetAsync` xóa canvas, kernel chép A vào offset và kernel warp B để nội suy, đọc lại giá trị A trong vùng chồng lấp rồi ghi màu đã trộn. Tại `site2/large`, S6 V3 mất 28,468 ms, chiếm 45,7% thời gian end-to-end. Fusion nhắm vào các lượt truy cập canvas và chi phí điều phối ba thao tác dựng ảnh. Tác động lên thời gian và lưu lượng DRAM cần được đo. [Báo cáo P8](../report/p8-t03-v3-apod.md)
+
+**API bàn giao P9-T04** trong [v4_warp_blend.h](../../src/v4/s6/v4_warp_blend.h), với kiểu hàm tương thích `GpuStage`.
+
+```cpp
+namespace panorama {
+ErrorCode v4_warp_blend(DeviceWorkspace& workspace, const Config& config,
+                        cudaStream_t stream = nullptr);
+}
+```
+
+| Hạng mục | Hợp đồng của caller và stage |
+|---|---|
+| Đầu vào | `imageA/B` là RGB xen kẽ trên Device, chiều rộng và chiều cao dương, stride tính theo byte và hỗ trợ padding. `imageA/B.data` trùng `d_imageA/B`. Caller cấp `d_homography` theo chiều B→A và `d_canvas_info` trên Device. |
+| Thứ tự CUDA | Truyền stream của pipeline. Input và H từ S5 phải sẵn sàng theo thứ tự stream hoặc qua event. Setup đọc geometry về Host trước khi cấp phát. Renderer được enqueue trên cùng stream và được ghi nhận qua `PANORAMA_LAUNCH_KERNEL`. |
+| Output và ownership | Sau `Success`, `workspace.canvas` có width, height, stride và offset đưa A sang canvas. `canvas.image.data` và `d_panorama` cùng alias `d_canvas`. Entry point quản lý việc thay allocation và cập nhật `canvas_capacity_bytes`; owner của workspace giải phóng `d_canvas` một lần. Caller giữ input và tự thực hiện D2H panorama. |
+| Đồng bộ và lỗi | `Success` xác nhận metadata đã công bố và lệnh dựng ảnh đã enqueue. Consumer trên stream khác chờ event. Host chờ hoàn tất trước khi đọc kết quả, tái sử dụng hoặc hủy workspace. Lỗi thực thi bất đồng bộ xuất hiện khi caller đợi stream/event. Giữ các `ErrorCode` của V1 cho hình học, cấu hình, cấp phát và CUDA. Khi hàm trả lỗi, hai view output rỗng và allocation còn giữ vẫn thuộc workspace owner. |
+| Tích hợp build | Include `v4/s6/v4_warp_blend.h`. Khi phần cài đặt `src/v4/s6/v4_warp_blend.cu` có mặt, `scripts/build.py` tự phát hiện file trong cây `src/v4/`. Bản hiện tại có khai báo, nên Thành có thể soạn scaffold nhưng cần phần định nghĩa trước khi link đường chạy gọi V4 S6. |
+
+V4 sẽ giữ S1–S4 của V1 và S5 của V3. Helper `run_gpu_stages` hiện nhận callback S5 và cố định S6 ở V1. P9-T04 sẽ chọn cách đưa callback S6 V4 vào đường chạy của V4, với cùng quy ước timing và lỗi như các bản trước.
+
+**Thiết kế phần cài đặt tiếp theo.** Giữ setup và kiểm tra giới hạn của V1. Dùng grid 2D, khởi đầu với block 32×8, mỗi thread trong biên chịu trách nhiệm cho một pixel RGB của canvas. Tính tọa độ trong hệ A bằng cách trừ offset. Kiểm tra vùng A bằng tọa độ và đọc màu trực tiếp từ ảnh A. Chiếu ngược qua H⁻¹ về B, kiểm tra denominator, snap về số nguyên, kiểm tra vùng B rồi clamp láng giềng khi lấy mẫu bilinear. Ghi một lần giá trị cuối cho từng kênh, gồm đen nếu ngoài cả hai nguồn, màu nguồn nếu chỉ một ảnh hợp lệ, hoặc trung bình 50/50 nếu cả hai ảnh hợp lệ. Giữ con đường số học `double`, clamp RGB và làm tròn half-up. Pixel RGB đen trong ảnh nguồn vẫn là mẫu hợp lệ.
+
 ## 7. Kiểm thử
 
 Kết quả local ngày 13/10: 194 assertions đạt, gồm geometry/pixel và lỗi/OOM giả lập. Kết quả trên Colab T4 ở bảng cuối mục. Tests đọc header stage và link module thật; đáp án pixel được tính riêng, không gọi helper đang kiểm thử để tạo đáp án.

@@ -25,13 +25,14 @@
 #include "common/kernel_timing.cuh"
 #include "v1/v1_pipeline.h"
 #include "v2/v2_pipeline.h"
+#include "v3/v3_pipeline.h"
 #endif
 
 namespace {
 
 const char* const kUsage =
     "Usage: ./stitch <left_image> <right_image> <output_image> "
-    "--version <0|1|2> [--runs N] [--debug]";
+    "--version <0|1|2|3> [--runs N] [--debug]";
 
 class ProgramError : public std::runtime_error {
 public:
@@ -135,7 +136,7 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
              "supported versions in this build: " +
-             std::string(panorama::is_supported_version(2) ? "0, 1, 2." : "0."),
+             std::string(panorama::is_supported_version(3) ? "0, 1, 2, 3." : "0."),
              panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
@@ -255,10 +256,11 @@ struct TimingSummary {
     }
 };
 
+// V0, V1 and V3 print Total_ms right after the stages; V2 keeps the P7-T04 order with it last.
 void print_timing(const std::string& label, const TimingStats& timing, int version = 0) {
     std::cout << label;
     for (std::size_t stage = 0; stage < kStageCount; ++stage) std::cout << ',' << timing.stage_ms[stage];
-    if (version < 2) std::cout << ',' << timing.end_to_end_ms;
+    if (version != 2) std::cout << ',' << timing.end_to_end_ms;
     if (version != 0) {
         std::cout << ',' << timing.h2d_ms << ',' << timing.d2h_ms
                   << ',' << timing.total_kernel_ms;
@@ -357,6 +359,33 @@ void reserve_host_panorama(const Panorama& canvas, HostPanorama& output) {
     output.geometry.image.data = nullptr;
 }
 
+using GpuPrepare = ErrorCode (*)(const Image&, const Image&, const Config&, V1DeviceOwner&);
+using GpuRunStages = ErrorCode (*)(DeviceWorkspace&, const Config&, cudaStream_t,
+                                   const V1StageTrace&, V1StageFailure&);
+
+// V1..V3 share the owner and dispatcher; each version supplies its own S5 and scratch size.
+GpuPrepare gpu_prepare(int version) {
+    if (version == 3) return v3_prepare;
+    return version == 2 ? v2_prepare : v1_prepare;
+}
+
+GpuRunStages gpu_run_stages(int version) {
+    if (version == 3) return v3_run_stages;
+    return version == 2 ? v2_run_stages : v1_run_stages;
+}
+
+// V2 keeps the P7-T04 schema; V1 and V3 use S<i>_V<version>_ms with Total_ms after the stages.
+std::string gpu_csv_header(int version) {
+    if (version == 2) {
+        return "Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms\n";
+    }
+    std::string header = "Run_Index";
+    for (std::size_t stage = 1; stage <= kStageCount; ++stage) {
+        header += ",S" + std::to_string(stage) + "_V" + std::to_string(version) + "_ms";
+    }
+    return header + ",Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
+}
+
 // One H2D -> S1..S6 -> D2H run on `stream`. The warm-up (measure = false) sizes the pinned
 // output from the canvas; a timed run fails when S6 gives another canvas.
 TimingStats run_gpu_once(int version, DeviceWorkspace& workspace, const Config& config,
@@ -391,8 +420,7 @@ TimingStats run_gpu_once(int version, DeviceWorkspace& workspace, const Config& 
     ErrorCode status;
     {
         KernelTimingScope scope(kernels);
-        const auto run_stages = version == 2 ? v2_run_stages : v1_run_stages;
-        status = run_stages(workspace, config, stream, trace, failure);
+        status = gpu_run_stages(version)(workspace, config, stream, trace, failure);
     }
     if (failure.on_device) fail("Device-side check in S3-S5 failed.", status);
     check_stage(status, failure.stage);
@@ -493,8 +521,7 @@ int run_gpu(const CliOptions& options, OutputFormat format, const Image& left,
     // Declaration order ensures stream completion before pinned/device buffers die,
     // including exceptions during a partially queued run.
     V1DeviceOwner owner;
-    const auto prepare = version == 2 ? v2_prepare : v1_prepare;
-    const ErrorCode prepared = prepare(left, right, config, owner);
+    const ErrorCode prepared = gpu_prepare(version)(left, right, config, owner);
     if (prepared != ErrorCode::Success) fail("Cannot prepare the GPU pipeline buffers.", prepared);
     const std::size_t bytes_a = left.stride * static_cast<std::size_t>(left.height);
     const std::size_t bytes_b = right.stride * static_cast<std::size_t>(right.height);
@@ -511,11 +538,7 @@ int run_gpu(const CliOptions& options, OutputFormat format, const Image& left,
     kernels.prepare();
     TimingSummary summary;
     std::cout.imbue(std::locale::classic());
-    const char* header = version == 2 ?
-        "Run_Index,S1_ms,S2_ms,S3_ms,S4_ms,S5_ms,S6_ms,H2D_ms,D2H_ms,Total_Kernel_ms,Total_ms\n" :
-        "Run_Index,S1_V1_ms,S2_V1_ms,S3_V1_ms,S4_V1_ms,S5_V1_ms,S6_V1_ms,"
-        "Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms\n";
-    std::cout << std::fixed << std::setprecision(9) << header;
+    std::cout << std::fixed << std::setprecision(9) << gpu_csv_header(version);
     for (int index = 0; index < options.runs; ++index) {
         const TimingStats timing = run_gpu_once(version, owner.view, config, input_a.get(), input_b.get(),
                                                 output, stream.get(), events, kernels, true, nullptr);
@@ -529,7 +552,9 @@ int run_gpu(const CliOptions& options, OutputFormat format, const Image& left,
     print_timing("Minimum", summary.minimum, version);
     if (options.debug) {
         std::cout.flush();  // Keep the CSV block and the stderr diagnostics apart.
-        if (version == 2) {
+        if (version == 3) {
+            print_gpu_diagnostics(left, right, config, after_s2, v3_collect_diagnostics(owner.view, stream.get()));
+        } else if (version == 2) {
             print_gpu_diagnostics(left, right, config, after_s2, v2_collect_diagnostics(owner.view, stream.get()));
         } else {
             print_gpu_diagnostics(left, right, config, after_s2, v1_collect_diagnostics(owner.view, stream.get()));

@@ -11,11 +11,12 @@
 namespace panorama {
 
 // Versions accepted by --version. V0 is the sequential pipeline in v0_pipeline.cpp;
-// V1 is the basic CUDA pipeline; V2 replaces its S5 with the optimized CUDA implementation.
+// V1 is the basic CUDA pipeline; V2 replaces its S5 with the optimized CUDA implementation;
+// V3 replaces it with the micro-architecture-tuned S5 V3.
 // Host-only builds retain V0 support without CUDA headers or a GPU driver.
 inline bool is_supported_version(int version) {
 #ifdef __CUDACC__
-    return version == 0 || version == 1 || version == 2;
+    return version >= 0 && version <= 3;
 #else
     return version == 0;
 #endif

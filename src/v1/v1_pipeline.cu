@@ -155,9 +155,10 @@ ErrorCode v1_run_stages(DeviceWorkspace& workspace, const Config& config, cudaSt
 }
 
 ErrorCode run_gpu_stages(DeviceWorkspace& workspace, const Config& config, cudaStream_t stream,
-                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography) {
+                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography,
+                        GpuStage warp_blend) {
     const GpuStage stages[kStageCount] = {
-        v1_preprocess, v1_detect, v1_describe, v1_match, homography, v1_warp_blend
+        v1_preprocess, v1_detect, v1_describe, v1_match, homography, warp_blend
     };
     failure = V1StageFailure();
     for (std::size_t i = 0; i < kStageCount; ++i) {

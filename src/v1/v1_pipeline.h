@@ -7,6 +7,7 @@
 #include "common/common.h"
 #include "common/cuda_utils.cuh"
 #include "v1/s5/v1_homography.h"
+#include "v1/v1_warp_blend.h"
 #include <cuda_runtime.h>
 #include <cstddef>
 
@@ -53,14 +54,16 @@ struct V1StageFailure {
     bool on_device = false;
 };
 
-// Shared orchestration for GPU variants that replace only the homography stage.
+// Shared orchestration for GPU variants that replace the homography stage and, from V4,
+// the warp and blend stage. S1-S4 always come from V1.
 using HomographyScratchBytes = std::size_t (*)(std::size_t);
 using GpuStage = ErrorCode (*)(DeviceWorkspace&, const Config&, cudaStream_t);
 
 ErrorCode prepare_gpu_pipeline(const Image& left, const Image& right, const Config& config,
                                V1DeviceOwner& owner, HomographyScratchBytes homography_scratch);
 ErrorCode run_gpu_stages(DeviceWorkspace& workspace, const Config& config, cudaStream_t stream,
-                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography);
+                        const V1StageTrace& trace, V1StageFailure& failure, GpuStage homography,
+                        GpuStage warp_blend = v1_warp_blend);
 
 // Enqueues S1..S6 on `stream`. The caller resets d_counts before the run, uploads both
 // images first and awaits the stream before using the canvas.

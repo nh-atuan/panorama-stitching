@@ -1,6 +1,6 @@
 # S6 - Warping and blending
 
-Người phụ trách: Chương (23120195). Cập nhật lần cuối: 21/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7. Thành (23120166) cập nhật trạng thái tích hợp CLI ở mục 7 ngày 06/11/2026 (P6-T01).
+Người phụ trách: Chương (23120195). Cập nhật lần cuối: 21/10/2026; Tuấn (23120185) bổ sung kết quả Colab T4 và panorama trên dataset ở mục 5, 7. Thành (23120166) cập nhật trạng thái tích hợp CLI ở mục 7 ngày 06/11/2026 (P6-T01) và đường chạy S6 V4 ở mục 6.4 ngày 17/11/2026 (P9-T04).
 
 Task hiện tại: **P1-T17 — cài đặt và kiểm thử S6 tuần tự**. Đã có `src/v0_warp_blend.cpp`, header stage và tests synthetic. Theo yêu cầu coding mới ngày 13/10, bản cài hiện tại dùng **inverse warping, bilinear tự tính và average blending 50/50** thay cho feather của đề xuất trước đó. Phải giữ cùng phương pháp ở V0–V3 khi benchmark. Ngày 18/10/2026 test S6 đạt trên Colab T4 và S6 ra panorama cho cả 4 cặp của dataset ở 3 kích thước (mục 5, 7).
 
@@ -542,7 +542,7 @@ ErrorCode v4_warp_blend(DeviceWorkspace& workspace, const Config& config,
 | Đồng bộ và lỗi | `Success` xác nhận metadata đã công bố và lệnh dựng ảnh đã enqueue. Consumer trên stream khác chờ event. Host chờ hoàn tất trước khi đọc kết quả, tái sử dụng hoặc hủy workspace. Lỗi thực thi bất đồng bộ xuất hiện khi caller đợi stream/event. Giữ các `ErrorCode` của V1 cho hình học, cấu hình, cấp phát và CUDA. Khi hàm trả lỗi, hai view output rỗng và allocation còn giữ vẫn thuộc workspace owner. |
 | Tích hợp build | Include `v4/s6/v4_warp_blend.h`. Khi phần cài đặt `src/v4/s6/v4_warp_blend.cu` có mặt, `scripts/build.py` tự phát hiện file trong cây `src/v4/`. Bản hiện tại có khai báo, nên Thành có thể soạn scaffold nhưng cần phần định nghĩa trước khi link đường chạy gọi V4 S6. |
 
-V4 sẽ giữ S1–S4 của V1 và S5 của V3. Helper `run_gpu_stages` hiện nhận callback S5 và cố định S6 ở V1. P9-T04 sẽ chọn cách đưa callback S6 V4 vào đường chạy của V4, với cùng quy ước timing và lỗi như các bản trước.
+V4 giữ S1–S4 của V1 và S5 của V3. Từ P9-T04, helper `run_gpu_stages` nhận thêm callback S6 ở tham số cuối `warp_blend`, mặc định là `v1_warp_blend`; `v4_run_stages` truyền `v4_warp_blend`, giữ nguyên quy ước timing và lỗi như các bản trước ([interface mục 11.4](../interface.md#114-timing-và-csv-v1v2v3v4)).
 
 **Thiết kế phần cài đặt tiếp theo.** Giữ setup và kiểm tra giới hạn của V1. Dùng grid 2D, khởi đầu với block 32×8, mỗi thread trong biên chịu trách nhiệm cho một pixel RGB của canvas. Tính tọa độ trong hệ A bằng cách trừ offset. Kiểm tra vùng A bằng tọa độ và đọc màu trực tiếp từ ảnh A. Chiếu ngược qua H⁻¹ về B, kiểm tra denominator, snap về số nguyên, kiểm tra vùng B rồi clamp láng giềng khi lấy mẫu bilinear. Ghi một lần giá trị cuối cho từng kênh, gồm đen nếu ngoài cả hai nguồn, màu nguồn nếu chỉ một ảnh hợp lệ, hoặc trung bình 50/50 nếu cả hai ảnh hợp lệ. Giữ con đường số học `double`, clamp RGB và làm tròn half-up. Pixel RGB đen trong ảnh nguồn vẫn là mẫu hợp lệ.
 

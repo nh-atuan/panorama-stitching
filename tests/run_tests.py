@@ -205,6 +205,7 @@ PYTHON_SUITES = [
     "test_v1_cli.py",
     "test_verify_v2_dataset.py",
     "test_verify_v3_cli.py",
+    "test_final_notebook.py",
 ]
 
 

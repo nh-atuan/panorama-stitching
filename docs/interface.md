@@ -286,7 +286,7 @@ V1 dùng một stream non-blocking, các stage thực hiện theo thứ tự. Di
 
 `device_allocate<T>` chỉ nhận con trỏ rỗng, kiểm tra overflow `count * sizeof(T)`, và giữ con trỏ rỗng khi allocation thất bại. Count bằng 0 không cấp phát. `device_free<T>` cho phép null, reset con trỏ sau khi free và không ném exception trong destructor; lỗi cleanup được báo stderr. Ownership không copy được. Không dùng `cudaDeviceReset` để dọn một workspace vì thao tác đó phá cả tài nguyên CUDA khác trong context.
 
-### 11.4. Timing và CSV V1/V2/V3
+### 11.4. Timing và CSV V1/V2/V3/V4
 
 Một lượt warm-up chạy đủ H2D → sáu stage → D2H, không gọi clock hoặc record event timing. Sau đó chạy N lượt đo (`--runs`, mặc định 5). Input đã decode, pinned input, Device buffers trừ canvas, stream và events được chuẩn bị trước warm-up; pinned output được cấp trong warm-up theo canvas (mục 11.8). Tất cả được tái sử dụng. CPU copy từ ảnh stb sang pinned input cũng nằm ngoài phép đo. Đây là chính sách chuẩn bị bộ nhớ của V1, cần ghi rõ khi so sánh với phiên bản khác.
 
@@ -313,6 +313,12 @@ Từ P8-T02 (16/11/2026), `--version 3` chạy `src/v3/v3_pipeline.{h,cu}`. Modu
 
 ```csv
 Run_Index,S1_V3_ms,S2_V3_ms,S3_V3_ms,S4_V3_ms,S5_V3_ms,S6_V3_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
+```
+
+Từ P9-T04 (17/11/2026), `--version 4` chạy `src/v4/v4_pipeline.{h,cu}`. V4 giữ S1–S4 của V1 và S5 V3 (cùng scratch, cùng `V3HomographyDiagnostics` khi `--debug`), chỉ thay S6 bằng `v4_warp_blend` (single-pass canvas fusion, xem [S6](stages/s6-warp-blend.md)). Để làm việc này, `run_gpu_stages` nhận thêm tham số cuối `warp_blend`, mặc định là `v1_warp_blend`, nên V1, V2 và V3 không đổi. Kernel S6 V4 được gọi qua `PANORAMA_LAUNCH_KERNEL` nên vẫn nằm trong `Total_Kernel_ms`. CSV V4 dùng thứ tự cột của V1 với hậu tố `_V4`, khớp với `version_columns(4)`:
+
+```csv
+Run_Index,S1_V4_ms,S2_V4_ms,S3_V4_ms,S4_V4_ms,S5_V4_ms,S6_V4_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
 ```
 
 `Total_ms` là `TimingStats::end_to_end_ms`. `Average` và `Minimum` tổng hợp độc lập từng cột của N lượt đo, không gồm warm-up. Trường H2D/D2H cũ trong bản nháp (`host_to_device_ms`, `device_to_host_ms`) được đổi tên thành `h2d_ms`, `d2h_ms`; dữ liệu V0 và CSV V0 không đổi. Công cụ đa phiên bản của P5-T05 cần nhận biết header V1; parser V0 hiện tại không dùng để đọc CSV V1. Số đo của bản stub trước P6-T01 không được dùng tính speedup.

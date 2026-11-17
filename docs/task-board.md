@@ -367,16 +367,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Chương)</td>
       <td></td>
       <td>Người làm tự thiết kế các hàm nạp dữ liệu, xuất bảng biểu và trực quan hóa kết quả; tích hợp với khung 10 mục của notebook; chuẩn bị sẵn code vẽ biểu đồ speedup đa phiên bản và hiển thị gallery</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p9</code>. Chương đã bàn giao thứ tự cell, schema CSV và đường dẫn hiện vật trong <a href="report/p9-final-notebook-handoff.md#thanh-integration-points">tài liệu tích hợp</a>. Thành phụ trách nạp dataset và kết quả, bảng V0/V1, bảng và biểu đồ so sánh, gallery ảnh và ca lỗi.</td>
+      <td>Chờ review</td>
+      <td>17/11: Thành thêm <code>scripts/final_notebook.py</code> (tải và kiểm tra dataset, build, chạy một lượt benchmark cho mọi phiên bản CLI nhận, nạp dữ liệu, bảng, biểu đồ, gallery) cùng suite <code>test_final_notebook.py</code> (19 test), và chèn cell vào các điểm <code>thanh-*</code> của notebook; lời văn các cell này viết bằng tiếng Việt. Colab T4 tại <code>8588ec6</code>: notebook chạy hết từ đầu đến cuối bằng <code>jupyter nbconvert --execute</code> với dataset tải mới và thư mục benchmark mới, exit 0; lượt benchmark gồm V0–V4 và challenge. Chưa có ảnh mẫu của môn học cho gallery. Ô <code>runtime-setup</code> còn ghim <code>SOURCE_REF</code> ở commit trước P9, cần đổi khi chốt bản nộp.<br><br>Nhánh <code>thanh/p9</code>. Chương đã bàn giao thứ tự cell, schema CSV và đường dẫn hiện vật trong <a href="report/p9-final-notebook-handoff.md#thanh-integration-points">tài liệu tích hợp</a>. Thành phụ trách nạp dataset và kết quả, bảng V0/V1, bảng và biểu đồ so sánh, gallery ảnh và ca lỗi.</td>
     </tr>
     <tr>
       <td>P9-T04</td>
       <td>Ghép nối <code>src/v4/v4_pipeline</code> và mở rộng CLI <code>--version 4</code></td>
       <td>P9-T08</td>
       <td>Người làm tự thiết kế điều phối pipeline; tạo trước scaffold CLI V4; tích hợp kernel S6 V4 mới và tái sử dụng S1–S4 V1, S5 V3; gắn timer <code>cudaEvent_t</code> đo chuẩn xác 11 cột CSV; CLI <code>./stitch ... --version 4</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p9</code></td>
+      <td>Chờ review</td>
+      <td>17/11: Nhánh <code>thanh/p9</code>. <code>src/v4/v4_pipeline.{h,cu}</code> chạy S1–S4 của V1, S5 V3 và S6 V4; <code>run_gpu_stages</code> nhận thêm tham số <code>warp_blend</code> (mặc định <code>v1_warp_blend</code>), CSV V4 dùng thứ tự cột của V1 (<a href="interface.md#114-timing-và-csv-v1v2v3v4">interface mục 11.4</a>). Colab T4 tại <code>b4a509f</code>: build <code>sm_75</code> đạt; 14 suite V0 (45284 checks), 14 suite GPU (68297 checks), 10 suite Python (145 test) đạt. CLI V4 trên 12 cấu hình thật: header khớp <code>version_columns(4)</code>, H, canvas và diagnostics giống V3, Max RGB so với V3 bằng 0 trên 10 cấu hình chạy được, challenge medium/large cùng lỗi <code>NumericalFailure</code> như V3. Memcheck V4 trên site1/small, site2/large và challenge/medium: 0 lỗi, 0 byte rò rỉ. Số đo thời gian chính thức thuộc P9-T05.</td>
     </tr>
     <tr>
       <td rowspan="2">Đế</td>

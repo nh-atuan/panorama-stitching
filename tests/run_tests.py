@@ -62,6 +62,9 @@ V2_PIPELINE_HEADER = "src/v2/v2_pipeline.h"
 V3_PIPELINE_SUITE = "gpu_v3_pipeline"
 V3_PIPELINE_SOURCE = "src/v3/v3_pipeline.cu"
 V3_PIPELINE_HEADER = "src/v3/v3_pipeline.h"
+V4_PIPELINE_SUITE = "gpu_v4_pipeline"
+V4_PIPELINE_SOURCE = "src/v4/v4_pipeline.cu"
+V4_PIPELINE_HEADER = "src/v4/v4_pipeline.h"
 
 V0_SUITES = {
     "preprocess": [*COMMON_BLUR, "src/v0/v0_preprocess.cpp", "tests/v0/test_v0_preprocess.cpp"],
@@ -176,12 +179,22 @@ GPU_SUITES = {
         "src/v2/s5/v2_homography.cu",
         "tests/gpu/test_gpu_v3_pipeline.cu",
     ],
+    V4_PIPELINE_SUITE: [
+        *V0_ALL_SOURCES,
+        *V1_ALL_SOURCES,
+        V2_PIPELINE_SOURCE,
+        "src/v2/s5/v2_homography.cu",
+        V3_PIPELINE_SOURCE,
+        "src/v3/s5/v3_homography.cu",
+        "src/v4/s6/v4_warp_blend.cu",
+        "tests/gpu/test_gpu_v4_pipeline.cu",
+    ],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {name: ["-Xlinker=--wrap=cudaMalloc"] for name in ("gpu_s6", "gpu_v4_s6")}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
 GPU_STB_SUITES = {"gpu_s6", "gpu_v4_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline",
-                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE}
+                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE, V4_PIPELINE_SUITE}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
 GPU_COMPILE_FLAGS = [
@@ -205,6 +218,7 @@ PYTHON_SUITES = [
     "test_v1_cli.py",
     "test_verify_v2_dataset.py",
     "test_verify_v3_cli.py",
+    "test_verify_v4_cli.py",
     "test_final_notebook.py",
 ]
 
@@ -229,6 +243,10 @@ def v3_pipeline_available():
     return all((ROOT / path).is_file() for path in (V3_PIPELINE_SOURCE, V3_PIPELINE_HEADER))
 
 
+def v4_pipeline_available():
+    return all((ROOT / path).is_file() for path in (V4_PIPELINE_SOURCE, V4_PIPELINE_HEADER))
+
+
 def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.platform):
     """Compile line of one GPU suite; V0 sources get the same host flags as the official build."""
     pipeline = []
@@ -240,6 +258,10 @@ def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.plat
         sources = sorted((ROOT / "src/v3").rglob("*"))
         pipeline = ["-DV3_PIPELINE_AVAILABLE", *(path.relative_to(ROOT).as_posix() for path in sources
                                                 if path.is_file() and path.suffix in {".cu", ".cpp"})]
+    if name == V4_PIPELINE_SUITE:
+        if not v4_pipeline_available():
+            raise RuntimeError("Production V4 pipeline source and header are required (P9-T04)")
+        pipeline = ["-DV4_PIPELINE_AVAILABLE", V4_PIPELINE_SOURCE]
     return [
         compiler,
         *GPU_COMPILE_FLAGS,
@@ -407,6 +429,12 @@ def run_gpu_group(args, environment):
             raise RuntimeError(missing)
         print(f"SKIP {V3_PIPELINE_SUITE}: {missing}", flush=True)
         selected.remove(V3_PIPELINE_SUITE)
+    if V4_PIPELINE_SUITE in selected and not v4_pipeline_available():
+        missing = "Production V4 pipeline source and header are required (P9-T04)"
+        if args.suite or args.v4_dataset_dir:
+            raise RuntimeError(missing)
+        print(f"SKIP {V4_PIPELINE_SUITE}: {missing}", flush=True)
+        selected.remove(V4_PIPELINE_SUITE)
     compiler = shutil.which(args.compiler)
     if not compiler or Path(compiler).stem.lower() != "nvcc":
         raise RuntimeError("GPU suites require nvcc -arch=sm_75")
@@ -429,7 +457,12 @@ def run_gpu_group(args, environment):
     if V3_PIPELINE_SUITE in selected and args.v3_dataset_dir:
         v3_arguments = ["--require-v3-pipeline", "--dataset", str(args.v3_dataset_dir.resolve()),
                         *synthetic_arguments(args.v3_synthetic_dir)]
-    suite_arguments = {V2_PIPELINE_SUITE: v2_arguments, V3_PIPELINE_SUITE: v3_arguments}
+    v4_arguments = []
+    if V4_PIPELINE_SUITE in selected and args.v4_dataset_dir:
+        v4_arguments = ["--require-v4-pipeline", "--dataset", str(args.v4_dataset_dir.resolve()),
+                        *synthetic_arguments(args.v4_synthetic_dir)]
+    suite_arguments = {V2_PIPELINE_SUITE: v2_arguments, V3_PIPELINE_SUITE: v3_arguments,
+                       V4_PIPELINE_SUITE: v4_arguments}
     if args.v4_synthetic_dir:
         suite_arguments["gpu_v4_s6"] = synthetic_arguments(args.v4_synthetic_dir)
     stb_object = build / "stb_impl.o"
@@ -472,7 +505,9 @@ def main(argv=None):
     parser.add_argument("--v2-dataset-dir", type=Path, help="official 4-pair dataset at all 3 resolutions")
     parser.add_argument("--v3-synthetic-dir", type=Path, help="six P7 translation/projective fixtures for V3")
     parser.add_argument("--v3-dataset-dir", type=Path, help="official 4-pair dataset for V3 at all 3 resolutions")
-    parser.add_argument("--v4-synthetic-dir", type=Path, help="six P7 fixtures and their H_gt for standalone V4 S6")
+    parser.add_argument("--require-v4-pipeline", action="store_true", help="reject the test-only V4 dispatcher")
+    parser.add_argument("--v4-synthetic-dir", type=Path, help="six P7 fixtures and their H_gt for V4")
+    parser.add_argument("--v4-dataset-dir", type=Path, help="official 4-pair dataset for V4 at all 3 resolutions")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
     parser.add_argument("--list", action="store_true", help="list the available suites and exit")
     args = parser.parse_args(argv)
@@ -493,10 +528,13 @@ def main(argv=None):
         if (args.group not in {"all", "gpu"} or (args.suite and V3_PIPELINE_SUITE not in args.suite) or
                 not is_nvcc(args.compiler)):
             parser.error("V3 options require the gpu_v3_pipeline suite and nvcc")
-    if args.v4_synthetic_dir:
-        if (args.group not in {"all", "gpu"} or (args.suite and "gpu_v4_s6" not in args.suite) or
+    if args.v4_synthetic_dir or args.v4_dataset_dir or args.require_v4_pipeline:
+        if args.v4_dataset_dir and not args.v4_synthetic_dir:
+            parser.error("V4 acceptance requires both --v4-synthetic-dir and --v4-dataset-dir")
+        allowed_v4 = {"gpu_v4_s6", V4_PIPELINE_SUITE}
+        if (args.group not in {"all", "gpu"} or (args.suite and not any(s in args.suite for s in allowed_v4)) or
                 not is_nvcc(args.compiler)):
-            parser.error("--v4-synthetic-dir requires the gpu_v4_s6 suite and nvcc")
+            parser.error("V4 options require nvcc and either gpu_v4_s6 or gpu_v4_pipeline")
 
     print("Validation: Colab T4 required" if args.require_t4 else "Validation: local, not official Colab T4")
     print(f"Host: {platform.platform()}, CPU: {platform.processor() or 'unknown'}", flush=True)

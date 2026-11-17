@@ -401,8 +401,8 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Thành)</td>
       <td></td>
       <td>Người làm tự thiết kế bố cục notebook theo chuẩn 10 mục của đề bài cuối kỳ; đưa sẵn các nội dung lý thuyết, phương pháp, phân tích V0–V3 từ <code>docs/report/</code> vào notebook; thiết lập cấu trúc cell chạy tuần tự từ trên xuống dưới sạch lỗi</td>
-      <td>Chờ review</td>
-      <td>17/11: Phần Chương đã xong trên <code>chuong/p9</code>. <a href="../Group16_Final.ipynb">Notebook</a> có đủ 10 mục, trình bày phương pháp, phân tích V0–V3 và khung V4. Đã kiểm tra định dạng, liên kết và chạy tuần tự 8 cell code trên Python mới. Cell dữ liệu và trực quan hóa thuộc P9-T03 của Thành, số đo V4 thuộc P9-T05 của Đế.</td>
+      <td>Xong</td>
+      <td><a href="https://github.com/nh-atuan/panorama-stitching/pull/43">PR #43</a> đã merge vào <code>main</code> ngày 17/11. Phần Chương đã xong trên <code>chuong/p9</code>. <a href="../Group16_Final.ipynb">Notebook</a> có đủ 10 mục, trình bày phương pháp, phân tích V0–V3 và khung V4. Đã kiểm tra định dạng, liên kết và chạy tuần tự 8 cell code trên Python mới. Cell dữ liệu và trực quan hóa thuộc P9-T03 của Thành, số đo V4 thuộc P9-T05 của Đế.</td>
     </tr>
     <tr>
       <td>P9-T08</td>

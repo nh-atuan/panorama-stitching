@@ -368,7 +368,7 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td></td>
       <td>Người làm tự thiết kế các hàm nạp dữ liệu, xuất bảng biểu và trực quan hóa kết quả; tích hợp với khung 10 mục của notebook; chuẩn bị sẵn code vẽ biểu đồ speedup đa phiên bản và hiển thị gallery</td>
       <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p9</code></td>
+      <td>Nhánh <code>thanh/p9</code>. Chương đã bàn giao thứ tự cell, schema CSV và đường dẫn hiện vật trong <a href="report/p9-final-notebook-handoff.md#thanh-integration-points">tài liệu tích hợp</a>. Thành phụ trách nạp dataset và kết quả, bảng V0/V1, bảng và biểu đồ so sánh, gallery ảnh và ca lỗi.</td>
     </tr>
     <tr>
       <td>P9-T04</td>
@@ -401,16 +401,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Thành)</td>
       <td></td>
       <td>Người làm tự thiết kế bố cục notebook theo chuẩn 10 mục của đề bài cuối kỳ; đưa sẵn các nội dung lý thuyết, phương pháp, phân tích V0–V3 từ <code>docs/report/</code> vào notebook; thiết lập cấu trúc cell chạy tuần tự từ trên xuống dưới sạch lỗi</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>chuong/p9</code></td>
+      <td>Chờ review</td>
+      <td>17/11: Phần Chương đã xong trên <code>chuong/p9</code>. <a href="../Group16_Final.ipynb">Notebook</a> có đủ 10 mục, trình bày phương pháp, phân tích V0–V3 và khung V4. Đã kiểm tra định dạng, liên kết và chạy tuần tự 8 cell code trên Python mới. Cell dữ liệu và trực quan hóa thuộc P9-T03 của Thành, số đo V4 thuộc P9-T05 của Đế.</td>
     </tr>
     <tr>
       <td>P9-T08</td>
       <td>Thiết kế và cài đặt tối ưu kernel S6 V4 (Single-pass Canvas Fusion) trong <code>src/v4/s6/</code></td>
       <td></td>
       <td>Người làm toàn quyền lựa chọn giải pháp kỹ thuật (Single-pass fused canvas rendering gộp clear, copy A, gather B; thread 2D); build sạch bằng <code>nvcc -arch=sm_75</code>; giữ nguyên phương pháp và tham số V0; kết quả nhất quán với V0 (Max RGB ≤ 1) trên fixture đơn vị và 6 cặp synthetic; mở PR trước 18/11 (Thứ 4)</td>
-      <td>Chờ review</td>
-      <td>16/11: hoàn tất kernel và bộ test S6 V4 trên nhánh <code>chuong/p9</code>. Build <code>sm_75</code> và kiểm thử trên GTX 1650 đạt, gồm 6/6 cặp synthetic dùng cùng <code>H_gt</code>, canvas/offset khớp và Max RGB = 0. <a href="https://github.com/nh-atuan/panorama-stitching/pull/41">PR #41</a> đang mở. Kiểm thử chấp nhận V4 trên Colab T4 thuộc P9-T02.</td>
+      <td>Xong</td>
+      <td><a href="https://github.com/nh-atuan/panorama-stitching/pull/41">PR #41</a> đã merge vào <code>main</code> ngày 16/11. Phạm vi kernel S6 V4 đã build <code>sm_75</code> và kiểm thử trên GTX 1650. Cả 6 cặp synthetic dùng cùng <code>H_gt</code> khớp canvas/offset và Max RGB = 0. Nghiệm thu pipeline V4 và memcheck trên Colab T4 thuộc P9-T02.</td>
     </tr>
   </tbody>
 </table>

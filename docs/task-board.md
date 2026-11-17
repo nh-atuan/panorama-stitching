@@ -358,8 +358,8 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng suite kiểm tra tích hợp CLI V4 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P9-T04, P9-T08</td>
       <td>Người làm tự thiết kế kịch bản kiểm thử trong <code>tests/gpu/test_gpu_v4_pipeline.cu</code>; đối chiếu H, canvas và Max RGB ≤ 1 với V0/V1/V2/V3 trên 6 cặp synthetic và 12 cấu hình thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p9</code></td>
+      <td>Chờ review</td>
+      <td>17/11: Nhánh <code>tuan/p9</code>. Hoàn thành suite C++/CUDA <code>tests/gpu/test_gpu_v4_pipeline.cu</code> kiểm tra 4 tầng, harness CLI <code>scripts/verify_v4_cli.py</code> (CSV 11 cột, CLI âm, D2H canvas mở rộng), đăng ký suite <code>gpu_v4_pipeline</code> trong <code>tests/run_tests.py</code> và cập nhật notebook nghiệm thu <code>Group16_P9_V4_Verification.ipynb</code>. Colab T4 tại <code>ab8df98</code>: 6 cặp synthetic đạt RMSE ≤ 0,100 px, Max ≤ 0,209 px, drift so với V0–V3 ≤ 4,56e-13 px, Max RGB = 0; 12 cấu hình thật khớp 100% trạng thái V0–V4 (10 ca thành công có drift = 0 và Max RGB = 0, 2 ca challenge medium/large lỗi <code>NumericalFailure</code> tại S6 như thiết kế); <code>compute-sanitizer --tool memcheck --leak-check full</code> đạt 0 lỗi và 0 byte rò rỉ cho cả suite V4 và CLI production; báo cáo nghiệm thu chi tiết tại <a href="report/p9-v4-verification.md">docs/report/p9-v4-verification.md</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Thành</td>

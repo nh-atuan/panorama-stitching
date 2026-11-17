@@ -154,6 +154,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn("| site1 | small | V2 | 10.00 | 5.00x | 1.25x | 9.00 | 5.56x |", table)
         self.assertIn("| challenge | large | V2 | failed: NumericalFailure |", table)
         self.assertIn("| site1 | small | V0 | 50.00 | 1.00x | 1.00x | — | — |", fn.speedup_table(self.data))
+        sites = [row["site"] for row in fn.speedup_rows(self.data)]
+        self.assertEqual(sites[-1], "challenge")
+        self.assertEqual(sites.index("challenge"), sites.count("site1") * 3)
 
     def test_best_version_uses_the_geometric_mean(self):
         means = fn.geomean_speedups(self.data)
@@ -194,6 +197,7 @@ class ViewTests(unittest.TestCase):
         with self.assertRaisesRegex(fn.NotebookDataError, "Missing panorama"):
             fn.panorama_preview(self.data, "V2", "site1", "small")
         out = fn.plot_gallery(entries, self.temp / "gallery.png")
+        self.assertEqual(out.suffix, ".jpg")
         self.assertGreater(out.stat().st_size, 0)
 
 

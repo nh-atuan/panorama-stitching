@@ -269,9 +269,13 @@ def dominant_stage_table(data, version):
     return markdown_table(["Size", *(f"{stage} %" for stage in STAGES), "Dominant"], body)
 
 
+SITE_ORDER = (*BENCHMARK_SITES, CHALLENGE_SITE)
+
+
 def speedup_rows(data, version=None):
+    """Rows in report order: standard sites, then challenge; sizes small to large; versions."""
     rows = [row for row in data.speedup if version is None or row["version"] == version]
-    return sorted(rows, key=lambda row: (row["site"], list(SIZES).index(row["size"]),
+    return sorted(rows, key=lambda row: (SITE_ORDER.index(row["site"]), list(SIZES).index(row["size"]),
                                          int(row["version"].lstrip("V"))))
 
 
@@ -408,8 +412,9 @@ def plot_gallery(entries, out_path):
         for axis in row:
             axis.axis("off")
     figure.tight_layout()
-    out_path = Path(out_path)
+    # JPEG keeps the embedded photos small in the saved notebook and its PDF export.
+    out_path = Path(out_path).with_suffix(".jpg")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(out_path, dpi=110, bbox_inches="tight")
+    figure.savefig(out_path, dpi=90, bbox_inches="tight", pil_kwargs={"quality": 85})
     plt.close(figure)
     return out_path

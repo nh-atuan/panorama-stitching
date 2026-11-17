@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# Authors: Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195)
-# External source: none
+# Authors: Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
+# Adapted from: tests/python/test_run_tests.py by Tran Huu Kim Thanh (23120166), Le Ha Thanh Chuong (23120195)
+# Changes: Added unit tests for V4 pipeline suite and acceptance options.
 
 """Tests for tests/run_tests.py; compile lines are only inspected, so no GPU or nvcc is needed."""
 
@@ -90,6 +91,29 @@ class GpuCommandTest(unittest.TestCase):
                 run_tests.run_gpu_group(args, {})
         run.assert_not_called()
 
+    def test_v4_requires_both_integration_files_and_links_real_sources(self):
+        with TemporaryDirectory() as directory, mock.patch.object(run_tests, "ROOT", Path(directory)):
+            root = Path(directory)
+            for name in (run_tests.V4_PIPELINE_HEADER, run_tests.V4_PIPELINE_SOURCE):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+                if name == run_tests.V4_PIPELINE_HEADER:
+                    with self.assertRaisesRegex(RuntimeError, "Production V4 pipeline"):
+                        self.command(run_tests.V4_PIPELINE_SUITE)
+            command = self.command(run_tests.V4_PIPELINE_SUITE)
+            for value in ("-arch=sm_75", "-DV4_PIPELINE_AVAILABLE", run_tests.V4_PIPELINE_SOURCE,
+                          run_tests.V3_PIPELINE_SOURCE, "src/v4/s6/v4_warp_blend.cu", "build/stb_impl.o"):
+                self.assertIn(value, command)
+
+    def test_explicit_v4_fails_before_build_if_production_is_absent(self):
+        args = SimpleNamespace(suite=[run_tests.V4_PIPELINE_SUITE])
+        with mock.patch.object(run_tests, "v4_pipeline_available", return_value=False), \
+                mock.patch.object(run_tests, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "P9-T04"):
+                run_tests.run_gpu_group(args, {})
+        run.assert_not_called()
+
     def test_stb_is_not_built_with_strict_warnings(self):
         command = run_tests.gpu_stb_command("nvcc", "build/stb_impl.o")
         self.assertIn(run_tests.STB_SOURCE, command)
@@ -123,7 +147,7 @@ class MainTest(unittest.TestCase):
 
     def test_list_names_every_group_and_runs_nothing(self):
         text, v0, gpu, python = self.run_main(["--list"])
-        for name in ("preprocess", "gpu_s6", "gpu_reference", "gpu_v3_pipeline", "test_run_tests.py"):
+        for name in ("preprocess", "gpu_s6", "gpu_reference", "gpu_v3_pipeline", "gpu_v4_pipeline", "test_run_tests.py", "test_verify_v4_cli.py"):
             self.assertIn(name, text)
         for group in (v0, gpu, python):
             group.assert_not_called()
@@ -162,6 +186,10 @@ class MainTest(unittest.TestCase):
     def test_v3_acceptance_requires_both_fixture_directories(self):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             self.run_main(["--group", "gpu", "--suite", "gpu_v3_pipeline", "--v3-dataset-dir", "dataset"])
+
+    def test_v4_acceptance_requires_both_fixture_directories(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            self.run_main(["--group", "gpu", "--suite", "gpu_v4_pipeline", "--v4-dataset-dir", "dataset"])
 
 
 class SyntheticArgumentsTest(unittest.TestCase):

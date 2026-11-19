@@ -384,16 +384,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Đo benchmark V4 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V4</td>
       <td>P9-T04, P9-T08</td>
       <td>Người làm tự lựa chọn metric NCU/NSYS để phân tích hiệu quả giảm truy cập bộ nhớ của kernel S6 V4; đo thời gian V4 trên Colab T4 (5 runs + warm-up) cùng phiên với V0–V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v4/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V4 trong <code>docs/report/</code></td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p9</code></td>
+      <td>Chờ review</td>
+      <td>Nhánh <code>de/p9</code>. Đã đo V0–V4 trên cùng T4, phân tích 8 NSYS và 12 NCU, cập nhật APOD. V4/V3 đạt 1,0086× toàn pipeline và 1,0357× ở S6. Gói bàn giao đã chuẩn bị, Đế upload Drive nhóm. <a href="report/p9-t05-v4-apod.md">Báo cáo và bằng chứng</a>.</td>
     </tr>
     <tr>
       <td>P9-T06</td>
       <td>Xây dựng nội dung khung slide thuyết trình bằng LaTeX (Beamer) và chuẩn bị tư liệu video (phối hợp cùng Tuấn)</td>
       <td></td>
       <td>Người làm toàn quyền tự quyết định cách trình bày nội dung trên slide Beamer; phối hợp cùng Tuấn trên cùng mã nguồn Beamer; Đế phụ trách nội dung phân tích hiệu năng, chu trình APOD, profiling Nsight và bài học rút ra; chuẩn bị sẵn các bảng số liệu mẫu và danh mục tư liệu biểu đồ/timeline phục vụ cho video thuyết trình sau này</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p9</code></td>
+      <td>Chờ review</td>
+      <td>Nhánh <code>de/p9</code>. Đã dựng khung Beamer toàn dự án (tổng quan S1–S6, demo, benchmark V0–V4, APOD và bài học) và tích hợp module hiệu năng của Đế. Có dàn ý video rút gọn 15 phút và danh mục tư liệu để review với Tuấn. <a href="../slides/README.md">Deck và hướng dẫn build</a> · <a href="../slides/video-outline.md">Kịch bản chung</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>

@@ -1,0 +1,167 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usetheme{Madrid}
+\setbeamertemplate{navigation symbols}{}
+\graphicspath{{assets/}{generated/}}
+\title{Parallel Panorama Stitching}
+\subtitle{CSC14120 Parallel Programming Final Project}
+\author[Group 16]{Nguyen Ho Anh Tuan \and Tran Huu Kim Thanh \and Le Thuong De \and Le Ha Thanh Chuong}
+\institute{Group 16}
+\date{}
+\begin{document}
+
+\begin{frame}\titlepage\end{frame}
+\begin{frame}{Presentation roadmap}
+\tableofcontents[hideallsubsections]
+\end{frame}
+
+\section{Problem and approach}
+\begin{frame}{From two overlapping photos to one panorama}
+\begin{columns}[T]
+\column{.39\textwidth}
+\begin{itemize}
+\item Input: two overlapping RGB images, A and B.
+\item Output: a shared canvas in A's coordinate system.
+\item Goal: accelerate the pipeline while preserving the output and failure behavior of the CPU reference.
+\end{itemize}
+\column{.59\textwidth}
+\centering
+\includegraphics[width=\linewidth]{site2-large-panorama.jpg}
+\scriptsize Group 16 dataset, site2/large. V4 output from P9.
+\end{columns}
+\end{frame}
+
+\begin{frame}{Six stages from image features to canvas}
+\centering
+\begin{tikzpicture}[
+  stage/.style={draw=blue!60,fill=blue!7,rounded corners=2pt,align=center,
+    minimum height=9mm,text width=2.65cm,font=\small}, node distance=5mm and 7mm,
+  link/.style={-{Stealth[length=2mm]},thick}]
+\node[stage] (s1) {S1 Preprocessing};
+\node[stage,right=of s1] (s2) {S2 Keypoints};
+\node[stage,right=of s2] (s3) {S3 Descriptors};
+\node[stage,below=of s3] (s4) {S4 Matching};
+\node[stage,left=of s4] (s5) {S5 Homography};
+\node[stage,left=of s5] (s6) {S6 Warp and blend};
+\draw[link] (s1)--(s2); \draw[link] (s2)--(s3); \draw[link] (s3)--(s4);
+\draw[link] (s4)--(s5); \draw[link] (s5)--(s6);
+\end{tikzpicture}
+
+\medskip
+\begin{itemize}
+\item S1--S3 process A and B independently. S4--S6 combine their data.
+\item S1 uses grayscale and Gaussian smoothing. S2 detects corners and S3 builds binary patch descriptors.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Matching, geometry and rendering}
+\begin{itemize}
+\item \textbf{S4:} Match binary descriptors by Hamming distance and reject ambiguous nearest neighbors.
+\item \textbf{S5:} Sample four matches per RANSAC hypothesis, score the candidate homography and refit it using inliers.
+\item \textbf{S6:} Compute the canvas bounds, map output pixels back to the sources, sample B and blend the overlap.
+\end{itemize}
+\medskip
+\small Homography models a common plane or a largely rotational camera motion. Parallax and weak overlap can reduce alignment quality.
+\end{frame}
+
+\begin{frame}{One pipeline, five versions}
+\centering
+\begin{tabular}{lp{.69\linewidth}}
+\toprule
+Version & Main implementation change \\
+\midrule
+V0 & Sequential CPU reference. \\
+V1 & CUDA S1--S6 with intermediate data kept on GPU. \\
+V2 & Parallel RANSAC and inlier reduction in S5. \\
+V3 & Warp shuffle, shared memory and batch scheduling in S5. \\
+V4 & One fused canvas renderer in S6. \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\section{Live demonstration}
+\begin{frame}[fragile]{Build and run on the same Tesla T4}
+\begin{verbatim}
+nvidia-smi -L
+python3 scripts/build.py --compiler nvcc --require-t4 \
+  --target stitch
+mkdir -p results/demo
+./build/stitch dataset/site2/small_left.jpg \
+  dataset/site2/small_right.jpg results/demo/site2-v0.jpg \
+  --version 0 --runs 1 --debug
+./build/stitch dataset/site2/small_left.jpg \
+  dataset/site2/small_right.jpg results/demo/site2-v4.jpg \
+  --version 4 --runs 1 --debug
+\end{verbatim}
+\small Show both input photos, both output files and the terminal timing. The one-run demo illustrates the execution flow.
+\end{frame}
+
+\begin{frame}{How we check correctness}
+\begin{itemize}
+\item Check each stage before checking the integrated pipeline.
+\item Compare homography against known synthetic transforms.
+\item On real data compare success status, canvas geometry and pixel differences with V0.
+\item Run Compute Sanitizer on the GPU suite and production CLI.
+\end{itemize}
+\medskip
+\small On P9-T02, ten real configurations succeeded with Max RGB = 0 and matching geometry. Challenge medium and large returned the expected S6 NumericalFailure. Memcheck reported zero errors and zero bytes leaked.
+\end{frame}
+
+\begin{frame}{Gallery and a reproducible failure}
+\centering
+\includegraphics[width=.61\linewidth]{site2-large-panorama.jpg}
+
+\small Stable case: site2/large, V4. Run site2/small live for a shorter demonstration.
+\begin{itemize}
+\item Show challenge/medium next and point to 	exttt{[NumericalFailure] S6 warp\_blend failed}.
+\item Present the supplied course image example when the team has integrated it into the final gallery.
+\end{itemize}
+\end{frame}
+
+\section{Performance results and analysis}
+\begin{frame}{V0--V4 timing on one T4 session}
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Version & site2/large total (ms) & GM vs. V0 & GM vs. previous \\
+\midrule
+V0 & 5746.068 & 1.00$\times$ & -- \\
+V1 & 504.101 & 3.80$\times$ & 3.80$\times$ \\
+V2 & 81.091 & 23.37$\times$ & 6.16$\times$ \\
+V3 & 62.874 & 42.65$\times$ & 1.83$\times$ \\
+V4 & 62.197 & 43.02$\times$ & 1.009$\times$ \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\small Geometric means use nine standard configurations. Each timing uses one warm-up and five measured runs. The full per-case and per-stage tables are in the report.
+\end{frame}
+
+\begin{frame}{The bottleneck changes as S5 gets faster}
+\begin{itemize}
+\item P6 showed S5 accounted for about 90--99\% of V1 pipeline time across the standard matrix.
+\item P7 parallelized hypothesis scoring and inlier reduction to reduce S5 time.
+\item P8 improved S5 execution with warp shuffle reduction, shared-memory DLT/SVD and new batch scheduling.
+\item At site2/large after V3, the canvas renderer took about 46\% of total time. That case became the primary target for V4.
+\end{itemize}
+\medskip
+\small P6--P8 measurements establish the history of each optimization. The V0--V4 comparison uses the P9 session.
+\end{frame}
+
+\section{Key optimizations and lessons}
+\input{performance.tex}
+
+\begin{frame}{What the project demonstrates}
+\begin{itemize}
+\item Keep one reference and one measurement protocol across versions.
+\item Move the bottleneck through evidence: CPU reference, CUDA pipeline, parallel S5, more efficient S5 execution, then canvas fusion.
+\item Verify outputs and failure behavior before interpreting speedups.
+\item Check step-level gains against the total time. For V4, the additional total gain was about 0.9\%.
+\end{itemize}
+\medskip
+\small Reproducibility: source, dataset checksums, timing CSV, traces and the report notebook.
+\end{frame}
+\end{document}

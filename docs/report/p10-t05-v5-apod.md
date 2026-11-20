@@ -44,17 +44,18 @@ Toàn bộ 6 ca synthetic và 12 cấu hình ảnh thật đã được nghiệm
 
 Thực nghiệm đo lường trên Google Colab Tesla T4 (5 runs + 1 warm-up sau khi khởi động) đối chiếu giữa V4 Production, V5 Sequential và V5 DualStream. Thời gian tính bằng mili-giây (ms):
 
-| Cấu hình | Độ phân giải | V4 Production (ms) | V5 Sequential (ms) | V5 DualStream (ms) | Speedup V5_dual / V4 | Speedup V5_dual / V5_seq |
+| Cấu hình | Độ phân giải | V0 CPU (ms) | V4 Production (ms) | V5 DualStream (ms) | Speedup V5 vs V0 | Speedup V5 vs V4 |
 |---|---|---:|---:|---:|---:|---:|
-| site1 | small | 32.716 | 32.890 | 31.954 | 1.0238× | 1.0293× |
-| site1 | medium | 30.785 | 30.941 | 29.872 | 1.0306× | 1.0358× |
-| site1 | large | 107.157 | 107.412 | 104.981 | 1.0207× | 1.0232× |
-| site2 | small | 21.142 | 21.285 | 20.418 | 1.0355× | 1.0425× |
-| site2 | medium | 27.581 | 27.760 | 26.685 | 1.0336× | 1.0403× |
-| site2 | large | 62.197 | 62.450 | 59.862 | 1.0390× | 1.0432× |
-| site3 | small | 44.576 | 44.780 | 43.810 | 1.0175× | 1.0221× |
-| site3 | medium | 55.723 | 55.952 | 54.680 | 1.0191× | 1.0233× |
-| site3 | large | 100.393 | 100.680 | 98.712 | 1.0170× | 1.0199× |
+| site1 | small | 1403,980 | 51,758 | 32,246 | 43,54× | 1,605× |
+| site1 | medium | 2069,516 | 31,042 | 30,085 | 68,79× | 1,032× |
+| site1 | large | 5708,801 | 105,309 | 102,925 | 55,47× | 1,023× |
+| site2 | small | 1310,195 | 21,214 | 20,686 | 63,34× | 1,026× |
+| site2 | medium | 2241,272 | 27,701 | 27,090 | 82,73× | 1,023× |
+| site2 | large | 6537,569 | 61,655 | 59,941 | 109,07× | 1,029× |
+| site3 | small | 1058,809 | 63,224 | 49,738 | 21,29× | 1,271× |
+| site3 | medium | 1813,086 | 55,968 | 55,433 | 32,71× | 1,010× |
+| site3 | large | 4824,060 | 100,810 | 99,205 | 48,63× | 1,016× |
+| challenge | small | 1209,994 | 112,074 | 113,776 | 10,63× | 0,985× |
 
 ### Đánh giá thời gian đoạn Pre-S4 (tại `site2/large`)
 - V4 Production Pre-S4: ~15,288 ms.

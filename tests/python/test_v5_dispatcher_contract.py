@@ -11,6 +11,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 from smoke_v5_dispatcher import DETAIL_COLUMNS, check_detail
+from run_benchmark import parse_version_csv, version_columns
 
 
 class DispatcherContractTests(unittest.TestCase):
@@ -52,6 +53,20 @@ class DispatcherContractTests(unittest.TestCase):
                                 cwd=ROOT, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("P10-T02", result.stderr)
+
+    def test_overlap_allows_work_sum_above_wall_time_only_for_v5(self):
+        for version in (4, 5):
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(version_columns(version))
+            values = [2] * 6 + [8, 1, 1, 12]
+            for label in ("1", "Average", "Minimum"):
+                writer.writerow([label, *values])
+            if version == 5:
+                self.assertEqual(parse_version_csv(output.getvalue(), 1, version)["average"]["Total_ms"], 8)
+            else:
+                with self.assertRaises(ValueError):
+                    parse_version_csv(output.getvalue(), 1, version)
 
 
 if __name__ == "__main__":

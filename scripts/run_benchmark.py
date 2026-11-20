@@ -200,7 +200,7 @@ def parse_version_csv(text, runs=5, version=0):
         if any(not math.isfinite(val) or val < 0 for val in numbers):
             raise ValueError("Non-finite or negative timing")
         item = dict(zip(timing_keys, numbers))
-        if sum(numbers[:6]) > item["Total_ms"] + STAGE_SUM_TOLERANCE_MS:
+        if version != 5 and sum(numbers[:6]) > item["Total_ms"] + STAGE_SUM_TOLERANCE_MS:
             raise ValueError("Total_ms is smaller than the sum of the stage times")
         if not is_gpu:
             item.update(H2D_ms=0.0, D2H_ms=0.0, Total_Kernel_ms=item["Total_ms"])

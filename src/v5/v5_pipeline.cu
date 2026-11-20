@@ -170,6 +170,19 @@ void schedule_dual(const Image& a, const Image& b, const Config& config, V5Devic
     }
 }
 
+void schedule_sequential(const Image& a, const Image& b, const Config& config, V5DeviceOwner& owner) {
+    const Image inputs[] = {a, b};
+    for (int i = 0; i < 2; ++i) {
+        if (i) owner.events[0].done.wait_on(owner.image_stream[1].get());
+        enqueue_prefix(inputs[i], config, owner, i);
+        const Clock::time_point begin = Clock::now();
+        owner.events[i].count_ready.synchronize();
+        owner.events[i].host_wait_ms =
+            std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
+        enqueue_suffix(config, owner, i);
+    }
+}
+
 __global__ void merge_counts(DeviceCounts* out, const DeviceCounts* a, const DeviceCounts* b,
                               ErrorCode host_a, Stage stage_a, ErrorCode host_b, Stage stage_b) {
     if (threadIdx.x || blockIdx.x) return;
@@ -191,8 +204,10 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
                        V5DeviceOwner& owner, V5Schedule schedule, KernelTiming& kernels,
                        bool measured, V1StageFailure& failure) {
     (void)measured;
-    (void)schedule;  // Sequential scheduling is introduced in the next change.
     failure = V1StageFailure();
+    owner.output_ready = false;
+    if (!owner.view.d_counts || !owner.view.d_scratch) return ErrorCode::InvalidArgument;
+    const Clock::time_point host_start = Clock::now();
     try {
         kernels.reset();
         KernelTimingScope timing_scope(kernels);
@@ -200,7 +215,8 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
         CUDA_CHECK(cudaMemsetAsync(owner.view.d_counts, 0, sizeof(DeviceCounts), control));
         CUDA_CHECK(cudaMemsetAsync(owner.view.d_homography, 0, sizeof(Homography), control));
         owner.origin.record(control);
-        schedule_dual(a, b, config, owner);
+        if (schedule == V5Schedule::Sequential) schedule_sequential(a, b, config, owner);
+        else schedule_dual(a, b, config, owner);
         for (int i = 0; i < 2; ++i) {
             if (owner.events[i].status == ErrorCode::CudaFailure) {
                 owner.drain();
@@ -214,6 +230,7 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
             owner.events[1].status, owner.events[1].failure));
         CUDA_CHECK(cudaGetLastError());
         owner.ready.record(control);
+        owner.host_pre_s4_ms = std::chrono::duration<double, std::milli>(Clock::now() - host_start).count();
         const GpuStage downstream[] = {v1_match, v3_homography, v4_warp_blend};
         for (int i = 0; i < 3; ++i) {
             failure.stage = static_cast<Stage>(i + 3);
@@ -230,6 +247,7 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
             CUDA_CHECK(cudaGetLastError());
             owner.downstream_stop[i].record(control);
         }
+        owner.output_ready = true;
         return ErrorCode::Success;
     } catch (const CudaError&) {
         owner.drain();

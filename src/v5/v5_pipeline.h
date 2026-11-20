@@ -28,6 +28,8 @@ struct V5DeviceOwner {
     V5BranchEvents events[2];
     CudaEvent origin, ready;
     CudaEvent downstream_start[3], downstream_stop[3], d2h_start, d2h_stop;
+    double host_pre_s4_ms = 0;
+    bool output_ready = false;
     V5DeviceOwner() = default;
     ~V5DeviceOwner();
     V5DeviceOwner(const V5DeviceOwner&) = delete;

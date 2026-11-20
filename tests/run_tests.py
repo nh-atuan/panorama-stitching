@@ -65,6 +65,10 @@ V3_PIPELINE_HEADER = "src/v3/v3_pipeline.h"
 V4_PIPELINE_SUITE = "gpu_v4_pipeline"
 V4_PIPELINE_SOURCE = "src/v4/v4_pipeline.cu"
 V4_PIPELINE_HEADER = "src/v4/v4_pipeline.h"
+V5_PIPELINE_SUITE = "gpu_v5_pipeline"
+V5_PIPELINE_SOURCE = "src/v5/v5_pipeline.cu"
+V5_PIPELINE_HEADER = "src/v5/v5_pipeline.h"
+V5_IMAGE_BRANCH_SOURCE = "src/v5/v5_image_branch.cu"
 
 V0_SUITES = {
     "preprocess": [*COMMON_BLUR, "src/v0/v0_preprocess.cpp", "tests/v0/test_v0_preprocess.cpp"],
@@ -189,12 +193,25 @@ GPU_SUITES = {
         "src/v4/s6/v4_warp_blend.cu",
         "tests/gpu/test_gpu_v4_pipeline.cu",
     ],
+    V5_PIPELINE_SUITE: [
+        *V0_ALL_SOURCES,
+        *V1_ALL_SOURCES,
+        V2_PIPELINE_SOURCE,
+        "src/v2/s5/v2_homography.cu",
+        V3_PIPELINE_SOURCE,
+        "src/v3/s5/v3_homography.cu",
+        V4_PIPELINE_SOURCE,
+        "src/v4/s6/v4_warp_blend.cu",
+        V5_IMAGE_BRANCH_SOURCE,
+        V5_PIPELINE_SOURCE,
+        "tests/gpu/test_gpu_v5_pipeline.cu",
+    ],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {name: ["-Xlinker=--wrap=cudaMalloc"] for name in ("gpu_s6", "gpu_v4_s6")}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
 GPU_STB_SUITES = {"gpu_s6", "gpu_v4_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline",
-                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE, V4_PIPELINE_SUITE}
+                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE, V4_PIPELINE_SUITE, V5_PIPELINE_SUITE}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
 GPU_COMPILE_FLAGS = [
@@ -222,6 +239,7 @@ PYTHON_SUITES = [
     "test_final_notebook.py",
     "test_pres4_baseline.py",
     "test_v5_dispatcher_contract.py",
+    "test_verify_v5_cli.py",
 ]
 
 
@@ -249,6 +267,10 @@ def v4_pipeline_available():
     return all((ROOT / path).is_file() for path in (V4_PIPELINE_SOURCE, V4_PIPELINE_HEADER))
 
 
+def v5_pipeline_available():
+    return all((ROOT / path).is_file() for path in (V5_PIPELINE_SOURCE, V5_PIPELINE_HEADER, V5_IMAGE_BRANCH_SOURCE))
+
+
 def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.platform):
     """Compile line of one GPU suite; V0 sources get the same host flags as the official build."""
     pipeline = []
@@ -264,6 +286,10 @@ def gpu_suite_command(compiler, name, binary, stb_object, platform_name=sys.plat
         if not v4_pipeline_available():
             raise RuntimeError("Production V4 pipeline source and header are required (P9-T04)")
         pipeline = ["-DV4_PIPELINE_AVAILABLE", V4_PIPELINE_SOURCE]
+    if name == V5_PIPELINE_SUITE:
+        if not v5_pipeline_available():
+            raise RuntimeError("Production V5 pipeline source, header and image branch are required (P10-T02/T03)")
+        pipeline = ["-DV5_PIPELINE_AVAILABLE", "-DPANORAMA_V5_IMAGE_API_AVAILABLE"]
     return [
         compiler,
         *GPU_COMPILE_FLAGS,
@@ -463,8 +489,12 @@ def run_gpu_group(args, environment):
     if V4_PIPELINE_SUITE in selected and args.v4_dataset_dir:
         v4_arguments = ["--require-v4-pipeline", "--dataset", str(args.v4_dataset_dir.resolve()),
                         *synthetic_arguments(args.v4_synthetic_dir)]
+    v5_arguments = []
+    if V5_PIPELINE_SUITE in selected and args.v5_dataset_dir:
+        v5_arguments = ["--require-v5-pipeline", "--dataset", str(args.v5_dataset_dir.resolve()),
+                        *synthetic_arguments(args.v5_synthetic_dir)]
     suite_arguments = {V2_PIPELINE_SUITE: v2_arguments, V3_PIPELINE_SUITE: v3_arguments,
-                       V4_PIPELINE_SUITE: v4_arguments}
+                       V4_PIPELINE_SUITE: v4_arguments, V5_PIPELINE_SUITE: v5_arguments}
     if args.v4_synthetic_dir:
         suite_arguments["gpu_v4_s6"] = synthetic_arguments(args.v4_synthetic_dir)
     stb_object = build / "stb_impl.o"
@@ -510,6 +540,9 @@ def main(argv=None):
     parser.add_argument("--require-v4-pipeline", action="store_true", help="reject the test-only V4 dispatcher")
     parser.add_argument("--v4-synthetic-dir", type=Path, help="six P7 fixtures and their H_gt for V4")
     parser.add_argument("--v4-dataset-dir", type=Path, help="official 4-pair dataset for V4 at all 3 resolutions")
+    parser.add_argument("--require-v5-pipeline", action="store_true", help="reject the test-only V5 dispatcher")
+    parser.add_argument("--v5-synthetic-dir", type=Path, help="six P7 fixtures and their H_gt for V5")
+    parser.add_argument("--v5-dataset-dir", type=Path, help="official 4-pair dataset for V5 at all 3 resolutions")
     parser.add_argument("--sanitizers", action="store_true", help="local clang/g++ ASan+UBSan")
     parser.add_argument("--list", action="store_true", help="list the available suites and exit")
     args = parser.parse_args(argv)
@@ -537,6 +570,12 @@ def main(argv=None):
         if (args.group not in {"all", "gpu"} or (args.suite and not any(s in args.suite for s in allowed_v4)) or
                 not is_nvcc(args.compiler)):
             parser.error("V4 options require nvcc and either gpu_v4_s6 or gpu_v4_pipeline")
+    if args.v5_synthetic_dir or args.v5_dataset_dir or args.require_v5_pipeline:
+        if args.v5_dataset_dir and not args.v5_synthetic_dir:
+            parser.error("V5 acceptance requires both --v5-synthetic-dir and --v5-dataset-dir")
+        if (args.group not in {"all", "gpu"} or (args.suite and V5_PIPELINE_SUITE not in args.suite) or
+                not is_nvcc(args.compiler)):
+            parser.error("V5 options require nvcc and gpu_v5_pipeline")
 
     print("Validation: Colab T4 required" if args.require_t4 else "Validation: local, not official Colab T4")
     print(f"Host: {platform.platform()}, CPU: {platform.processor() or 'unknown'}", flush=True)

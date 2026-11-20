@@ -100,6 +100,18 @@ One thread per output pixel: test A/B validity, sample source pixels, blend, wri
 \end{itemize}
 \end{frame}
 
+\begin{frame}{V5: dual-stream concurrency investigation}
+\begin{block}{Two independent image branches}
+Stream A and Stream B overlap H2D, S1, S2, and S3 concurrently; join before S4.
+\end{block}
+\begin{itemize}
+\item Pre-S4 duration at site2/large decreases from $\sim$15.29 ms to $\sim$12.68 ms (1.207$\times$).
+\item End-to-end speedup is modest (1.027$\times$ geometric mean) because downstream S5 and S6 dominate total time and SM resources are shared.
+\item Confirms correctness and memory safety (0 memcheck errors, bit-for-bit parity with sequential mode).
+\item Conclusion: V4 remains the production version; V5 serves as a concurrent stream case study.
+\end{itemize}
+\end{frame}
+
 \begin{frame}{Lessons and limits}
 \begin{itemize}
 \item Faster S5 exposes S6; stage speedup is bounded by its pipeline share.

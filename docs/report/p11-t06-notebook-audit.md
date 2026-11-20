@@ -221,3 +221,7 @@ Thực hiện theo thứ tự để tránh đo lại một notebook chưa chốt
 **Kết luận audit:** chưa đủ điều kiện nghiệm thu T06; công cụ và baseline audit đã hoàn thành local. Không đổi source pin, quyết định adoption hoặc số liệu gốc. Không có remote write.
 
 **AUDIT COMPLETE — BLOCKERS IDENTIFIED**
+
+## 13. Acceptance Workflow Follow-Up
+
+Lượt triển khai tiếp theo đã bổ sung [notebook điều phối T4](../../Group16_P11_T06_Acceptance.ipynb), preflight, source packaging theo commit, execution/evidence controller và PDF exporter. Cách chạy hai source mode, giữ log lỗi, tải evidence và giới hạn nghiệm thu được ghi tại [runbook](p11-t06-colab-runbook.md). Báo cáo gốc không bị sửa; bản chạy dùng overlay có provenance, không tự thay lời văn/số liệu. Có 28 test thuộc mảng notebook và 221 test Python tổng thể chạy không lỗi (2 skip). PDF smoke đã xem cả hai trang; không phải Group16_Final.pdf nghiệm thu. Source freeze, raw V5, T04 và Run all T4 thực vẫn chờ.

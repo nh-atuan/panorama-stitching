@@ -2,30 +2,30 @@
 
 # P10-T01 — V5 Baseline and Execution Contract
 
-Chương phụ trách điều tra baseline và chốt contract ngày 20/11/2026. Thành thực hiện API một ảnh ở T02, Chương thực hiện dispatcher ở T03, Tuấn nghiệm thu ở T04. Đế đo V5 chính thức ở T05. Các chữ ký dưới đây là giao diện cần triển khai, với semantics được chốt trước khi đo V5.
+**T01 đã Xong.** Chương đã thu baseline Colab T4 và chốt contract ngày 20/11/2026. Thành thực hiện API một ảnh ở T02, Chương thực hiện dispatcher ở T03, Tuấn nghiệm thu ở T04. Đế đo V5 chính thức ở T05. Các chữ ký dưới đây là giao diện cần triển khai, với semantics được chốt trước khi đo V5. [Phân tích và bằng chứng T01](p10-t01-pres4-baseline.md)
 
 ## 1. Baseline và bằng chứng
 
 - Nền nhánh T01 là `ede4d51`, chứa merge PR #47 và toàn bộ P9. V4 production được nghiệm thu tại `ab8df98d7f15bb42d5e3306cf03a38311248b4a8`. P9-T05 checkout `ba97ed780785135e9d20ce36aac852efc4ebc898`, có `src/` và `scripts/build.py` khớp source nghiệm thu. [Nghiệm thu V4](p9-v4-verification.md) · [Benchmark P9](p9-t05-v4-apod.md)
 - P9 đo Tesla T4, driver 580.82.07, nvcc 13.0.88, `sm_75 -O2 --fmad=false`, một warm-up và năm runs. Manifest ảnh SHA-256 là `99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d`. Đây là môi trường của bằng chứng P9.
-- Máy điều tra T01 có GTX 1650, VRAM tổng 4096 MiB, còn trống 3935 MiB tại thời điểm truy vấn. PowerShell không tìm thấy `nvcc` hoặc `nsys`. Checkout có report và hình NSYS/NCU, chưa có SQLite, CSV timing thô hay ZIP evidence P9. Notebook P9 trên Git không lưu output. T01 chưa chạy đo mới trên T4. Bộ nhớ GTX là thông tin môi trường local.
+- T01 đã chạy Colab T4 tại source `c4566e3f656493bc48bb8edddaa5e8ac95d27831`, runtime 13.0, driver 580.82.07, nvcc 13.0.88 và NSYS 2025.3.1.0. Có đủ CSV production/probe, ba NSYS trace và SQLite, 84 file khớp checksum, 14 lệnh exit 0. Ba panorama probe khớp production.
 - Bộ evidence P9 được report định danh bằng ZIP SHA-256 `a16c610c7a8bff02c6cd61c94bacd79a9d1d0793b2c838d58d996ca3c6e060c7`. Chương có thể tự trích khi nhận được archive từ kho chung. [Kho evidence](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1)
 
 ### Baseline ba ca large
 
-| Ca | V4 Total (ms) | S6 V4 (ms) | Nguồn | H2D → S4 ready, H2D A/B, S1 A/B, S2, S3, host wait, GPU idle, peak/headroom T4 |
-|---|---:|---:|---|---|
-| site1/large | 107.157 | 19.531 | Bảng benchmark P9-T05 | Chưa có số trích được trong checkout |
-| site2/large | 62.197 | 28.190 | Bảng benchmark P9-T05 | Chưa có số trích được trong checkout |
-| site3/large | 100.393 | 20.405 | Bảng benchmark P9-T05 | Chưa có số trích được trong checkout |
+| Ca | T01 production Total mean (ms) | Probe pre-S4 mean (ms) | Probe pre-S4 median (ms) | Pre-S4 share của probe |
+|---|---:|---:|---:|---:|
+| site1/large | 106.883 | 13.086 | 12.645 | 12.23% |
+| site2/large | 69.684 | 15.288 | 16.149 | 21.44% |
+| site3/large | 100.512 | 11.234 | 10.893 | 11.20% |
 
-Các số Total/S6 là kết quả được đọc từ report P9. Chúng không xác định thời gian trước S4. Các bảng NCU và NSYS của report chỉ chi tiết S6. Pre-S4 share, A/B imbalance, `asyncEngineCount`, `concurrentKernels` và mức contention còn cần được đo.
+Năm run mỗi ca sau warm-up. Probe thêm event và readiness wait, nên báo timing riêng với production. Headroom device lấy mẫu còn ít nhất 12,980 GiB. Scratch hai nhánh tính từ production cần thêm 132.790.432 byte. `asyncEngineCount=3` và `concurrentKernels=1` cho phép thử overlap. Các thời lượng nhánh, host wait, GPU intervals và allocation timeline được phân tích tại [báo cáo T01](p10-t01-pres4-baseline.md).
 
-### Quy tắc chọn ca chính khi thiếu trace
+### Chốt ca chính trước khi đo V5
 
-Chốt **site2/large** trước khi xem số V5. Quy tắc dự phòng là chọn ca có Total V4 thấp nhất trong ba ca cùng kích thước ảnh large. Giả thuyết làm việc là công việc theo pixel trước S4 tương đương về quy mô, nên cùng mức giảm thời gian tuyệt đối có ảnh hưởng tương đối lớn hơn ở ca có Total nhỏ nhất. Số candidate và lịch sort có thể khác giữa các cảnh. Đây là quyết định theo proxy, có bất định, chưa phải xếp hạng từ pre-S4 timing. Kết quả trên cả ba ca và toàn bộ chín ca chuẩn vẫn phải báo cáo. Chốt này độc lập với lý do chọn hotspot S6 của P9.
+Giữ **site2/large** làm ca chính. Lựa chọn dự phòng ban đầu theo Total V4 nay được baseline pre-S4 hỗ trợ: mean 15,288 ms và share 21,44% đều cao nhất trong ba ca. Hai nhánh có tải gần nhau và còn headroom cho scratch riêng. Trace production cũng ghi đoạn trước S4 dài nhất ở site2 trong lượt được profile. Độ biến thiên probe và overhead profiler vẫn tồn tại, do đó T05 cần đo ghép cặp và báo đủ ma trận chuẩn.
 
-### Thu thập phần baseline còn thiếu
+### Lệnh tái lập baseline
 
 Trên T4, ghi SHA checkout, hash binary và manifest, GPU/driver, nvcc, thuộc tính thiết bị, lệnh và exit code. Build bằng script production, chạy CLI V4 với một warm-up tự động và năm runs. Ghi lại stdout/stderr.
 
@@ -59,7 +59,7 @@ Probe build bằng `python scripts/build_pres4_probe.py --out-dir build/pres4`. 
 
 CSV probe gồm pre-S4 CUDA/host, H2D/S1–S3 từng ảnh, interval D2H candidate, host wait S2 và mẫu VRAM. Candidate-copy interval có thể bao gồm overhead do vùng host pageable. Bộ nhớ là các checkpoint trên toàn device, chưa phải peak allocation process chính xác. `*_statistics.json` giữ mean/median/min/max/sample SD. NSYS SQLite phục vụ việc trích GPU idle và allocation timeline sau đó.
 
-ZIP có raw timing, summary, memory, source SHA, hash binary và dataset, lệnh build/chạy, log, source overlay, biểu đồ và assessment ca chính. Notebook kiểm tra PNG probe trùng production trước khi nhận kết quả. Cell Export vẫn có thể chạy để tải evidence partial khi measurement lỗi. Cập nhật bảng baseline và đánh giá ca chính bằng output thực trước khi đóng T01.
+ZIP có raw timing, summary, memory, source SHA, hash binary và dataset, lệnh build/chạy, log, source overlay, biểu đồ và assessment ca chính. Notebook kiểm tra PNG probe trùng production trước khi nhận kết quả. Cell Export có thể tải evidence partial khi measurement lỗi. Baseline đã được chốt bằng output T4 và phân tích SQLite trong báo cáo kết quả T01.
 
 1. `main.cu::run_gpu_once` dùng một stream nonblocking. Reset `DeviceCounts`, upload A rồi B bằng `cudaMemcpy2DAsync`, sau đó gọi pipeline. Input pinned được chuẩn bị ngoài timing.
 2. `v4_run_stages` dùng bộ stage V1, thay S5 bằng V3 và S6 bằng V4. S1 chạy A rồi B, S2 chạy A rồi B, S3 chạy A rồi B.
@@ -226,6 +226,6 @@ Ghi test chẩn đoán checksum feature/match và Config ngoài timing. Khi API 
 
 ### Trạng thái T01 và điều kiện tiếp tục
 
-Contract API/scheduler đã đủ để triển khai T02/T03 theo giả định ghi rõ ở trên. Chương tự phụ trách phần baseline còn thiếu, không có phụ thuộc bàn giao từ Đế cho T01. Trước kết luận hiệu năng V5, cần bổ sung số pre-S4, thời lượng theo nhánh, wait/idle và VRAM T4 từ trace gốc hoặc lượt thu lại. T05 của Đế vẫn là lần đo V5 chính thức sau T04.
+T01 đã hoàn tất baseline và contract, đủ để Thành triển khai T02 và Chương triển khai T03. Bộ evidence có số pre-S4, thời lượng nhánh, mẫu VRAM cùng trace wait/idle và allocation. T05 của Đế là lần đo V5 chính thức sau T04.
 
-Số liệu P9 chỉ xác nhận fusion S6 có lợi ích nhỏ. Rủi ro V5 gồm scratch tăng, GPU tranh chấp tài nguyên, S2 host waits làm giảm overlap, sai khác thứ tự lỗi, pattern/context initialization và event instrumentation gây overhead. Tỷ trọng pre-S4 thực còn thiếu nên chưa có dự báo speedup định lượng cho V5. Báo cả regression nếu prototype hai stream chậm hơn control.
+Rủi ro V5 gồm scratch tăng, GPU tranh chấp tài nguyên, S2 host waits làm giảm overlap, sai khác thứ tự lỗi, pattern/context initialization và event instrumentation gây overhead. T01 xác nhận có dư địa pre-S4, còn lợi ích của hai stream phải được đo trên V5. Báo cả regression nếu prototype hai stream chậm hơn control.

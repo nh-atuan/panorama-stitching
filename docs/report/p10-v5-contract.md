@@ -51,6 +51,16 @@ GPU idle là phần bù của hợp các khoảng GPU copy/kernel trong cửa s�
 
 ## 2. Audit đường chạy V4
 
+### Notebook thu baseline
+
+Chạy [Group16_P10_T01_PreS4_Baseline.ipynb](../../Group16_P10_T01_PreS4_Baseline.ipynb) trên Colab T4 từ nhánh `chuong/p10-v5`. Notebook dùng binary production và probe riêng, hỗ trợ đủ ba site large, một warm-up và ít nhất năm measured runs, dataset Drive đã kiểm hash, NSYS tùy khả dụng và cell tải ZIP.
+
+Probe build bằng `python scripts/build_pres4_probe.py --out-dir build/pres4`. Script tạo source overlay trong build và kiểm tra từng anchor trước khi chèn event. Source production không đổi. Probe ghi CUDA event origin ngay trước H2D(A), ready sau S3(B) và trước S4. Có readiness synchronize bổ sung để đo host-observed pre-S4 completion. Timing probe bao gồm overhead event và chờ này, nên notebook lưu Total production riêng.
+
+CSV probe gồm pre-S4 CUDA/host, H2D/S1–S3 từng ảnh, interval D2H candidate, host wait S2 và mẫu VRAM. Candidate-copy interval có thể bao gồm overhead do vùng host pageable. Bộ nhớ là các checkpoint trên toàn device, chưa phải peak allocation process chính xác. `*_statistics.json` giữ mean/median/min/max/sample SD. NSYS SQLite phục vụ việc trích GPU idle và allocation timeline sau đó.
+
+ZIP có raw timing, summary, memory, source SHA, hash binary và dataset, lệnh build/chạy, log, source overlay, biểu đồ và assessment ca chính. Notebook kiểm tra PNG probe trùng production trước khi nhận kết quả. Cell Export vẫn có thể chạy để tải evidence partial khi measurement lỗi. Cập nhật bảng baseline và đánh giá ca chính bằng output thực trước khi đóng T01.
+
 1. `main.cu::run_gpu_once` dùng một stream nonblocking. Reset `DeviceCounts`, upload A rồi B bằng `cudaMemcpy2DAsync`, sau đó gọi pipeline. Input pinned được chuẩn bị ngoài timing.
 2. `v4_run_stages` dùng bộ stage V1, thay S5 bằng V3 và S6 bằng V4. S1 chạy A rồi B, S2 chạy A rồi B, S3 chạy A rồi B.
 3. S1 dùng scratch cho blur tạm. S2 tái sử dụng scratch cho counter, score và sort keys. Sau score/NMS, S2 copy count vào biến host rồi `cudaStreamSynchronize` trước top-K. Lần chờ A làm trì hoãn cả việc submit công việc S2 của B.

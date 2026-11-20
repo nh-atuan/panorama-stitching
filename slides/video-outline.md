@@ -4,10 +4,10 @@ Kịch bản rút gọn **15 phút**, vẫn có đủ bốn phần nội dung. �
 
 | Thời gian | Phần | Người dẫn đề xuất | Nội dung và hình trên màn hình |
 |---|---|---|---|
-| 00:00–03:00 | Tổng quan và phương pháp | Tuấn, Thành và Chương | Giới thiệu bài toán, chỉ vùng chồng lấn trên hai ảnh, cho xem panorama. Giải thích S1–S3 làm riêng trên từng ảnh, S4 ghép điểm, S5 ước lượng homography, S6 dựng canvas. Tóm tắt lộ trình V0–V4. |
+| 00:00–03:00 | Tổng quan và phương pháp | Tuấn, Thành và Chương | Giới thiệu bài toán, chỉ vùng chồng lấn trên hai ảnh, cho xem panorama. Giải thích S1–S3 làm riêng trên từng ảnh, S4 ghép điểm, S5 ước lượng homography, S6 dựng canvas. Tóm tắt lộ trình V0–V5 (V4 production, V5 thử nghiệm stream concurrency). |
 | 03:00–07:00 | Live demo | Tuấn và Thành | Chuẩn bị sẵn binary và dataset. Trên Colab, hiện GPU và source SHA, chạy V0 và V4 trên site2/small, rồi mở hai output. Dùng log challenge/medium đã lưu để giải thích trạng thái lỗi. |
-| 07:00–12:00 | Kết quả và phân tích hiệu năng | Đế | Dùng bảng V0–V4 cùng phiên và một hình Nsight. Nêu mức tăng của V2, V3, mức cải thiện nhỏ của V4 và phạm vi counter. Xem lời dẫn của Đế để chia đúng 5 phút. |
-| 12:00–15:00 | Tối ưu chính và bài học | Đế, Chương và Tuấn | Dùng APOD nối ba vòng tối ưu. Minh họa S5 chuyển từ RANSAC tuần tự sang tính giả thuyết song song, V3 giảm chi phí thực thi S5, V4 hợp nhất dựng canvas. Kết luận về kiểm chứng, cách đọc counter và ảnh hưởng của hotspot lên tốc độ tổng. |
+| 07:00–12:00 | Kết quả và phân tích hiệu năng | Đế và Tuấn | Dùng bảng V0–V4 cùng phiên và một hình Nsight. Nêu mức tăng của V2, V3, mức cải thiện của V4 và kết quả thử nghiệm V5 hai stream. Xem lời dẫn của Đế để chia đúng 5 phút. |
+| 12:00–15:00 | Tối ưu chính và bài học | Đế, Chương và Tuấn | Dùng APOD nối các vòng tối ưu. Minh họa S5 chuyển từ RANSAC tuần tự sang tính giả thuyết song song, V3 giảm chi phí thực thi S5, V4 hợp nhất dựng canvas, V5 khai thác concurrency. Kết luận về kiểm chứng, cách đọc counter và ảnh hưởng của hotspot lên tốc độ tổng. |
 
 ## Chuẩn bị ghi hình
 

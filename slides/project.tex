@@ -67,7 +67,7 @@
 \small Homography models a common plane or a largely rotational camera motion. Parallax and weak overlap can reduce alignment quality.
 \end{frame}
 
-\begin{frame}{One pipeline, five versions}
+\begin{frame}{One pipeline, six versions}
 \centering
 \begin{tabular}{lp{.69\linewidth}}
 \toprule
@@ -77,7 +77,8 @@ V0 & Sequential CPU reference. \\
 V1 & CUDA S1--S6 with intermediate data kept on GPU. \\
 V2 & Parallel RANSAC and inlier reduction in S5. \\
 V3 & Warp shuffle, shared memory and batch scheduling in S5. \\
-V4 & One fused canvas renderer in S6. \\
+V4 & One fused canvas renderer in S6 (Production baseline). \\
+V5 & Dual-stream asynchronous execution for independent branches (H2D + S1--S3). \\
 \bottomrule
 \end{tabular}
 \end{frame}

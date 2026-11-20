@@ -237,6 +237,7 @@ PYTHON_SUITES = [
     "test_verify_v3_cli.py",
     "test_verify_v4_cli.py",
     "test_final_notebook.py",
+    "test_notebook_audit.py",
     "test_pres4_baseline.py",
     "test_v5_dispatcher_contract.py",
     "test_verify_v5_cli.py",

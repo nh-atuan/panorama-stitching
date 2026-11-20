@@ -350,16 +350,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng khung slide thuyết trình bằng LaTeX (Beamer) và chuẩn bị sơ bộ cho video thuyết trình (phối hợp cùng Đế)</td>
       <td></td>
       <td>Người làm toàn quyền tự quyết định cấu trúc, theme, bố cục và nội dung các slide Beamer theo ý tưởng của nhóm (đề bài không ràng buộc cố định bố cục slide); biên dịch PDF sạch lỗi, chừa sẵn khung cho hình ảnh và số liệu các phiên bản tối ưu; kèm chuẩn bị sơ bộ cho video thuyết trình (lập dàn ý kịch bản, phân bổ thời lượng 20–30 phút và chuẩn bị tài liệu trực quan, chưa quay video hoàn chỉnh); Tuấn phụ trách cấu trúc chung của slide, phần tổng quan/pipeline và dàn ý kịch bản video</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p9</code></td>
+      <td>Xong</td>
+      <td>19/11: Tuấn và Đế phối hợp hoàn thành khung deck thuyết trình Beamer trong <code>slides/project.tex</code>, module hiệu năng <code>slides/performance.tex</code> và kịch bản video sơ bộ trong <code>slides/video-outline.md</code>; đã merge qua PR #46.</td>
     </tr>
     <tr>
       <td>P9-T02</td>
       <td>Xây dựng suite kiểm tra tích hợp CLI V4 trong <code>tests/</code> và kiểm tra an toàn bộ nhớ trên Colab T4</td>
       <td>P9-T04, P9-T08</td>
       <td>Người làm tự thiết kế kịch bản kiểm thử trong <code>tests/gpu/test_gpu_v4_pipeline.cu</code>; đối chiếu H, canvas và Max RGB ≤ 1 với V0/V1/V2/V3 trên 6 cặp synthetic và 12 cấu hình thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
-      <td>Chờ review</td>
-      <td>17/11: Nhánh <code>tuan/p9</code>. Hoàn thành suite C++/CUDA <code>tests/gpu/test_gpu_v4_pipeline.cu</code> kiểm tra 4 tầng, harness CLI <code>scripts/verify_v4_cli.py</code> (CSV 11 cột, CLI âm, D2H canvas mở rộng), đăng ký suite <code>gpu_v4_pipeline</code> trong <code>tests/run_tests.py</code> và cập nhật notebook nghiệm thu <code>Group16_P9_V4_Verification.ipynb</code>. Colab T4 tại <code>ab8df98</code>: 6 cặp synthetic đạt RMSE ≤ 0,100 px, Max ≤ 0,209 px, drift so với V0–V3 ≤ 4,56e-13 px, Max RGB = 0; 12 cấu hình thật khớp 100% trạng thái V0–V4 (10 ca thành công có drift = 0 và Max RGB = 0, 2 ca challenge medium/large lỗi <code>NumericalFailure</code> tại S6 như thiết kế); <code>compute-sanitizer --tool memcheck --leak-check full</code> đạt 0 lỗi và 0 byte rò rỉ cho cả suite V4 và CLI production; báo cáo nghiệm thu chi tiết tại <a href="report/p9-v4-verification.md">docs/report/p9-v4-verification.md</a>.</td>
+      <td>Xong</td>
+      <td>17/11: Nhánh <code>tuan/p9</code>, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/45">PR #45</a> vào <code>main</code>. Hoàn thành suite C++/CUDA <code>tests/gpu/test_gpu_v4_pipeline.cu</code> kiểm tra 4 tầng, harness CLI <code>scripts/verify_v4_cli.py</code> (CSV 11 cột, CLI âm, D2H canvas mở rộng), đăng ký suite <code>gpu_v4_pipeline</code> trong <code>tests/run_tests.py</code> và cập nhật notebook nghiệm thu <code>Group16_P9_V4_Verification.ipynb</code>. Colab T4 tại <code>ab8df98</code>: 6 cặp synthetic đạt RMSE ≤ 0,100 px, Max ≤ 0,209 px, drift so với V0–V3 ≤ 4,56e-13 px, Max RGB = 0; 12 cấu hình thật khớp 100% trạng thái V0–V4 (10 ca thành công có drift = 0 và Max RGB = 0, 2 ca challenge medium/large lỗi <code>NumericalFailure</code> tại S6 như thiết kế); <code>compute-sanitizer --tool memcheck --leak-check full</code> đạt 0 lỗi và 0 byte rò rỉ cho cả suite V4 và CLI production; báo cáo nghiệm thu chi tiết tại <a href="report/p9-v4-verification.md">docs/report/p9-v4-verification.md</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Thành</td>
@@ -367,16 +367,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Xây dựng sườn báo cáo notebook cuối kỳ <code>Group16_Final.ipynb</code> đủ 10 mục theo đề bài (phối hợp cùng Chương)</td>
       <td></td>
       <td>Người làm tự thiết kế các hàm nạp dữ liệu, xuất bảng biểu và trực quan hóa kết quả; tích hợp với khung 10 mục của notebook; chuẩn bị sẵn code vẽ biểu đồ speedup đa phiên bản và hiển thị gallery</td>
-      <td>Chờ review</td>
-      <td>17/11: Thành thêm <code>scripts/final_notebook.py</code> (tải và kiểm tra dataset, build, chạy một lượt benchmark cho mọi phiên bản CLI nhận, nạp dữ liệu, bảng, biểu đồ, gallery) cùng suite <code>test_final_notebook.py</code> (19 test), và chèn cell vào các điểm <code>thanh-*</code> của notebook; lời văn các cell này viết bằng tiếng Việt. Colab T4 tại <code>8588ec6</code>: notebook chạy hết từ đầu đến cuối bằng <code>jupyter nbconvert --execute</code> với dataset tải mới và thư mục benchmark mới, exit 0; lượt benchmark gồm V0–V4 và challenge. Chưa có ảnh mẫu của môn học cho gallery. Ô <code>runtime-setup</code> còn ghim <code>SOURCE_REF</code> ở commit trước P9, cần đổi khi chốt bản nộp.<br><br>Nhánh <code>thanh/p9</code>. Chương đã bàn giao thứ tự cell, schema CSV và đường dẫn hiện vật trong <a href="report/p9-final-notebook-handoff.md#thanh-integration-points">tài liệu tích hợp</a>. Thành phụ trách nạp dataset và kết quả, bảng V0/V1, bảng và biểu đồ so sánh, gallery ảnh và ca lỗi.</td>
+      <td>Xong</td>
+      <td>17/11: Nhánh <code>thanh/p9</code>, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/44">PR #44</a> vào <code>main</code>. Thành thêm <code>scripts/final_notebook.py</code> (tải và kiểm tra dataset, build, chạy một lượt benchmark cho mọi phiên bản CLI nhận, nạp dữ liệu, bảng, biểu đồ, gallery) cùng suite <code>test_final_notebook.py</code> (19 test), và chèn cell vào các điểm <code>thanh-*</code> của notebook; lời văn các cell này viết bằng tiếng Việt. Colab T4 tại <code>8588ec6</code>: notebook chạy hết từ đầu đến cuối bằng <code>jupyter nbconvert --execute</code> với dataset tải mới và thư mục benchmark mới, exit 0; lượt benchmark gồm V0–V4 và challenge.</td>
     </tr>
     <tr>
       <td>P9-T04</td>
       <td>Ghép nối <code>src/v4/v4_pipeline</code> và mở rộng CLI <code>--version 4</code></td>
       <td>P9-T08</td>
       <td>Người làm tự thiết kế điều phối pipeline; tạo trước scaffold CLI V4; tích hợp kernel S6 V4 mới và tái sử dụng S1–S4 V1, S5 V3; gắn timer <code>cudaEvent_t</code> đo chuẩn xác 11 cột CSV; CLI <code>./stitch ... --version 4</code> chạy thông suốt và xuất đủ 11 cột CSV; các test Python không bị hồi quy</td>
-      <td>Chờ review</td>
-      <td>17/11: Nhánh <code>thanh/p9</code>. <code>src/v4/v4_pipeline.{h,cu}</code> chạy S1–S4 của V1, S5 V3 và S6 V4; <code>run_gpu_stages</code> nhận thêm tham số <code>warp_blend</code> (mặc định <code>v1_warp_blend</code>), CSV V4 dùng thứ tự cột của V1 (<a href="interface.md#114-timing-và-csv-v1v2v3v4">interface mục 11.4</a>). Colab T4 tại <code>b4a509f</code>: build <code>sm_75</code> đạt; 14 suite V0 (45284 checks), 14 suite GPU (68297 checks), 10 suite Python (145 test) đạt. CLI V4 trên 12 cấu hình thật: header khớp <code>version_columns(4)</code>, H, canvas và diagnostics giống V3, Max RGB so với V3 bằng 0 trên 10 cấu hình chạy được, challenge medium/large cùng lỗi <code>NumericalFailure</code> như V3. Memcheck V4 trên site1/small, site2/large và challenge/medium: 0 lỗi, 0 byte rò rỉ. Số đo thời gian chính thức thuộc P9-T05.</td>
+      <td>Xong</td>
+      <td>17/11: Nhánh <code>thanh/p9</code>, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/44">PR #44</a> vào <code>main</code>. <code>src/v4/v4_pipeline.{h,cu}</code> chạy S1–S4 của V1, S5 V3 và S6 V4; <code>run_gpu_stages</code> nhận thêm tham số <code>warp_blend</code> (mặc định <code>v1_warp_blend</code>), CSV V4 dùng thứ tự cột của V1 (<a href="interface.md#114-timing-và-csv-v1v2v3v4">interface mục 11.4</a>). Colab T4 tại <code>b4a509f</code>: build <code>sm_75</code> đạt; 14 suite V0 (45284 checks), 14 suite GPU (68297 checks), 10 suite Python (145 test) đạt. CLI V4 trên 12 cấu hình thật đạt chuẩn, memcheck 0 lỗi.</td>
     </tr>
     <tr>
       <td rowspan="2">Đế</td>
@@ -384,16 +384,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
       <td>Đo benchmark V4 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V4</td>
       <td>P9-T04, P9-T08</td>
       <td>Người làm tự lựa chọn metric NCU/NSYS để phân tích hiệu quả giảm truy cập bộ nhớ của kernel S6 V4; đo thời gian V4 trên Colab T4 (5 runs + warm-up) cùng phiên với V0–V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v4/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V4 trong <code>docs/report/</code></td>
-      <td>Chờ review</td>
-      <td>Nhánh <code>de/p9</code>. Đã đo V0–V4 trên cùng T4, phân tích 8 NSYS và 12 NCU, cập nhật APOD. V4/V3 đạt 1,0086× toàn pipeline và 1,0357× ở S6. Gói bàn giao đã chuẩn bị, Đế upload Drive nhóm. <a href="report/p9-t05-v4-apod.md">Báo cáo và bằng chứng</a>.</td>
+      <td>Xong</td>
+      <td>19/11: Nhánh <code>de/p9</code>, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/46">PR #46</a> vào <code>main</code>. Đã đo V0–V4 trên cùng T4, phân tích 8 NSYS và 12 NCU, cập nhật APOD. V4/V3 đạt 1,0086× toàn pipeline và 1,0357× ở S6. Gói bàn giao đã chuẩn bị và upload Drive nhóm. <a href="report/p9-t05-v4-apod.md">Báo cáo và bằng chứng</a>.</td>
     </tr>
     <tr>
       <td>P9-T06</td>
       <td>Xây dựng nội dung khung slide thuyết trình bằng LaTeX (Beamer) và chuẩn bị tư liệu video (phối hợp cùng Tuấn)</td>
       <td></td>
       <td>Người làm toàn quyền tự quyết định cách trình bày nội dung trên slide Beamer; phối hợp cùng Tuấn trên cùng mã nguồn Beamer; Đế phụ trách nội dung phân tích hiệu năng, chu trình APOD, profiling Nsight và bài học rút ra; chuẩn bị sẵn các bảng số liệu mẫu và danh mục tư liệu biểu đồ/timeline phục vụ cho video thuyết trình sau này</td>
-      <td>Chờ review</td>
-      <td>Nhánh <code>de/p9</code>. Đã dựng khung Beamer toàn dự án (tổng quan S1–S6, demo, benchmark V0–V4, APOD và bài học) và tích hợp module hiệu năng của Đế. Có dàn ý video rút gọn 15 phút và danh mục tư liệu để review với Tuấn. <a href="../slides/README.md">Deck và hướng dẫn build</a> · <a href="../slides/video-outline.md">Kịch bản chung</a>.</td>
+      <td>Xong</td>
+      <td>19/11: Nhánh <code>de/p9</code>, đã merge <a href="https://github.com/nh-atuan/panorama-stitching/pull/46">PR #46</a> vào <code>main</code>. Đã dựng khung Beamer toàn dự án (tổng quan S1–S6, demo, benchmark V0–V4, APOD và bài học) và tích hợp module hiệu năng của Đế. Có dàn ý video rút gọn 15 phút và danh mục tư liệu để review với Tuấn. <a href="../slides/README.md">Deck và hướng dẫn build</a> · <a href="../slides/video-outline.md">Kịch bản chung</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Chương</td>
@@ -457,3 +457,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing)), quy ước chi tiết tại [docs/results-guide.md](results-guide.md) và nhật ký APOD tại [docs/apod-log.md](apod-log.md) |
 | 12/11 | Chốt kế hoạch Phase 8 (hạn 15/11, Chủ nhật): sprint 3 ngày tập trung tối ưu vi kiến trúc kernel S5 V3 (giải quyết nút thắt Occupancy và launch overhead của `compute_hypotheses`); phân công theo thứ tự stage: Tuấn (kernel S5 V3), Thành (v3_pipeline & CLI), Đế (benchmark V3, profiling Nsight & báo cáo APOD V3), Chương (test tích hợp V3 & compute-sanitizer T4); các thành viên tự quyết định giải pháp kỹ thuật trong phạm vi module mình phụ trách; xác nhận hoàn tất nghiệm thu P7-T01 |
 | 16/11 | Chốt kế hoạch Phase 9 (hạn 19/11, Thứ 5): sprint 3 ngày kết hợp hai nhánh việc chạy song song: tối ưu kernel S6 V4 (Single-pass Canvas Fusion giải quyết điểm nghẽn mới lộ diện tại site2/large của V3) và chuẩn bị khung bài nộp cuối kỳ (khung slide Beamer do người làm tự quyết định bố cục, kèm chuẩn bị sơ bộ cho video thuyết trình, và sườn notebook Group16_Final.ipynb); phân công độc lập: Tuấn & Đế (khung slide Beamer & chuẩn bị tư liệu video), Chương & Thành (sườn notebook 10 mục), Chương (kernel S6 V4), Thành (v4_pipeline & CLI), Tuấn (test tích hợp V4 & memcheck T4), Đế (benchmark V4, profiling Nsight & báo cáo APOD V4); các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách; video thuyết trình chính thức sẽ thực hiện tập trung ở giai đoạn sau |
+| 20/11 | Chốt bảy task P10 đến 23:59 thứ Ba 24/11. Chương điều phối, chốt baseline với Đế và triển khai dispatcher V5. Thành tách S1–S3, Tuấn nghiệm thu trên T4, Đế đo benchmark và profiling. Thành và Chương tích hợp kết quả vào notebook, Tuấn và Đế chốt slide và kịch bản. |

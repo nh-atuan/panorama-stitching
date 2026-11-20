@@ -6,6 +6,7 @@
 
 import csv
 import importlib.util
+import importlib.metadata
 import io
 import platform
 from pathlib import Path
@@ -54,6 +55,13 @@ def environment(evidence):
         if record["returncode"] != 0:
             raise RuntimeError("nvcc --version failed")
         result["nvcc"] = stdout
+        result["package_versions"] = {}
+        for name in ("nbformat", "nbconvert", "nbclient", "playwright", "pypdf", "Pillow", "numpy", "matplotlib"):
+            try:
+                result["package_versions"][name] = importlib.metadata.version(name)
+            except importlib.metadata.PackageNotFoundError:
+                result["package_versions"][name] = "unavailable"
+        capture([sys.executable, "-m", "pip", "freeze"], evidence / "logs/pip-freeze", timeout=60)
         result["status"] = "passed"
         return result
     except Exception as error:

@@ -231,6 +231,7 @@ def execute(args):
                 def before(cell, cell_index, **kwargs):
                     log.write(f"START cell={cell_index + 1} id={cell.get('id')}\n")
                     log.flush()
+                    print(f"Executing report cell {cell_index + 1}: {cell.get('id')}", flush=True)
                 def after(cell, cell_index, **kwargs):
                     log.write(f"END cell={cell_index + 1} count={cell.get('execution_count')}\n")
                     log.flush()
@@ -250,6 +251,8 @@ def execute(args):
         build_log = source / "build/build.log"
         shutil.copy2(build_log, run / "build.log")
         report["pdf"] = export(run / "Group16_Final.ipynb", run / "pdf")
+        if report["pdf"]["status"] != "exported_visual_review_pending":
+            raise ValueError("PDF automatic QA failed; see pdf/pdf_export.json")
         report["status"] = "executed_review_pending"
     except Exception as error:
         report["error"] = str(error)

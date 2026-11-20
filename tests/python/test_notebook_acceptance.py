@@ -33,6 +33,21 @@ class EvidenceTests(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec("nbformat"), "nbformat is an acceptance-tool dependency")
 class AcceptanceTests(unittest.TestCase):
+    def test_colab_wrapper_is_output_free_and_syntactically_valid(self):
+        import ast
+        import nbformat as nbf
+        path = Path(__file__).resolve().parents[2] / "Group16_P11_T06_Acceptance.ipynb"
+        if not path.is_file():
+            self.skipTest("Colab wrapper is not in this snapshot")
+        n = nbf.read(path, as_version=4)
+        nbf.validate(n)
+        cells = [c for c in n.cells if c.cell_type == "code"]
+        self.assertEqual(len(cells), 5)
+        for cell in cells:
+            ast.parse(cell.source)
+            self.assertEqual(cell.outputs, [])
+            self.assertIsNone(cell.execution_count)
+
     def test_overlay_preserves_authored_prose_and_producer_semantics(self):
         import nbformat as nbf
         root = Path(__file__).resolve().parents[2]

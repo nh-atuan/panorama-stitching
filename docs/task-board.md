@@ -523,25 +523,36 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
 
 Hạn của giai đoạn: **26/11 (Thứ 5)**.
 
-Kế hoạch chi tiết được lập sau khi hoàn thành P11. Phân công 4 phần video (thời lượng 20–30 phút) theo đúng yêu cầu đề bài:
-- Tuấn (4–6 phút): *Problem overview and approach* — Tổng quan bài toán, pipeline 6 stage và hướng tiếp cận GPU.
-- Thành (6–9 phút): *Live demonstration of running code* — Live demo chạy trực tiếp mã nguồn trên terminal / Colab T4 theo công cụ đã chuẩn bị ở P11-T03.
-- Đế (6–9 phút): *Performance results and analysis* — Kết quả thực nghiệm, biểu đồ speedup, profiling Nsight và chu trình APOD V0–V5.
-- Chương (4–6 phút): *Key optimizations and lessons learned* — Các tối ưu chính, bài học kinh nghiệm, giới hạn concurrency và hướng phát triển tiếp theo.
+Kế hoạch chi tiết được lập sau khi hoàn thành P11. Giai đoạn P12 tập trung quay và thu thập đầy đủ tư liệu thô của 4 phần video theo đúng yêu cầu đề bài (tổng thời lượng 20–30 phút, chuẩn 1080p, thu âm rõ ràng):
+- **Tuấn (4–6 phút) — *Problem overview and approach*:** Giới thiệu nhóm và đề tài; phát biểu bài toán ghép ảnh panorama và các thách thức hình học (parallax, homography); tổng quan pipeline 6 stage và kiến trúc bộ nhớ `Device-resident` trên GPU CUDA.
+- **Thành (6–9 phút) — *Live demonstration of running code*:** Sử dụng công cụ `scripts/live_demo.py` (từ P11-T03) quay màn hình terminal / Colab T4 chạy trực tiếp các bản V0, V1, V3, V4, V5 trên các cặp ảnh dataset thật (`site1`, `site2`, `site3`) và cặp lỗi `challenge`; chỉ ra ảnh panorama kết quả xuất hiện thực tế và đối chiếu thời gian chạy trên terminal.
+- **Đế (6–9 phút) — *Performance results and analysis*:** Trình bày bảng speedup tổng hợp V0–V5 trên cả 3 độ phân giải; phân tích biểu đồ speedup và các bước nhảy vọt hiệu năng; trình bày timeline Nsight Systems (`nsys`) và các chỉ số vi kiến trúc Nsight Compute (`ncu`) (SOL Compute, Memory Bandwidth, Occupancy, Warp Stalls).
+- **Chương (4–6 phút) — *Key optimizations and lessons learned*:** Tổng kết 3 tối ưu cốt lõi đã thành công: RANSAC Jacobi SVD (V2), Warp Shuffle Reduction & Shared Memory (V3), Single-pass Canvas Fusion (V4); phân tích bài học từ thử nghiệm V5 (hai CUDA stream) về tranh chấp SM và giới hạn concurrency; đúc kết kinh nghiệm lập trình song song GPU và hướng phát triển tiếp theo.
+
+Đầu ra cần bàn giao: Thư mục Drive chứa 4 file video/audio thô của 4 thành viên, đúng thời lượng quy định và đảm bảo chất lượng hình ảnh/âm thanh.
 
 ## P13 - Biên tập video và cập nhật bài nộp
 
 Hạn của giai đoạn: **29/11 (Chủ nhật)**.
 
-Kế hoạch chi tiết được lập sau khi hoàn thành P12. Tuấn đảm nhận edit chính: cắt ghép, khử ồn, chèn slide, làm intro/outro, render 1080p chuẩn 20–30 phút, upload YouTube Unlisted, dán link vào `Group16_Final.ipynb` và `README.md`, hoàn tất bản nộp video.
+Kế hoạch chi tiết được lập sau khi hoàn thành P12. Giai đoạn P13 tập trung biên tập hậu kỳ video hoàn chỉnh và cập nhật các thành phần bài nộp:
+- **Tuấn (Chủ trì - Edit chính):** Ghép 4 phần video của các thành viên theo đúng trình tự logic; cắt tỉa khoảng lặng/ngập ngừng, cân bằng âm lượng (audio normalization); chèn slide Beamer sắc nét, intro/title/outro và zoom spotlight vào dòng lệnh demo; render video chuẩn MP4 1080p; upload lên YouTube ở chế độ **Unlisted**.
+- **Thành & Chương:** Nhận link YouTube Unlisted dán vào Mục 1 / 2 của `Group16_Final.ipynb` và `README.md`; xuất lại bản in PDF `Group16_Final.pdf` có chứa link YouTube có thể click được.
+- **Đế & Cả nhóm:** Review nghiệm thu toàn bộ video trên YouTube về thời lượng (20–30 phút), âm thanh và hình ảnh trước khi đóng gói.
+
+Đầu ra cần bàn giao: Video YouTube Unlisted hoàn chỉnh, link video đã được nhúng vào notebook & README, file PDF notebook đã được cập nhật.
 
 ## P14 - Họp nhóm tổng duyệt thử thuyết trình
 
 Hạn của giai đoạn: **03/12 (Thứ 5)**.
 
-Kế hoạch chi tiết được lập sau khi hoàn thành P13. Họp nhóm tổng duyệt thử thuyết trình trực tiếp (Dry Run: 10 phút thuyết trình + 5 phút demo). Trong thời gian từ sau P13 đến ngày họp (30/11 – 03/12), các thành viên có thể điều chỉnh slide ở các phần mình phụ trách cho phù hợp bài nói trực tiếp; phân vai thuyết trình trực tiếp chi tiết sẽ được chốt sau khi hoàn thành P13.
+Kế hoạch chi tiết được lập sau khi hoàn thành P13. Giai đoạn P14 chuẩn bị sẵn sàng cho buổi bảo vệ vấn đáp / thuyết trình trực tiếp trước giảng viên với khung giờ: **10 phút thuyết trình slide + 5 phút live demo**:
+- **30/11 – 02/12 (Tinh chỉnh slide và chuẩn bị cá nhân):** Từng thành viên tự xem lại các slide thuộc phần mình trong `slides/project.tex`, rút gọn nội dung chữ và tăng tính trực quan để phù hợp với bài nói ngắn 10 phút; Thành chuẩn bị kịch bản demo 5 phút rút gọn (1 ca large và 1 ca challenge); chốt phân chia người nói cho bài thuyết trình trực tiếp 10 phút.
+- **03/12 (Họp tổng duyệt Dry Run):** Cả nhóm họp online, bấm giờ diễn tập thuyết trình thử như buổi bảo vệ thật; góp ý chéo về tốc độ nói, cách chuyển tiếp và chuẩn bị trước các câu hỏi vấn đáp tiềm năng của giảng viên.
 
-Mốc nộp bài cuối cùng: **04/12 (Thứ 6)** — Kiểm tra toàn bộ checklist và chính thức nộp bài.
+Đầu ra cần bàn giao: Bản PDF slide thuyết trình trực tiếp cuối cùng, sự tự tin và khớp giờ của 4 thành viên.
+
+Mốc nộp bài cuối cùng: **04/12 (Thứ 6)** — Kiểm tra toàn bộ checklist mục 9 của kế hoạch cuối kỳ, đóng gói zip bài nộp và chính thức nộp bài.
 
 ## Quyết định đã chốt
 

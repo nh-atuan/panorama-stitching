@@ -154,12 +154,17 @@ def main():
     parser.add_argument("--tool", choices=tuple(TOOL_TARGETS.keys()), action="append", help="build specific tool(s)")
     parser.add_argument("--out-dir", default="build", help="output directory (default: build)")
     parser.add_argument("--require-t4", action="store_true", help="verify Tesla T4 before official build")
+    parser.add_argument("--enable-v5", action="store_true", help="require the P10-T02 image API implementation")
     parser.add_argument(
         "--print-command",
         action="store_true",
         help="print the standalone one-line nvcc command for stitch and exit",
     )
     args = parser.parse_args()
+    v5_api = ROOT / "src/v5/v5_image_branch.cu"
+    if args.enable_v5 and not v5_api.is_file():
+        raise RuntimeError("V5 requires P10-T02: src/v5/v5_image_branch.cu")
+    v5_flags = ["-DPANORAMA_V5_IMAGE_API_AVAILABLE"] if v5_api.is_file() else []
 
     stitch_sources = discover_stitch_sources()
     out_dir = Path(args.out_dir)
@@ -168,6 +173,7 @@ def main():
         one_liner = [
             "nvcc",
             *compiler_flags(is_nvcc=True, is_clang=False, strict_warnings=False),
+            *v5_flags,
             "-Isrc",
             *stitch_sources,
             STB_SOURCE,
@@ -220,6 +226,8 @@ def main():
     )
 
     strict_flags = compiler_flags(is_nvcc, is_clang, strict_warnings=True)
+    if is_nvcc:
+        strict_flags += v5_flags
     build_stitch = args.target in {"stitch", "all"} and not args.tool
     selected_tools = args.tool or (list(TOOL_TARGETS.keys()) if args.target in {"tools", "all"} else [])
 

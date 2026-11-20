@@ -20,6 +20,8 @@ struct CliOptions {
     int version = 0;
     int runs = 5;
     bool debug = false;
+    std::string v5_schedule = "dual";
+    std::string v5_detail_csv;
 };
 
 // Non-owning views. Stride is always measured in bytes, including float images.

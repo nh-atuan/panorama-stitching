@@ -17,6 +17,9 @@ namespace panorama {
 // Host-only builds retain V0 support without CUDA headers or a GPU driver.
 inline bool is_supported_version(int version) {
 #ifdef __CUDACC__
+#ifdef PANORAMA_V5_IMAGE_API_AVAILABLE
+    if (version == 5) return true;
+#endif
     return version >= 0 && version <= 4;
 #else
     return version == 0;

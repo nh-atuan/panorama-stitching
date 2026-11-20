@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
+#include <fstream>
 #include <limits>
 #include <locale>
 #include <memory>
@@ -27,13 +28,17 @@
 #include "v2/v2_pipeline.h"
 #include "v3/v3_pipeline.h"
 #include "v4/v4_pipeline.h"
+#ifdef PANORAMA_V5_IMAGE_API_AVAILABLE
+#include "v5/v5_pipeline.h"
+#endif
 #endif
 
 namespace {
 
 const char* const kUsage =
     "Usage: ./stitch <left_image> <right_image> <output_image> "
-    "--version <0|1|2|3|4> [--runs N] [--debug]";
+    "--version <0|1|2|3|4|5> [--runs N] [--debug] "
+    "[--v5-schedule sequential|dual] [--v5-detail-csv path]";
 
 class ProgramError : public std::runtime_error {
 public:
@@ -104,6 +109,7 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     bool version_seen = false;
     bool runs_seen = false;
     bool debug_seen = false;
+    bool schedule_seen = false, detail_seen = false;
     for (int index = 4; index < argc; ++index) {
         const std::string flag = argv[index];
         if (flag == "--version") {
@@ -126,6 +132,17 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
             }
             debug_seen = true;
             options.debug = true;
+        } else if (flag == "--v5-schedule") {
+            if (schedule_seen) fail("Duplicate option --v5-schedule.");
+            schedule_seen = true;
+            options.v5_schedule = read_option_value(argc, argv, index, flag);
+            if (options.v5_schedule != "sequential" && options.v5_schedule != "dual")
+                fail("--v5-schedule must be sequential or dual.");
+        } else if (flag == "--v5-detail-csv") {
+            if (detail_seen) fail("Duplicate option --v5-detail-csv.");
+            detail_seen = true;
+            options.v5_detail_csv = read_option_value(argc, argv, index, flag);
+            if (options.v5_detail_csv.empty()) fail("--v5-detail-csv needs a path.");
         } else {
             fail("Unknown option or unexpected argument: '" + flag + "'.",
                  panorama::ErrorCode::UnknownOption);
@@ -134,10 +151,18 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!version_seen) {
         fail("Missing required option --version.");
     }
+    if (options.version != 5 && (schedule_seen || detail_seen))
+        fail("V5 options require --version 5.");
+#ifndef PANORAMA_V5_IMAGE_API_AVAILABLE
+    if (options.version == 5)
+        fail("V5 requires the P10-T02 image API and a CUDA V5-enabled build.",
+             panorama::ErrorCode::UnsupportedVersion);
+#endif
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
              "supported versions in this build: " +
-             std::string(panorama::is_supported_version(4) ? "0, 1, 2, 3, 4." : "0."),
+             std::string(panorama::is_supported_version(5) ? "0, 1, 2, 3, 4, 5." :
+                         panorama::is_supported_version(4) ? "0, 1, 2, 3, 4." : "0."),
              panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
@@ -572,6 +597,91 @@ int run_gpu(const CliOptions& options, OutputFormat format, const Image& left,
 }
 #endif  // __CUDACC__
 
+#if defined(__CUDACC__) && defined(PANORAMA_V5_IMAGE_API_AVAILABLE)
+int run_gpu_v5(const CliOptions& options, OutputFormat format, const Image& left,
+                const Image& right, const Config& config) {
+    V5DeviceOwner owner;
+    const ErrorCode prepared = v5_prepare(left, right, config, owner);
+    if (prepared != ErrorCode::Success) fail("Cannot prepare V5 buffers.", prepared);
+    if (options.debug) {
+        int device = 0;
+        cudaDeviceProp properties;
+        CUDA_CHECK(cudaGetDevice(&device));
+        CUDA_CHECK(cudaGetDeviceProperties(&properties, device));
+        std::cerr << "[debug] GPU=" << properties.name << " version=5 seed=" << config.seed
+                  << " runs=" << options.runs << '\n'
+                  << "[debug] version=5 seed=" << config.seed << " runs=" << options.runs << '\n';
+    }
+    const V5Schedule mode = options.v5_schedule == "sequential"
+        ? V5Schedule::Sequential : V5Schedule::DualStream;
+    const std::size_t bytes_a = left.stride * left.height, bytes_b = right.stride * right.height;
+    PinnedBuffer<std::uint8_t> pinned_a(bytes_a), pinned_b(bytes_b);
+    std::copy(left.data, left.data + bytes_a, pinned_a.get());
+    std::copy(right.data, right.data + bytes_b, pinned_b.get());
+    Image input_a = left, input_b = right;
+    input_a.data = pinned_a.get(); input_b.data = pinned_b.get();
+    HostPanorama output;
+    KernelTiming kernels;
+    std::ofstream detail_csv;
+    if (!options.v5_detail_csv.empty()) {
+        if (options.v5_detail_csv == options.output_image ||
+            options.v5_detail_csv == options.left_image || options.v5_detail_csv == options.right_image)
+            fail("V5 detail CSV must use a distinct path.");
+        detail_csv.open(options.v5_detail_csv);
+        if (!detail_csv) fail("Cannot open V5 detail CSV.");
+        detail_csv.imbue(std::locale::classic());
+        detail_csv << std::fixed << std::setprecision(9);
+    }
+    TimingSummary summary;
+    std::cout.imbue(std::locale::classic());
+    std::cout << std::fixed << std::setprecision(9);
+    for (int index = 0; index <= options.runs; ++index) {
+        const bool measured = index != 0;
+        const auto start = std::chrono::steady_clock::now();
+        V1StageFailure failure;
+        const ErrorCode code = v5_run_stages(input_a, input_b, config, owner, mode, kernels, measured, failure);
+        check_stage(code, failure.stage);
+        if (!measured) reserve_host_panorama(owner.view.canvas, output);
+        else if (!same_canvas(owner.view.canvas, output.geometry))
+            fail("V5 canvas changed between runs.", ErrorCode::InvalidCanvas);
+        TimingStats timing;
+        V5TimingDetail detail;
+        const Image& image = owner.view.canvas.image;
+        const ErrorCode copied = v5_download(owner, output.pixels->get(),
+            image.stride * image.height, measured, timing, detail);
+        if (copied != ErrorCode::Success) fail("V5 panorama D2H failed.", copied);
+        if (!measured) {
+            kernels.prepare();
+            std::cout << gpu_csv_header(5);
+            continue;
+        }
+        timing.end_to_end_ms = std::chrono::duration<double, std::milli>(
+            owner.download_completed - start).count();
+        timing.total_kernel_ms = kernels.milliseconds();
+        summary.add(timing);
+        print_timing(std::to_string(index), timing, 5);
+        if (detail_csv.is_open()) v5_write_detail(detail_csv, index, mode, detail);
+    }
+    Image image = owner.view.canvas.image;
+    image.data = output.pixels->get();
+    save_image(options.output_image, format, image);
+    print_timing("Average", summary.average, 5);
+    print_timing("Minimum", summary.minimum, 5);
+    if (options.debug) {
+        const auto diagnostics = v5_collect_diagnostics(owner);
+        DeviceCounts detected;
+        detected.keypointsA = static_cast<std::uint32_t>(std::min<std::size_t>(
+            *owner.branch[0].host_candidates, owner.branch[0].feature_capacity));
+        detected.keypointsB = static_cast<std::uint32_t>(std::min<std::size_t>(
+            *owner.branch[1].host_candidates, owner.branch[1].feature_capacity));
+        print_gpu_diagnostics(left, right, config, detected, diagnostics);
+    }
+    std::cout.flush();
+    if (!std::cout) throw std::runtime_error("Cannot write V5 CSV.");
+    return EXIT_SUCCESS;
+}
+#endif
+
 int run(int argc, char** argv) {
     const panorama::CliOptions options = parse_cli(argc, argv);
     const OutputFormat format = output_format(options.output_image);
@@ -583,6 +693,9 @@ int run(int argc, char** argv) {
         fail("Cannot build the V0 configuration.", ErrorCode::InvalidConfig);
     }
 #ifdef __CUDACC__
+#ifdef PANORAMA_V5_IMAGE_API_AVAILABLE
+    if (options.version == 5) return run_gpu_v5(options, format, left.view, right.view, config);
+#endif
     if (options.version != 0) return run_gpu(options, format, left.view, right.view, config);
 #endif
     V0Workspace workspace;

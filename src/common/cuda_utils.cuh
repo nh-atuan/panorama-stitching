@@ -108,6 +108,15 @@ public:
     void synchronize() const {
         check_cuda(cudaEventSynchronize(event_), "cudaEventSynchronize", __FILE__, __LINE__);
     }
+    void wait_on(cudaStream_t stream) const {
+        check_cuda(cudaStreamWaitEvent(stream, event_, 0), "cudaStreamWaitEvent", __FILE__, __LINE__);
+    }
+    bool ready() const {
+        const cudaError_t status = cudaEventQuery(event_);
+        if (status == cudaErrorNotReady) return false;
+        check_cuda(status, "cudaEventQuery", __FILE__, __LINE__);
+        return true;
+    }
     double elapsed_since(const CudaEvent& start) const {
         float milliseconds = 0.0f;
         check_cuda(cudaEventElapsedTime(&milliseconds, start.event_, event_),

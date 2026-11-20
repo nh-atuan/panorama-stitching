@@ -100,7 +100,7 @@ ErrorCode v5_describe_image(V5ImageBranch& branch, const Config& config,
 ```
 
 - `V5ImageBranch` là view host mượn storage. Dispatcher cấp RGB, gray, feature arrays, một `DeviceCounts`, scratch căn hàng 16 byte và một `PinnedBuffer<uint32_t>(1)` riêng cho từng ảnh. `v5_image_scratch_bytes` lấy max nhu cầu S1, S2, S3 của đúng ảnh đó, kiểm tra dimensions, Config và overflow trước khi công bố bytes. S1–S3 chỉ mượn storage.
-- `v5_reset_image` reset private counts/status, output counts và candidate slot về trạng thái sạch trên stream. API dùng local `keypointsA/descriptorsA` cho cả hai nhánh độc lập, các field B/matches private bằng 0. Đến hội tụ mới ánh xạ local A của nhánh B sang field B production.
+- `v5_reset_image` enqueue reset private counts/status và output counts trên stream. Sau khi run trước đã drain, host đặt pinned candidate slot về 0 trước D2H mới. API dùng local `keypointsA/descriptorsA` cho cả hai nhánh độc lập, các field B/matches private bằng 0. Đến hội tụ mới ánh xạ local A của nhánh B sang field B production.
 - `v5_upload_image` dùng `cudaMemcpy2DAsync`, kiểm tra cùng kích thước, RGB, stride/capacity của nguồn và đích. Con trỏ host phải pinned và sống đến khi copy hoàn tất.
 - `v5_detect_candidates` enqueue score/NMS và copy candidate count vào `host_candidates`, rồi trả về. Scheduler ghi `countReady` ngay sau lời gọi thành công. Count chỉ được đọc sau khi event này đã hoàn tất. Trường hợp ảnh quá nhỏ để có vùng candidate cũng phải ghi count = 0 và đi qua cùng giao thức event.
 - `v5_finish_detect` yêu cầu countReady đã được host xác nhận, tính kept bằng đúng giới hạn hiện hành, sort theo tie-break của V4 rồi publish local keypoint count. Bỏ countReady wait sẽ đọc pinned storage khi D2H còn đang ghi.
@@ -170,3 +170,52 @@ Run_Index,Mode,H2D_A_ms,H2D_B_ms,S1_A_ms,S1_B_ms,S2_A_ms,S2_B_ms,S3_A_ms,S3_B_ms
 Owner dùng một host thread enqueue lên hai stream. Có thể dùng một `KernelTiming` như hiện tại, vì counter của nó tăng lúc host phát lệnh và mỗi event pair được record trên stream tương ứng. Warm-up phải bao phủ cùng launch count với timed runs của mode đó. Khi launch count thay đổi, xử lý lại capacity trước đo theo semantics hiện có. Nếu triển khai nhiều host threads sau này phải tách collectors hoặc đồng bộ host instrumentation.
 
 Một warm-up precedes ít nhất năm timed runs. Timing benchmark không có profiler. Peak VRAM thu ở lượt chẩn đoán riêng bằng NSYS allocation timeline và device-owned bytes, bổ sung `cudaMemGetInfo` tại các checkpoint. Ghi free/total, asyncEngineCount và concurrentKernels vào environment artifact. Gắn nhãn sampled headroom nếu chỉ lấy mẫu, không gọi nó là peak chính xác. [Kernel instrumentation](../../src/common/kernel_timing.cuh) · [CSV parser](../../scripts/run_benchmark.py)
+
+## 6. Lỗi, ưu tiên và cleanup
+
+Giữ các `ErrorCode` và exit contract hiện hành. Trong một lượt, chọn theo các nhóm dưới đây. Với lỗi thuật toán trong hai nhánh, chọn theo stage S1 → S2 → S3, rồi A trước B khi cùng stage. Thứ tự hoàn tất stream không tham gia quyết định. Lưu stage và branch khi mỗi lời gọi trả lỗi để có diagnostics.
+
+| Tình huống | Kết quả và xử lý |
+|---|---|
+| Validation/cấp phát trước run thất bại | Giữ `InvalidImage`, `InvalidConfig`, `InvalidArgument` tương ứng. Kiểm tra allocation size overflow trước cấp phát. OOM trả `AllocationFailed`; ngoại lệ cudaMalloc memory-allocation được đổi mã ở biên owner |
+| H2D, launch, event hoặc query/synchronize lỗi | `CudaFailure` có ưu tiên hơn kết quả thuật toán vì dữ liệu device có thể không còn tin cậy. Lưu CUDA error gốc và vị trí lỗi, ngừng downstream |
+| Nhánh có lỗi thuật toán | Ghi vào status riêng, giữ lỗi đồng bộ host nếu có. Drain nhánh đang chạy rồi chọn lỗi theo stage/ảnh. Merge cùng quy tắc |
+| S2 không có candidate hoặc S3 không có descriptor | Publish count 0 và `Success` như stage hiện hành. Để S4 trả `InsufficientKeypoints` hoặc S5 trả `InsufficientMatches` theo policy production, không tự tạo lỗi sớm tại S2 |
+| Cả hai nhánh thành công | Hợp nhất counts và cho S4 dùng arrays. S4–S6 tái sử dụng validation/status propagation V4, gồm stage báo lỗi và `NumericalFailure` của challenge |
+| S4–S6 lỗi | Trả status và failure.stage theo V4, bỏ copy panorama chưa hợp lệ |
+| D2H panorama lỗi | `CudaFailure`, không ghi output thành công hoặc hàng timing cho run thất bại |
+
+Ngay cả khi một nhánh có lỗi thuật toán, nhánh còn lại vẫn được hoàn tất để chọn lỗi ổn định, tương tự validation theo stage A/B của V4. Với lỗi CUDA, record riêng từng stream đã được tạo và từng event đã record thành công. Không đợi event chưa record. `done`/countReady được reuse chỉ khi generation của run hiện tại đã record thành công.
+
+Đường lỗi đồng bộ host bắt buộc thu hồi control flow về owner trước khi unwind. Chờ mọi stream đã submit công việc, kể cả stream bên kia. Log lỗi cleanup bằng helper `cuda_cleanup_warning` nhưng giữ lỗi chính. Sau drain mới hủy event, free scratch/feature/input/output/pinned và hủy stream. Nếu context đã báo lỗi nặng, cleanup vẫn thử các CUDA calls và ghi kết quả. Destructor không throw và không cam kết dữ liệu đầu ra hợp lệ sau lỗi CUDA.
+
+Các `CudaStream` phải được drain rõ ràng trước destructor các buffer owners. Kiểm tra thứ tự hủy C++ theo thứ tự khai báo member. Chưa thể xem việc hủy stream đơn lẻ là bằng chứng an toàn cho mọi buffer mượn.
+
+## 7. Bàn giao và nghiệm thu
+
+### Thành — P10-T02
+
+1. Dùng đúng chữ ký mục 3, triển khai trong `src/v5/` với nguồn kernel V1 được tái sử dụng. Chuẩn bị một header cho T03 include. API Thành cung cấp chỉ xử lý một ảnh và dùng private storage.
+2. Chốt scratch calculator cùng public header, mọi thay đổi field/semantics cần cập nhật contract trong cùng PR. Kiểm tra branch view có capacity thực, byte stride và alignment đủ trước enqueue.
+3. Dùng cùng sort key, tie-break, pattern, smoothing và compact order V4. Kiểm tra A rồi B qua API mới trước khi thử overlap.
+4. Bàn giao code, lệnh build `python scripts/build.py --compiler nvcc --require-t4 --out-dir build`, ca unit nhỏ và diagnostics counts để T03 tích hợp.
+
+### Chương — P10-T03
+
+Triển khai owner và scheduler mục 3–6, CSV chính và detail sidecar, không sửa thuật toán S4–S6. Bảo đảm API event có raw handle hoặc wrapper `wait(stream)` hợp lệ, vì `CudaEvent` hiện tại chưa expose handle cho `cudaStreamWaitEvent`. Hai mode cần dùng cùng lifecycle và memory layout. Chuẩn bị NVTX nhánh A/B và hội tụ để T05 xem overlap.
+
+Ghi test chẩn đoán checksum feature/match và Config ngoài timing. Khi API một ảnh chưa có, có thể dựng owner/header/dispatcher ở nhánh T03 để review, nhưng chưa công bố pipeline V5 đạt nghiệm thu.
+
+### Tuấn — P10-T04
+
+- Giữ sáu cặp synthetic cùng Config/seed. Ground-truth reprojection trên tập Q theo grid 20×20 có RMSE ≤ 0,5 px và Max ≤ 1 px. Drift V5/V4 < 0,1 px, canvas dimensions/offset khớp, Max RGB ≤ 1/kênh.
+- So cả hai mode với V4 trước tiên ở status, rồi keypoint đúng thứ tự, descriptor từng bit, match indices/distances, H, canvas và RGB. Với lỗi dự kiến dừng so dữ liệu không tồn tại sau status. 12 cấu hình thật gồm 9 chuẩn và 3 challenge, ghi hành vi challenge từng resolution.
+- Thêm A/B khác kích thước, ảnh quá nhỏ, một nhánh không feature, cả hai nhánh lỗi, lặp nhiều lượt trên cùng workspace, lỗi launch/event giả lập và allocation failure qua cơ chế inject test nếu khả thi.
+- Memcheck suite và CLI gồm canvas mở rộng, ca một nhánh lỗi, yêu cầu 0 lỗi/0 bytes rò rỉ. Racecheck bổ sung chỉ hỗ trợ kiểm tra shared-memory hazards trong kernel. Kiểm tra timeline và ownership riêng cho các buffer toàn cục giữa stream.
+- Đối chiếu `version_columns(5)`, Average/Minimum, detail sidecar và cả hai mode. Lưu SHA, GPU, binary hash, manifest, commands, statuses và log.
+
+### Trạng thái T01 và điều kiện tiếp tục
+
+Contract API/scheduler đã đủ để triển khai T02/T03 theo giả định ghi rõ ở trên. Chương tự phụ trách phần baseline còn thiếu, không có phụ thuộc bàn giao từ Đế cho T01. Trước kết luận hiệu năng V5, cần bổ sung số pre-S4, thời lượng theo nhánh, wait/idle và VRAM T4 từ trace gốc hoặc lượt thu lại. T05 của Đế vẫn là lần đo V5 chính thức sau T04.
+
+Số liệu P9 chỉ xác nhận fusion S6 có lợi ích nhỏ. Rủi ro V5 gồm scratch tăng, GPU tranh chấp tài nguyên, S2 host waits làm giảm overlap, sai khác thứ tự lỗi, pattern/context initialization và event instrumentation gây overhead. Tỷ trọng pre-S4 thực còn thiếu nên chưa có dự báo speedup định lượng cho V5. Báo cả regression nếu prototype hai stream chậm hơn control.

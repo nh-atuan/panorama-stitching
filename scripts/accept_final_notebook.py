@@ -15,7 +15,7 @@ import traceback
 import uuid
 import zipfile
 
-from audit_final_notebook import SECTIONS, reconcile_apod
+from audit_final_notebook import SECTIONS, local_links, reconcile_apod
 from export_notebook_pdf import executed_notebook, export
 from midterm_notebook import sha256
 from notebook_preflight import dataset, environment, VERSIONS
@@ -46,6 +46,15 @@ def prepare_notebook(original, source, source_sha, run, tools, candidate=True):
             changed.append(dict(cell=i, change="stable missing cell ID"))
     notebook = nbf.from_dict(raw)
     source, run, tools = Path(source).resolve(), Path(run).resolve(), Path(tools).resolve()
+    references = {}
+    for cell in notebook.cells:
+        if cell.cell_type != "markdown":
+            continue
+        for relative in local_links(cell.source):
+            target = (source / relative).resolve()
+            if not target.is_relative_to(source) or not target.is_file():
+                raise ValueError(f"Missing or unsafe notebook reference in verified source: {relative}")
+            references[relative] = sha256(target)
     # Runtime paths are literal, with source paths taking precedence over harness helpers.
     bootstrap = f'''import os, sys
 from pathlib import Path
@@ -88,7 +97,7 @@ print("Timed runs:", TIMED_RUNS)
     if not setup_found or not producer_found:
         raise ValueError("Missing runtime-setup/thanh-producer anchors; manual integration required")
     notebook.metadata["group16_acceptance"] = dict(source_sha=source_sha, candidate=candidate,
-        input_sha256=sha256(original), overlay=changed)
+        input_sha256=sha256(original), overlay=changed, local_reference_hashes=references)
     nbf.validate(notebook)
     return notebook
 

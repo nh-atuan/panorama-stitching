@@ -63,6 +63,7 @@ class AcceptanceTests(unittest.TestCase):
             self.assertIn("candidates=BASELINE_VERSIONS", n.cells[4].source)
             self.assertEqual(n.metadata.group16_acceptance.source_sha, "a" * 40)
             self.assertTrue(n.metadata.group16_acceptance.candidate)
+            self.assertIn("docs/dataset.md", n.metadata.group16_acceptance.local_reference_hashes)
             self.assertEqual(original.read_bytes(), before)
             path = Path(folder) / "unexecuted.ipynb"
             nbf.write(n, path)

@@ -58,8 +58,9 @@ flowchart LR
     P6 --> P7["P7 Tối ưu và profiling V2"]
     P7 --> P8["P8 Tối ưu và profiling V3"]
     P8 --> P9["P9 Tối ưu S6 V4 và khung bài nộp"]
-    P9 --> P10["P10 Hoàn thiện báo cáo, slide và video"]
-    P10 --> END["03/12 (Thứ 5) Nộp bài"]
+    P9 --> P10["P10 Tối ưu Streams V5 và Mục 1–5 bài nộp"]
+    P10 --> P11["P11 Hoàn thiện báo cáo, slide và video"]
+    P11 --> END["03/12 (Thứ 5) Nộp bài"]
 ```
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
@@ -69,7 +70,8 @@ flowchart LR
 | P7 | Tối ưu và profiling V2 | Đã lập, kết thúc 10/11 (Thứ 3) |
 | P8 | Tối ưu và profiling V3 | Đã lập, kết thúc 15/11 (Chủ nhật) |
 | P9 | Tối ưu S6 V4 và khung bài nộp | Đã lập, kết thúc 19/11 (Thứ 5) |
-| P10 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P9, hoàn tất trước 03/12 (Thứ 5) |
+| P10 | Tối ưu Streams V5 và Mục 1–5 bài nộp | Đã lập, kết thúc 23/11 (Thứ 2) |
+| P11 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P10, hoàn tất trước 03/12 (Thứ 5) |
 
 Kết quả cần có khi kết thúc `P5`:
 
@@ -103,6 +105,13 @@ Kết quả cần có khi kết thúc `P9`:
 - bộ benchmark V4 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v4/`; báo cáo profiling Nsight (`nsys`, `ncu`) cho kernel S6 V4, cập nhật [docs/apod-log.md](apod-log.md) và hoàn thiện mục báo cáo APOD V4;
 - khung slide thuyết trình hoàn chỉnh bằng LaTeX Beamer do người làm tự quyết định bố cục và phong cách thiết kế, biên dịch PDF sạch lỗi, kèm tài liệu chuẩn bị sơ bộ cho video thuyết trình;
 - sườn notebook báo cáo cuối kỳ `Group16_Final.ipynb` đầy đủ 10 mục theo cấu trúc chuẩn của đề bài, tích hợp sẵn các nội dung lý thuyết, phương pháp và phân tích các phiên bản trước.
+
+Kết quả cần có khi kết thúc `P10`:
+
+- `v5_pipeline` hoàn chỉnh sử dụng CUDA Streams chạy bất đồng bộ hai nhánh ảnh A và B cho S1–S3, build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
+- bộ benchmark V5 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v5/`; báo cáo profiling Nsight (`nsys`, `ncu`) cho V5, cập nhật [docs/apod-log.md](apod-log.md) và hoàn thiện mục báo cáo APOD V5;
+- Mục 1 đến Mục 5 của notebook `Group16_Final.ipynb` được viết hoàn chỉnh, câu chữ tự nhiên, mọi số liệu khớp đúng output cell;
+- khung slide Beamer và kịch bản video thuyết trình được cập nhật sẵn sàng cho giai đoạn hoàn thiện cuối cùng.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

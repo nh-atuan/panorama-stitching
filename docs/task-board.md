@@ -415,95 +415,23 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
   </tbody>
 </table>
 
-## P10 - Tối ưu Streams V5 và hoàn thiện Mục 1–5 bài nộp
+## P10 - V5 hai CUDA stream và tích hợp kết quả vào bài nộp
 
-Hạn của giai đoạn: **23/11 (Thứ 2)**.
+**Hạn chốt bảy task: 23:59 thứ Ba 24/11/2026, giờ Việt Nam.** Chương điều phối P10. V5 thử chạy H2D và S1–S3 của hai ảnh trên hai stream, sau đó hội tụ trước S4. Bản đối chứng là V4 production đã nghiệm thu. Dùng kết quả T4 chính thức của Đế cho phần V4 trong báo cáo. Hạn nộp đồ án là 03/12. [Nghiệm thu V4](report/p9-v4-verification.md) · [Benchmark và APOD V4](report/p9-t05-v4-apod.md) · [Thiết kế thí nghiệm V5](report/v4-v5-optimization-plan.md)
 
-Giai đoạn P10 tiếp tục kết hợp hai nhánh công việc chạy song song độc lập tối đa: tối ưu hóa luồng bất đồng bộ bằng CUDA Streams cho hai nhánh ảnh A và B (H2D -> S1 -> S2 -> S3) ở V5 nhằm giải quyết việc xử lý tuần tự hai nhánh trước S4 và hoàn thành trục Thực thi và Đồng thời (Execution & Concurrency); đồng thời hoàn thiện sâu sắc Mục 1 đến Mục 5 của notebook báo cáo cuối kỳ <code>Group16_Final.ipynb</code> (gồm Thông tin nhóm, Giới thiệu, Phương pháp chọn, V0 CPU và V1 Basic CUDA), cùng rà soát khung Slide Beamer và kịch bản video thuyết trình. Tuấn và Đế phụ trách cài đặt kỹ thuật V5; Thành phụ trách suite kiểm tra tích hợp CLI V5 và nghiệm thu an toàn bộ nhớ trên Colab T4; Chương phụ trách benchmark V0–V5, profiling Nsight và báo cáo APOD V5. Về mặt bài nộp, Chương hoàn thiện Mục 1–3 của notebook; Thành hoàn thiện Mục 4–5 của notebook; Tuấn và Đế rà soát khung Slide Beamer và kịch bản video. Các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách.
+| Task | Phụ trách | Loại việc · tải | Đầu ra cần bàn giao | Hạn (giờ Việt Nam) | Trạng thái | Ghi chú / PR |
+|---|---|---|---|---|---|---|
+| P10-T01 — Baseline và contract V5 | **Chương**, Đế cung cấp trace | Thiết kế và đo baseline · Vừa | Đế lập bảng thời gian từ H2D đầu tiên đến khi S4 sẵn sàng trên `site1/large`, `site2/large`, `site3/large`, ghi điểm chờ ở S2 và VRAM còn trống. Chương chốt ca chính trước khi đo V5, giao diện xử lý một ảnh, ý nghĩa trường timing và thứ tự ưu tiên lỗi. | **20/11 20:00** | Chưa làm | T02 và T03 dùng cùng contract. |
+| P10-T02 — Tách S1–S3 theo từng ảnh | **Thành** | C++/CUDA production · Nặng | Tách entry point một ảnh, scratch, counters/status và vùng host nhận candidate count theo nhánh. Tách bước phát hiện candidate của S2 khỏi bước hoàn tất top-K, khởi tạo BRIEF trước khi tách stream. Chạy A rồi B qua API mới và đối chiếu V4 về thứ tự keypoint cùng từng bit descriptor. | **21/11 18:00** | Chưa làm | Bàn giao API chạy được và kết quả đối chiếu cho Chương. |
+| P10-T03 — Dispatcher hai stream, CLI và timing | **Chương** | C++/CUDA production · Nặng | Cài `v5_pipeline` và `--version 5`. Stream điều phối chờ `doneA` và `doneB`, hợp nhất status/counts, chạy S4–S6 rồi D2H. Có chế độ đối chứng nối tiếp dùng cùng API, workspace, pinned buffers và kernel. Giữ CSV chính tương thích runner, ghi timing từng nhánh và thời gian đến điểm hội tụ. Build `sm_75`, chạy thử cả hai chế độ, kiểm tra đường lỗi và thu hồi tài nguyên. | **22/11 10:00** | Chưa làm | Phát triển song song T02 sau T01. Bàn giao SHA ứng viên, lệnh build và lệnh chạy cho Tuấn. |
+| P10-T04 — Regression, memcheck và evidence V5 | **Tuấn** | Code test và nghiệm thu T4 · Nặng | Mở rộng suite V4 cho hai ảnh khác kích thước, nhánh thiếu feature, lỗi từng nhánh và lặp lại trên cùng workspace. So status → keypoint/descriptor → match → H → canvas/offset → RGB. Chạy 6 synthetic và 12 cấu hình thật theo ngưỡng đã dùng ở V4. Chạy memcheck cho suite và CLI, yêu cầu 0 lỗi, 0 byte rò rỉ. Đăng ký test vào runner, lưu SHA, manifest, bảng parity và log T4. | **22/11 22:00** | Chưa làm | Chuẩn bị suite ngay sau T01. Bàn giao SHA đã nghiệm thu cho Đế trước benchmark chính thức. |
+| P10-T05 — Benchmark, NSYS và quyết định giữ V5 | **Đế** | Thực nghiệm và phân tích · Nặng khi có binary | So V4 production, prototype nối tiếp và prototype hai stream trên 9 ca chuẩn, ghi riêng challenge. Đo V0 cùng phiên để tính speedup V5/V0. Báo V5/V4, `Total_ms`, thời gian đến S4 và peak VRAM. Thu trace NSYS để xác định có overlap hay không và S4 bắt đầu khi nào. Bàn giao CSV, trace và báo cáo APOD có kết luận giữ hoặc dừng V5. | **23/11 22:00** | Chưa làm | Chuẩn bị script trước. Dùng SHA đạt T04, đủ một warm-up và ít nhất 5 lượt đo mỗi cấu hình. Thu profiling riêng. |
+| P10-T06 — Tích hợp kết quả vào notebook | **Thành** làm cell, **Chương** chốt lời văn | Python và tài liệu · Vừa | Đưa V4 chính thức vào mục 6 ngay. Sau T05, bổ sung kết quả và giới hạn của V5 vào mục 6–7. Ghim `SOURCE_REF` tới SHA đủ helper và pipeline, chạy từ Colab trống, so lời văn với output và ghi nhận tình trạng cặp ảnh mẫu của môn học. | **24/11 20:00** | Chưa làm | Để lại thời gian sửa lỗi tái lập trước hạn chốt. |
+| P10-T07 — Chốt slide và kịch bản | **Tuấn**, phối hợp **Đế** | Tài liệu · Nhẹ–vừa | Dùng `slides/project.tex`. Tuấn chốt tổng quan, demo, phân vai và kịch bản 20–30 phút. Đế hoàn thiện phần hiệu năng và thêm kết luận V5 sau T05. Build deck Beamer và bàn giao kịch bản đủ để quay. | **24/11 20:00** | Chưa làm | Chuẩn bị deck và kịch bản song song với phần code. |
 
-<table>
-  <thead>
-    <tr>
-      <th>Thành viên</th>
-      <th>Mã</th>
-      <th>Công việc</th>
-      <th>Phụ thuộc</th>
-      <th>Đầu ra / tiêu chí xong</th>
-      <th>Trạng thái</th>
-      <th>Ghi chú / PR</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td rowspan="2">Tuấn</td>
-      <td>P10-T01</td>
-      <td>Thiết kế kiến trúc đa stream và điều phối <code>v5_pipeline</code> trong <code>src/v5/</code> (phối hợp cùng Đế)</td>
-      <td></td>
-      <td>Toàn quyền tự quyết định giải pháp kỹ thuật; cấp phát scratch/workspace riêng biệt cho hai nhánh ảnh A và B; quản lý <code>streamA</code>, <code>streamB</code> và event đồng bộ <code>cudaStreamWaitEvent</code> trước S4; build sạch bằng <code>nvcc -arch=sm_75</code>; mở rộng cờ CLI <code>--version 5</code> và lệnh <code>./stitch ... --version 5</code> chạy thông suốt cả 6 stage</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p10</code></td>
-    </tr>
-    <tr>
-      <td>P10-T02</td>
-      <td>Rà soát khung slide Beamer và hoàn thiện khung kịch bản video (phối hợp cùng Đế)</td>
-      <td></td>
-      <td>Toàn quyền quyết định bố cục; hoàn thiện các slide tổng quan bài toán, luồng pipeline S1–S6 và kịch bản demo trong <code>slides/project.tex</code>; biên dịch PDF sạch lỗi tại <code>build/slides/project.pdf</code>; chốt khung kịch bản video 20–30 phút theo 4 phần của đề bài trong <code>slides/video-outline.md</code> kèm phân bổ thời lượng và phân vai sơ bộ</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p10</code></td>
-    </tr>
-    <tr>
-      <td rowspan="2">Thành</td>
-      <td>P10-T03</td>
-      <td>Xây dựng suite kiểm tra tích hợp CLI V5 trong <code>tests/</code> và nghiệm thu an toàn bộ nhớ trên Colab T4</td>
-      <td>P10-T01, P10-T05</td>
-      <td>Toàn quyền thiết kế kịch bản kiểm thử trong <code>tests/gpu/test_gpu_v5_pipeline.cu</code> và <code>scripts/verify_v5_cli.py</code>; đối chiếu H, canvas và Max RGB ≤ 1 với V0–V4 trên 6 cặp synthetic và 12 cấu hình thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi memcheck, 0 byte rò rỉ; hoàn thành báo cáo nghiệm thu <code>docs/report/p10-v5-verification.md</code></td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p10</code></td>
-    </tr>
-    <tr>
-      <td>P10-T04</td>
-      <td>Hoàn thiện nội dung Mục 4 và Mục 5 của notebook <code>Group16_Final.ipynb</code> (phối hợp cùng Chương)</td>
-      <td></td>
-      <td>Soạn thảo và trau chuốt lời văn tiếng Việt tự nhiên cho Mục 4 (V0 Sequential: thiết kế, code, phân rã timing CPU, hotspot) và Mục 5 (V1 Basic CUDA: ánh xạ thread/block, code, kiểm chứng V0, timing & speedup); kiểm tra toàn bộ số liệu trong lời văn khớp đúng output cell; các cell chạy tuần tự từ trên xuống dưới sạch lỗi</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>thanh/p10</code></td>
-    </tr>
-    <tr>
-      <td rowspan="2">Đế</td>
-      <td>P10-T05</td>
-      <td>Thiết kế và tái cấu trúc luồng thực thi S1–S3 cho từng nhánh ảnh (phối hợp cùng Tuấn)</td>
-      <td></td>
-      <td>Toàn quyền tự quyết định giải pháp kỹ thuật; trích xuất entry point xử lý 1 ảnh cho S1–S3; loại bỏ điểm nghẽn đồng bộ Host trong S2 (decoupling fetch candidate count để không block CPU khi enqueue lệnh cho stream thứ hai); bảo đảm an toàn bộ nhớ khi 2 stream chạy đồng thời; build sạch bằng <code>nvcc -arch=sm_75</code></td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p10</code></td>
-    </tr>
-    <tr>
-      <td>P10-T06</td>
-      <td>Hoàn thiện slide phân tích hiệu năng và lời dẫn video kỹ thuật (phối hợp cùng Tuấn)</td>
-      <td></td>
-      <td>Toàn quyền quyết định cách trình bày; hoàn thiện module <code>slides/performance.tex</code> (tổng hợp phân tích bottleneck, chu trình APOD và biểu đồ profiling từ V1 đến V4, chừa sẵn khung cho V5); soạn lời dẫn chi tiết phần hiệu năng cho video trong <code>slides/video-performance-notes.md</code></td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>de/p10</code></td>
-    </tr>
-    <tr>
-      <td rowspan="2">Chương</td>
-      <td>P10-T07</td>
-      <td>Đo benchmark V5 trên Colab T4, thu thập profiling Nsight và hoàn thành báo cáo APOD V5</td>
-      <td>P10-T01, P10-T05</td>
-      <td>Toàn quyền lựa chọn metric và công cụ phân tích; đo benchmark chính thức V0–V5 (1 warm-up + 5 runs) trên cùng phiên Colab T4; thu thập timeline NSYS (đánh giá mức độ chồng lấn / overlap giữa 2 stream) và chỉ số NCU; xuất CSV/biểu đồ vào Drive chung <code>v5/</code>; cập nhật <code>docs/apod-log.md</code> và viết báo cáo <code>docs/report/p10-t07-v5-apod.md</code></td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>chuong/p10</code></td>
-    </tr>
-    <tr>
-      <td>P10-T08</td>
-      <td>Hoàn thiện nội dung Mục 1, 2 và 3 của notebook <code>Group16_Final.ipynb</code> (phối hợp cùng Thành)</td>
-      <td></td>
-      <td>Soạn thảo và trau chuốt nội dung Mục 1 (Team information & bảng đóng góp chi tiết theo stage và version), Mục 2 (Introduction: bài toán bằng lời văn của nhóm, tổng quan pipeline), Mục 3 (Chosen methods: phương pháp từng stage, lý do chọn, chất lượng và hiệu quả song song, bảng tham số chuẩn); các cell chạy tuần tự sạch lỗi</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>chuong/p10</code></td>
-    </tr>
-  </tbody>
-</table>
+**Thứ tự nghiệm thu và benchmark.** T01 chốt giao diện để Thành và Chương triển khai T02/T03. Tuấn có thể viết fixture ngay khi có contract và chạy nghiệm thu tích hợp khi nhận SHA từ Chương. Nếu T04 phát hiện lỗi, Thành hoặc Chương sửa phần phụ trách, Tuấn xác nhận lại trên SHA mới rồi Đế mới đo chính thức. Nếu đến hạn chốt vẫn thiếu bằng chứng, nhóm ghi rõ kết quả đã kiểm chứng và dùng V4 cho bài nộp.
+
+**Tiêu chí đánh giá V5.** Theo kế hoạch thí nghiệm, trên ca chính chạy 5 khối đo ghép cặp luân phiên thứ tự V4/V5. Đề xuất giữ V5 khi đạt correctness/memcheck, trace có overlap, thời gian đến S4 giảm, median speedup end-to-end đạt ít nhất 1,05× và ít nhất 4/5 khối cùng chiều. Đo lại các ca nghi ngờ để kiểm tra không có ca chuẩn nào chậm quá 5%. `Total_Kernel_ms` cộng thời lượng từng kernel nên có thể tính cả các khoảng chồng lấn. Dùng `Total_ms` sau D2H để kết luận về tốc độ toàn pipeline.
 
 ## Quyết định đã chốt
 
@@ -529,4 +457,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 07/11 | Chốt cấu trúc lưu trữ kết quả trên Drive chung theo mô hình Version Package ([CSC14120_Group16_Results](https://drive.google.com/drive/folders/1uJ-4_kgVONvIt5NQIPzdEWTIPrg8Sue1?usp=sharing)), quy ước chi tiết tại [docs/results-guide.md](results-guide.md) và nhật ký APOD tại [docs/apod-log.md](apod-log.md) |
 | 12/11 | Chốt kế hoạch Phase 8 (hạn 15/11, Chủ nhật): sprint 3 ngày tập trung tối ưu vi kiến trúc kernel S5 V3 (giải quyết nút thắt Occupancy và launch overhead của `compute_hypotheses`); phân công theo thứ tự stage: Tuấn (kernel S5 V3), Thành (v3_pipeline & CLI), Đế (benchmark V3, profiling Nsight & báo cáo APOD V3), Chương (test tích hợp V3 & compute-sanitizer T4); các thành viên tự quyết định giải pháp kỹ thuật trong phạm vi module mình phụ trách; xác nhận hoàn tất nghiệm thu P7-T01 |
 | 16/11 | Chốt kế hoạch Phase 9 (hạn 19/11, Thứ 5): sprint 3 ngày kết hợp hai nhánh việc chạy song song: tối ưu kernel S6 V4 (Single-pass Canvas Fusion giải quyết điểm nghẽn mới lộ diện tại site2/large của V3) và chuẩn bị khung bài nộp cuối kỳ (khung slide Beamer do người làm tự quyết định bố cục, kèm chuẩn bị sơ bộ cho video thuyết trình, và sườn notebook Group16_Final.ipynb); phân công độc lập: Tuấn & Đế (khung slide Beamer & chuẩn bị tư liệu video), Chương & Thành (sườn notebook 10 mục), Chương (kernel S6 V4), Thành (v4_pipeline & CLI), Tuấn (test tích hợp V4 & memcheck T4), Đế (benchmark V4, profiling Nsight & báo cáo APOD V4); các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách; video thuyết trình chính thức sẽ thực hiện tập trung ở giai đoạn sau |
-| 20/11 | Chốt kế hoạch Phase 10 (hạn 23/11, Thứ 2): sprint 3 ngày kết hợp hai nhánh việc chạy song song: tối ưu bất đồng bộ CUDA Streams cho hai nhánh ảnh A và B (H2D -> S1 -> S2 -> S3) ở V5 và hoàn thiện Mục 1–5 của notebook Group16_Final.ipynb; phân công độc lập: Tuấn & Đế phụ trách cài đặt V5 (Tuấn: v5_pipeline & điều phối stream, Đế: entry-point S1–S3 & decoupling đồng bộ Host), Thành kiểm tra tích hợp CLI V5 & memcheck T4, Chương đo benchmark V0–V5 & profiling Nsight APOD V5; về bài nộp: Chương hoàn thiện Mục 1–3 notebook, Thành hoàn thiện Mục 4–5 notebook, Tuấn & Đế rà soát slide Beamer và kịch bản video; các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách; các mục 6–10 của notebook sẽ hoàn thiện ở phase cuối cùng P11 |
+| 20/11 | Chốt bảy task P10 đến 23:59 thứ Ba 24/11. Chương điều phối, chốt baseline với Đế và triển khai dispatcher V5. Thành tách S1–S3, Tuấn nghiệm thu trên T4, Đế đo benchmark và profiling. Thành và Chương tích hợp kết quả vào notebook, Tuấn và Đế chốt slide và kịch bản. |

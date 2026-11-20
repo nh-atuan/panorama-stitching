@@ -58,7 +58,7 @@ flowchart LR
     P6 --> P7["P7 Tối ưu và profiling V2"]
     P7 --> P8["P8 Tối ưu và profiling V3"]
     P8 --> P9["P9 Tối ưu S6 V4 và khung bài nộp"]
-    P9 --> P10["P10 Tối ưu Streams V5 và Mục 1–5 bài nộp"]
+    P9 --> P10["P10 Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp"]
     P10 --> P11["P11 Hoàn thiện báo cáo, slide và video"]
     P11 --> END["03/12 (Thứ 5) Nộp bài"]
 ```
@@ -70,7 +70,7 @@ flowchart LR
 | P7 | Tối ưu và profiling V2 | Đã lập, kết thúc 10/11 (Thứ 3) |
 | P8 | Tối ưu và profiling V3 | Đã lập, kết thúc 15/11 (Chủ nhật) |
 | P9 | Tối ưu S6 V4 và khung bài nộp | Đã lập, kết thúc 19/11 (Thứ 5) |
-| P10 | Tối ưu Streams V5 và Mục 1–5 bài nộp | Đã lập, kết thúc 23/11 (Thứ 2) |
+| P10 | Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp | Đã lập, kết thúc 23:59 ngày 24/11 (Thứ Ba). Xem [bảy task và hạn bàn giao](task-board.md#p10---v5-hai-cuda-stream-và-tích-hợp-kết-quả-vào-bài-nộp). |
 | P11 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P10, hoàn tất trước 03/12 (Thứ 5) |
 
 Kết quả cần có khi kết thúc `P5`:
@@ -109,8 +109,8 @@ Kết quả cần có khi kết thúc `P9`:
 Kết quả cần có khi kết thúc `P10`:
 
 - `v5_pipeline` hoàn chỉnh sử dụng CUDA Streams chạy bất đồng bộ hai nhánh ảnh A và B cho S1–S3, build sạch bằng `nvcc -arch=sm_75`, đạt toàn bộ test đối chiếu tích hợp trên Colab T4, `compute-sanitizer` 0 lỗi;
-- bộ benchmark V5 trên dataset cuối kỳ hoàn thành trên Colab T4, xuất CSV và biểu đồ speedup vào thư mục Drive `v5/`; báo cáo profiling Nsight (`nsys`, `ncu`) cho V5, cập nhật [docs/apod-log.md](apod-log.md) và hoàn thiện mục báo cáo APOD V5;
-- Mục 1 đến Mục 5 của notebook `Group16_Final.ipynb` được viết hoàn chỉnh, câu chữ tự nhiên, mọi số liệu khớp đúng output cell;
+- bộ benchmark trên Colab T4 đối chiếu V4 production, V5 chạy nối tiếp và V5 hai stream. Đế bàn giao CSV, trace Nsight Systems và kết luận APOD về việc giữ V5. Nếu chưa đủ bằng chứng khi chốt, nhóm ghi nhận kết quả đã kiểm chứng và dùng V4 cho bài nộp;
+- notebook `Group16_Final.ipynb` cập nhật kết quả V4 ở mục 6, kết quả và giới hạn của thử nghiệm V5 ở mục 6–7. Ghim SHA có đủ helper và pipeline, chạy từ Colab trống và đối chiếu số liệu trong lời văn với output;
 - khung slide Beamer và kịch bản video thuyết trình được cập nhật sẵn sàng cho giai đoạn hoàn thiện cuối cùng.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ

@@ -431,6 +431,16 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
 
 **Thứ tự nghiệm thu và benchmark.** T01 chốt giao diện để Thành và Chương triển khai T02/T03. Tuấn có thể viết fixture ngay khi có contract và chạy nghiệm thu tích hợp khi nhận SHA từ Chương. Nếu T04 phát hiện lỗi, Thành hoặc Chương sửa phần phụ trách, Tuấn xác nhận lại trên SHA mới rồi Đế mới đo chính thức. Nếu đến hạn chốt vẫn thiếu bằng chứng, nhóm ghi rõ kết quả đã kiểm chứng và dùng V4 cho bài nộp.
 
+### Tiến độ bàn giao của Chương
+
+- [x] **P10-T01** — Hoàn tất baseline T4, phân tích evidence, chốt ca chính và contract.
+- [x] **P10-T03, phần code độc lập** — Đã triển khai owner, hai mode scheduling, join counts/status, downstream S4–S6, CLI, timing và D2H trong [draft PR #48](https://github.com/nh-atuan/panorama-stitching/pull/48).
+- [x] **P10-T03, kiểm tra local** — Hồi quy V0 đạt 45.284 checks, Python đạt 187 test với một test cũ skip theo môi trường, CLI host build bằng g++ với Werror và đạt tám ca parse/error.
+- [ ] **P10-T03, tích hợp API** — Chờ Thành bàn giao implementation T02 tại `src/v5/v5_image_branch.cu`, rồi build CUDA và chạy smoke cả sequential/dual. Chưa có SHA V5 đã chạy trên GPU.
+- [ ] **P10-T06, phần Chương** — Chốt lời văn và số liệu notebook cùng Thành. Phần V4 có thể làm từ evidence P9 đã có. Kết luận V5 cần kết quả T04 của Tuấn và T05 của Đế.
+
+PR #48 đang draft và GitHub ghi nhận không có conflict tại lần rà soát này. Chuyển sang review tích hợp sau khi có T02 và kết quả build/smoke CUDA. Phạm vi nghiệm thu đầy đủ T4 thuộc T04. [Bàn giao T03 và giới hạn kiểm chứng](report/p10-t03-v5-handoff.md)
+
 **Tiêu chí đánh giá V5.** Theo kế hoạch thí nghiệm, trên ca chính chạy 5 khối đo ghép cặp luân phiên thứ tự V4/V5. Đề xuất giữ V5 khi đạt correctness/memcheck, trace có overlap, thời gian đến S4 giảm, median speedup end-to-end đạt ít nhất 1,05× và ít nhất 4/5 khối cùng chiều. Đo lại các ca nghi ngờ để kiểm tra không có ca chuẩn nào chậm quá 5%. `Total_Kernel_ms` cộng thời lượng từng kernel nên có thể tính cả các khoảng chồng lấn. Dùng `Total_ms` sau D2H để kết luận về tốc độ toàn pipeline.
 
 ## Quyết định đã chốt

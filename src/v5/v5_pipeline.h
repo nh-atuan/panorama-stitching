@@ -7,6 +7,7 @@
 #include "common/kernel_timing.cuh"
 #include <memory>
 #include <ostream>
+#include <chrono>
 
 namespace panorama {
 enum class V5Schedule { Sequential, DualStream };
@@ -30,6 +31,7 @@ struct V5DeviceOwner {
     CudaEvent downstream_start[3], downstream_stop[3], d2h_start, d2h_stop;
     double host_pre_s4_ms = 0;
     bool output_ready = false;
+    std::chrono::steady_clock::time_point download_completed;
     V5DeviceOwner() = default;
     ~V5DeviceOwner();
     V5DeviceOwner(const V5DeviceOwner&) = delete;

@@ -256,6 +256,8 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
 }
 ErrorCode v5_download(V5DeviceOwner& owner, std::uint8_t* destination, std::size_t capacity,
                       bool measured, TimingStats& stats, V5TimingDetail& detail) {
+    stats = TimingStats();
+    detail = V5TimingDetail();
     const Image& image = owner.view.canvas.image;
     if (!owner.output_ready || !destination || image.height <= 0 ||
         image.stride > capacity / static_cast<std::size_t>(image.height))
@@ -267,6 +269,7 @@ ErrorCode v5_download(V5DeviceOwner& owner, std::uint8_t* destination, std::size
             static_cast<std::size_t>(image.width) * 3, image.height, cudaMemcpyDeviceToHost, stream));
         owner.d2h_stop.record(stream);
         owner.d2h_stop.synchronize();
+        owner.download_completed = Clock::now();
         if (measured) {
             for (int branch = 0; branch < 2; ++branch) {
                 const V5BranchEvents& event = owner.events[branch];

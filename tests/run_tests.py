@@ -239,6 +239,7 @@ PYTHON_SUITES = [
     "test_final_notebook.py",
     "test_notebook_audit.py",
     "test_notebook_preflight.py",
+    "test_notebook_source.py",
     "test_pres4_baseline.py",
     "test_v5_dispatcher_contract.py",
     "test_verify_v5_cli.py",

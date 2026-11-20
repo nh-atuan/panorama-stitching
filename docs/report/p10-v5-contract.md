@@ -57,3 +57,60 @@ GPU idle là phần bù của hợp các khoảng GPU copy/kernel trong cửa s�
 4. S3 dùng scratch cho smoothing, scan và compacted keypoints. `load_pattern` dùng static flag cùng copy constant memory và synchronize lần đầu. S3 kernels đọc/ghi `DeviceCounts::status`, có nhánh lỗi ghi cả hai descriptor counts.
 5. S4 cần cả descriptor arrays và counts hợp lệ. S4/S5 tái sử dụng scratch production, S6 cấp canvas sau setup. S6 đọc metadata về host và chờ stream trước khi biết kích thước output.
 6. Các vùng scratch và `d_counts` hiện hành chỉ an toàn khi dùng tuần tự. Owner giải phóng buffers qua RAII sau khi stream hoàn tất. Hook kernel timing hiện hành là thread-local trên host. [Driver](../../src/main.cu) · [Pipeline](../../src/v1/v1_pipeline.cu) · [S2](../../src/v1/s2/v1_detect.cu) · [S3](../../src/v1/s3/v1_describe.cu) · [Workspace](../../src/common/common.h)
+
+## 3. API một ảnh giao cho Thành
+
+T02 đặt khai báo chung ở `src/v5/v5_image_branch.h`. Giao diện dùng lại `Image`, `GrayImage`, `Config`, `DeviceCounts`, `ErrorCode`, `PinnedBuffer`, `CudaStream` và các kernel hiện có. T02 triển khai các entry point dưới đây. T03 quản lý owner và scheduler. Code fence này chốt chữ ký C++11 cần triển khai.
+
+```cpp
+namespace panorama {
+
+struct V5ImageBranch {
+    Image image;                    // Device RGB view.
+    GrayImage gray;                  // Device normalized float view.
+    Keypoint* keypoints = nullptr;
+    Descriptor* descriptors = nullptr;
+    DeviceCounts* counts = nullptr;  // Private record, local image uses A fields.
+    std::uint8_t* scratch = nullptr;
+    std::size_t scratch_bytes = 0;
+    std::size_t feature_capacity = 0;
+    std::uint32_t* host_candidates = nullptr;  // One pinned element.
+};
+
+// Preparation runs outside timing. Success publishes required scratch capacity.
+ErrorCode v5_image_scratch_bytes(const Image& host, const Config& config,
+                                 std::size_t& bytes);
+// Initializes Gaussian weights and BRIEF constant memory on the current device.
+// Returns only after initialization has completed.
+ErrorCode v5_initialize_features(const Config& config, cudaStream_t stream);
+
+// Each function enqueues on the supplied stream and checks launch/API errors.
+ErrorCode v5_reset_image(V5ImageBranch& branch, cudaStream_t stream);
+ErrorCode v5_upload_image(const Image& pinned_host, V5ImageBranch& branch,
+                          cudaStream_t stream);
+ErrorCode v5_preprocess_image(V5ImageBranch& branch, const Config& config,
+                              cudaStream_t stream);
+ErrorCode v5_detect_candidates(V5ImageBranch& branch, const Config& config,
+                               cudaStream_t stream);
+ErrorCode v5_finish_detect(V5ImageBranch& branch, const Config& config,
+                           cudaStream_t stream);
+ErrorCode v5_describe_image(V5ImageBranch& branch, const Config& config,
+                            cudaStream_t stream);
+}
+```
+
+- `V5ImageBranch` là view host mượn storage. Dispatcher cấp RGB, gray, feature arrays, một `DeviceCounts`, scratch căn hàng 16 byte và một `PinnedBuffer<uint32_t>(1)` riêng cho từng ảnh. `v5_image_scratch_bytes` lấy max nhu cầu S1, S2, S3 của đúng ảnh đó, kiểm tra dimensions, Config và overflow trước khi công bố bytes. S1–S3 chỉ mượn storage.
+- `v5_reset_image` reset private counts/status, output counts và candidate slot về trạng thái sạch trên stream. API dùng local `keypointsA/descriptorsA` cho cả hai nhánh độc lập, các field B/matches private bằng 0. Đến hội tụ mới ánh xạ local A của nhánh B sang field B production.
+- `v5_upload_image` dùng `cudaMemcpy2DAsync`, kiểm tra cùng kích thước, RGB, stride/capacity của nguồn và đích. Con trỏ host phải pinned và sống đến khi copy hoàn tất.
+- `v5_detect_candidates` enqueue score/NMS và copy candidate count vào `host_candidates`, rồi trả về. Scheduler ghi `countReady` ngay sau lời gọi thành công. Count chỉ được đọc sau khi event này đã hoàn tất. Trường hợp ảnh quá nhỏ để có vùng candidate cũng phải ghi count = 0 và đi qua cùng giao thức event.
+- `v5_finish_detect` yêu cầu countReady đã được host xác nhận, tính kept bằng đúng giới hạn hiện hành, sort theo tie-break của V4 rồi publish local keypoint count. Bỏ countReady wait sẽ đọc pinned storage khi D2H còn đang ghi.
+- `v5_describe_image` enqueue smoothing, support check, scan, descriptor, copy-back và publish count. Private status có thể được device cập nhật sau khi API trả về. Nhánh hoàn tất khi event `done` sau S3 hoàn tất. Không nạp lại BRIEF hoặc đồng bộ ngầm ở API describe.
+- T02 chuẩn bị Gaussian weights từ Config trước timing và dùng pattern chung bất biến đã khởi tạo trên đúng CUDA device. Thiết kế một host thread, một Config, một device trong vòng đời owner. Nếu đổi device/context, gọi initializer cho context mới. Tránh dùng static process flag thay cho điều kiện đã khởi tạo trên context hiện hành.
+
+### Owner và vòng đời
+
+T03 khai báo `V5DeviceOwner` tại `src/v5/v5_pipeline.h`, chứa hai branch owners, downstream owner, ba nonblocking streams, sự kiện từng nhánh và timing. Các method lifecycle cần có là `v5_prepare(const Image&, const Image&, const Config&, V5DeviceOwner&)` trả ErrorCode, cùng destructor `noexcept` chờ stream rồi thu hồi vùng sở hữu. Owner không copy được. API reset/run tái sử dụng allocation đã chuẩn bị.
+
+Downstream `DeviceWorkspace` trỏ mượn RGB/gray/keypoint/descriptor hai nhánh, sở hữu record counts hợp nhất, match/H/canvas metadata và scratch S4/S5 riêng. Giữ scratch S5 sống qua S6 để lấy diagnostics. Chỉ một owner giải phóng mỗi allocation. `d_panorama` tiếp tục alias `d_canvas`. Tránh đặt view có con trỏ mượn vào `V1DeviceOwner`, vì destructor đó giải phóng tất cả pointer fields.
+
+Khởi tạo có thể thất bại giữa chừng. Owner lưu các allocation thành công ngay, và chỉ gọi free sau khi mọi stream có thể dùng chúng đã được drain. Hai chế độ giữ cùng hai scratch allocations suốt lượt đo để đối chứng memory footprint công bằng. S6 giữ chính sách cấp canvas theo kích thước H của V4 trong vùng đo, pinned output được reserve bằng warm-up ngoài lượt đo.

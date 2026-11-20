@@ -254,5 +254,57 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
         return ErrorCode::CudaFailure;
     }
 }
+ErrorCode v5_download(V5DeviceOwner& owner, std::uint8_t* destination, std::size_t capacity,
+                      bool measured, TimingStats& stats, V5TimingDetail& detail) {
+    const Image& image = owner.view.canvas.image;
+    if (!owner.output_ready || !destination || image.height <= 0 ||
+        image.stride > capacity / static_cast<std::size_t>(image.height))
+        return ErrorCode::InvalidArgument;
+    try {
+        cudaStream_t stream = owner.control.get();
+        owner.d2h_start.record(stream);
+        CUDA_CHECK(cudaMemcpy2DAsync(destination, image.stride, image.data, image.stride,
+            static_cast<std::size_t>(image.width) * 3, image.height, cudaMemcpyDeviceToHost, stream));
+        owner.d2h_stop.record(stream);
+        owner.d2h_stop.synchronize();
+        if (measured) {
+            for (int branch = 0; branch < 2; ++branch) {
+                const V5BranchEvents& event = owner.events[branch];
+                for (int stage = 0; stage < 4; ++stage) {
+                    detail.image_ms[branch][stage] = event.stop[stage].elapsed_since(event.start[stage]);
+                    if (stage == 0) stats.h2d_ms += detail.image_ms[branch][stage];
+                    else stats.stage_ms[stage - 1] += detail.image_ms[branch][stage];
+                }
+                detail.count_wait_ms[branch] = event.host_wait_ms;
+            }
+            for (int i = 0; i < 3; ++i)
+                stats.stage_ms[i + 3] = owner.downstream_stop[i].elapsed_since(owner.downstream_start[i]);
+            stats.d2h_ms = owner.d2h_stop.elapsed_since(owner.d2h_start);
+            detail.pre_s4_ms = owner.ready.elapsed_since(owner.origin);
+            detail.host_pre_s4_ms = owner.host_pre_s4_ms;
+        }
+        return ErrorCode::Success;
+    } catch (const CudaError&) {
+        owner.drain();
+        return ErrorCode::CudaFailure;
+    }
+}
+
+void v5_write_detail(std::ostream& out, int index, V5Schedule mode, const V5TimingDetail& detail) {
+    if (index == 1)
+        out << "Run_Index,Mode,H2D_A_ms,H2D_B_ms,S1_A_ms,S1_B_ms,S2_A_ms,S2_B_ms,"
+               "S3_A_ms,S3_B_ms,PreS4_ms,Host_PreS4_ms,CountWait_A_ms,CountWait_B_ms\n";
+    out << index << ',' << (mode == V5Schedule::Sequential ? "sequential" : "dual");
+    for (int stage = 0; stage < 4; ++stage)
+        for (int branch = 0; branch < 2; ++branch) out << ',' << detail.image_ms[branch][stage];
+    out << ',' << detail.pre_s4_ms << ',' << detail.host_pre_s4_ms << ','
+        << detail.count_wait_ms[0] << ',' << detail.count_wait_ms[1] << '\n';
+    if (!out) throw std::runtime_error("Cannot write V5 detailed timing");
+}
+
+V4Diagnostics v5_collect_diagnostics(const V5DeviceOwner& owner) {
+    return collect_gpu_diagnostics(owner.view, owner.control.get(),
+                                    v3_homography_diagnostics(owner.view));
+}
 }  // namespace panorama
 #endif

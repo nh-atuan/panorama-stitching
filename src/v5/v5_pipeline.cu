@@ -99,5 +99,77 @@ ErrorCode v5_prepare(const Image& a, const Image& b, const Config& config, V5Dev
         return error.status == cudaErrorMemoryAllocation ? ErrorCode::AllocationFailed : ErrorCode::CudaFailure;
     }
 }
+namespace {
+using Clock = std::chrono::steady_clock;
+
+ErrorCode remember(ErrorCode code, Stage stage, V5BranchEvents& event) {
+    if (code == ErrorCode::CudaFailure) throw CudaError(cudaErrorLaunchFailure);
+    if (code != ErrorCode::Success && event.status == ErrorCode::Success) {
+        event.status = code;
+        event.failure = stage;
+    }
+    return code;
+}
+
+void enqueue_prefix(const Image& host, const Config& config, V5DeviceOwner& owner, int index) {
+    V5ImageBranch& branch = owner.branch[index];
+    V5BranchEvents& event = owner.events[index];
+    cudaStream_t stream = owner.image_stream[index].get();
+    event.status = ErrorCode::Success;
+    event.failure = Stage::Preprocess;
+    event.host_wait_ms = 0;
+    owner.origin.wait_on(stream);
+    *branch.host_candidates = 0;
+    if (remember(v5_reset_image(branch, stream), Stage::Preprocess, event) == ErrorCode::Success) {
+        event.start[0].record(stream);
+        remember(v5_upload_image(host, branch, stream), Stage::Preprocess, event);
+        event.stop[0].record(stream);
+    }
+    if (event.status == ErrorCode::Success) {
+        event.start[1].record(stream);
+        remember(v5_preprocess_image(branch, config, stream), Stage::Preprocess, event);
+        event.stop[1].record(stream);
+    }
+    if (event.status == ErrorCode::Success) {
+        event.start[2].record(stream);
+        remember(v5_detect_candidates(branch, config, stream), Stage::Detect, event);
+    }
+    event.count_ready.record(stream);
+}
+
+void enqueue_suffix(const Config& config, V5DeviceOwner& owner, int index) {
+    V5BranchEvents& event = owner.events[index];
+    V5ImageBranch& branch = owner.branch[index];
+    cudaStream_t stream = owner.image_stream[index].get();
+    if (event.status == ErrorCode::Success) {
+        remember(v5_finish_detect(branch, config, stream), Stage::Detect, event);
+        event.stop[2].record(stream);
+    }
+    if (event.status == ErrorCode::Success) {
+        event.start[3].record(stream);
+        remember(v5_describe_image(branch, config, stream), Stage::Describe, event);
+        event.stop[3].record(stream);
+    }
+    event.done.record(stream);
+}
+
+void schedule_dual(const Image& a, const Image& b, const Config& config, V5DeviceOwner& owner) {
+    enqueue_prefix(a, config, owner, 0);
+    enqueue_prefix(b, config, owner, 1);
+    bool complete[2] = {};
+    const Clock::time_point waiting = Clock::now();
+    while (!complete[0] || !complete[1]) {
+        for (int i = 0; i < 2; ++i) {
+            if (!complete[i] && owner.events[i].count_ready.ready()) {
+                owner.events[i].host_wait_ms =
+                    std::chrono::duration<double, std::milli>(Clock::now() - waiting).count();
+                enqueue_suffix(config, owner, i);
+                complete[i] = true;
+            }
+        }
+        if (!complete[0] || !complete[1]) std::this_thread::yield();
+    }
+}
+}  // namespace
 }  // namespace panorama
 #endif

@@ -6,6 +6,7 @@
 #include "v1/s4/v1_match.h"
 #include "v3/s5/v3_homography.h"
 #include "v4/s6/v4_warp_blend.h"
+#include "v1/common/v1_nvtx.cuh"
 #include <algorithm>
 #include <chrono>
 #include <limits>
@@ -111,6 +112,7 @@ ErrorCode remember(ErrorCode code, Stage stage, V5BranchEvents& event) {
 }
 
 void enqueue_prefix(const Image& host, const Config& config, V5DeviceOwner& owner, int index) {
+    V1NvtxRange range(index == 0 ? "V5.A.prefix" : "V5.B.prefix");
     V5ImageBranch& branch = owner.branch[index];
     V5BranchEvents& event = owner.events[index];
     cudaStream_t stream = owner.image_stream[index].get();
@@ -137,6 +139,7 @@ void enqueue_prefix(const Image& host, const Config& config, V5DeviceOwner& owne
 }
 
 void enqueue_suffix(const Config& config, V5DeviceOwner& owner, int index) {
+    V1NvtxRange range(index == 0 ? "V5.A.suffix" : "V5.B.suffix");
     V5BranchEvents& event = owner.events[index];
     V5ImageBranch& branch = owner.branch[index];
     cudaStream_t stream = owner.image_stream[index].get();
@@ -209,6 +212,9 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
     if (!owner.view.d_counts || !owner.view.d_scratch) return ErrorCode::InvalidArgument;
     const Clock::time_point host_start = Clock::now();
     try {
+        for (int i = 0; i < 2; ++i)
+            CUDA_CHECK(cudaStreamSynchronize(owner.image_stream[i].get()));
+        CUDA_CHECK(cudaStreamSynchronize(owner.control.get()));
         kernels.reset();
         KernelTimingScope timing_scope(kernels);
         const cudaStream_t control = owner.control.get();

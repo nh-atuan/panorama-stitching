@@ -161,7 +161,8 @@ panorama::CliOptions parse_cli(int argc, char** argv) {
     if (!panorama::is_supported_version(options.version)) {
         fail("Version " + std::to_string(options.version) + " is not available; "
              "supported versions in this build: " +
-             std::string(panorama::is_supported_version(4) ? "0, 1, 2, 3, 4." : "0."),
+             std::string(panorama::is_supported_version(5) ? "0, 1, 2, 3, 4, 5." :
+                         panorama::is_supported_version(4) ? "0, 1, 2, 3, 4." : "0."),
              panorama::ErrorCode::UnsupportedVersion);
     }
     return options;
@@ -602,6 +603,15 @@ int run_gpu_v5(const CliOptions& options, OutputFormat format, const Image& left
     V5DeviceOwner owner;
     const ErrorCode prepared = v5_prepare(left, right, config, owner);
     if (prepared != ErrorCode::Success) fail("Cannot prepare V5 buffers.", prepared);
+    if (options.debug) {
+        int device = 0;
+        cudaDeviceProp properties;
+        CUDA_CHECK(cudaGetDevice(&device));
+        CUDA_CHECK(cudaGetDeviceProperties(&properties, device));
+        std::cerr << "[debug] GPU=" << properties.name << " version=5 seed=" << config.seed
+                  << " runs=" << options.runs << '\n'
+                  << "[debug] version=5 seed=" << config.seed << " runs=" << options.runs << '\n';
+    }
     const V5Schedule mode = options.v5_schedule == "sequential"
         ? V5Schedule::Sequential : V5Schedule::DualStream;
     const std::size_t bytes_a = left.stride * left.height, bytes_b = right.stride * right.height;
@@ -624,7 +634,7 @@ int run_gpu_v5(const CliOptions& options, OutputFormat format, const Image& left
     }
     TimingSummary summary;
     std::cout.imbue(std::locale::classic());
-    std::cout << std::fixed << std::setprecision(9) << gpu_csv_header(5);
+    std::cout << std::fixed << std::setprecision(9);
     for (int index = 0; index <= options.runs; ++index) {
         const bool measured = index != 0;
         const auto start = std::chrono::steady_clock::now();
@@ -642,6 +652,7 @@ int run_gpu_v5(const CliOptions& options, OutputFormat format, const Image& left
         if (copied != ErrorCode::Success) fail("V5 panorama D2H failed.", copied);
         if (!measured) {
             kernels.prepare();
+            std::cout << gpu_csv_header(5);
             continue;
         }
         timing.end_to_end_ms = std::chrono::duration<double, std::milli>(

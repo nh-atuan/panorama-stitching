@@ -3,7 +3,7 @@
 # Kế hoạch thực hiện bài nộp cuối kỳ CSC14120
 
 **Bài nộp:** Final Submission - Parallel CUDA Versions, Report, Slides and Presentation Video.
-**Hạn:** 03/12 (Thứ 5). Mọi phần việc phải hoàn thành trước ngày này.
+**Hạn:** 04/12 (Thứ 6). Mọi phần việc phải hoàn thành trước ngày này (ngày 03/12 họp tổng duyệt thử thuyết trình).
 
 Tài liệu đi kèm:
 
@@ -18,7 +18,7 @@ Quy ước ngày: mọi hạn ghi theo dạng `dd/mm (Thứ n)` hoặc `dd/mm (C
 
 ## 1. Mục tiêu và sản phẩm nộp
 
-Đến hạn 03/12 (Thứ 5), nhóm hoàn thành trọn bộ sản phẩm theo mục 5 của đề cuối kỳ:
+Đến hạn 04/12 (Thứ 6), nhóm hoàn thành trọn bộ sản phẩm theo mục 5 của đề cuối kỳ:
 
 1. **Mã nguồn đa phiên bản (`src/`):** tối thiểu 4 phiên bản của cùng pipeline ghép ảnh (`V0 Sequential`, `V1 Basic CUDA`, và ít nhất 2 phiên bản tối ưu `V2`, `V3`) giữ chung phương pháp và tham số. Mỗi phiên bản sau `V1` chỉ đưa vào đúng một ý tưởng tối ưu chính xuất phát từ điểm nghẽn đo được, đo riêng tác dụng và cho kết quả nhất quán với `V0`. Nhóm chốt mục tiêu hoàn thành chắc chắn 4 phiên bản `V0`–`V3`; chỉ mở thêm `V4` nếu xong `V3` sớm và còn đủ thời gian cho báo cáo, slide và video.
 2. **Báo cáo Jupyter Notebook (`Group16_Final.ipynb`) và bản xuất PDF:** chạy `Runtime -> Run all` thành công từ đầu đến cuối trên phiên Google Colab GPU Tesla T4 mới, lưu sẵn toàn bộ output, mọi con số dẫn trong lời văn xuất hiện trực tiếp trong output cell, đủ 10 mục theo mục 5.2 của đề cuối kỳ.
@@ -50,7 +50,7 @@ Phân công theo phiên bản pipeline (mục tiêu tối ưu cụ thể của `
 
 ## 3. Các giai đoạn
 
-Kế hoạch cuối kỳ tiếp tục lập **cuốn chiếu** nối tiếp từ `P5`: chỉ giai đoạn đang mở có danh sách task và hạn chi tiết trong [bảng công việc](task-board.md); các giai đoạn tiếp theo chỉ ghi tên và được lập chi tiết ngay sau khi giai đoạn trước hoàn thành cùng số đo thực tế. Mốc cố định duy nhất là **03/12 (Thứ 5)**.
+Kế hoạch cuối kỳ tiếp tục lập **cuốn chiếu** nối tiếp từ `P5`: chỉ giai đoạn đang mở có danh sách task và hạn chi tiết trong [bảng công việc](task-board.md); các giai đoạn tiếp theo chỉ ghi tên và được lập chi tiết ngay sau khi giai đoạn trước hoàn thành cùng số đo thực tế. Mốc nộp bài chính thức là **04/12 (Thứ 6)** (ngày **03/12 (Thứ 5)** họp tổng duyệt thử thuyết trình).
 
 ```mermaid
 flowchart LR
@@ -59,8 +59,11 @@ flowchart LR
     P7 --> P8["P8 Tối ưu và profiling V3"]
     P8 --> P9["P9 Tối ưu S6 V4 và khung bài nộp"]
     P9 --> P10["P10 Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp"]
-    P10 --> P11["P11 Hoàn thiện báo cáo, slide và video"]
-    P11 --> END["03/12 (Thứ 5) Nộp bài"]
+    P10 --> P11["P11 Chốt tài liệu tĩnh, tái cấu trúc codebase và chuẩn bị demo"]
+    P11 --> P12["P12 Quay video thuyết trình"]
+    P12 --> P13["P13 Biên tập video và cập nhật bài nộp"]
+    P13 --> P14["P14 Họp tổng duyệt thử thuyết trình"]
+    P14 --> END["04/12 (Thứ 6) Nộp bài"]
 ```
 
 | Mã | Giai đoạn | Kế hoạch chi tiết |
@@ -70,8 +73,11 @@ flowchart LR
 | P7 | Tối ưu và profiling V2 | Đã lập, kết thúc 10/11 (Thứ 3) |
 | P8 | Tối ưu và profiling V3 | Đã lập, kết thúc 15/11 (Chủ nhật) |
 | P9 | Tối ưu S6 V4 và khung bài nộp | Đã lập, kết thúc 19/11 (Thứ 5) |
-| P10 | Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp | Đã lập, kết thúc 23:59 ngày 24/11 (Thứ Ba). Xem [bảy task và hạn bàn giao](task-board.md#p10---v5-hai-cuda-stream-và-tích-hợp-kết-quả-vào-bài-nộp). |
-| P11 | Hoàn thiện báo cáo, slide và video | Lập sau khi hoàn thành P10, hoàn tất trước 03/12 (Thứ 5) |
+| P10 | Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp | Đã lập, hoàn thành 20/11 (Thứ 6). Xem [kết quả](task-board.md#p10---v5-hai-cuda-stream-và-tích-hợp-kết-quả-vào-bài-nộp). |
+| P11 | Chốt tài liệu tĩnh, tái cấu trúc codebase và chuẩn bị demo | Đang mở, kết thúc 23/11 (Thứ 2). Xem [sáu task chi tiết](task-board.md#p11---chốt-tài-liệu-tĩnh-tái-cấu-trúc-codebase-và-chuẩn-bị-demo). |
+| P12 | Quay video thuyết trình | Lập sau P11, kết thúc 26/11 (Thứ 5) |
+| P13 | Biên tập video và cập nhật bài nộp | Lập sau P12, kết thúc 29/11 (Chủ nhật) |
+| P14 | Họp tổng duyệt thử thuyết trình | Lập sau P13, kết thúc 03/12 (Thứ 5) |
 
 Kết quả cần có khi kết thúc `P5`:
 
@@ -112,6 +118,16 @@ Kết quả cần có khi kết thúc `P10`:
 - bộ benchmark trên Colab T4 đối chiếu V4 production, V5 chạy nối tiếp và V5 hai stream. Đế bàn giao CSV, trace Nsight Systems và kết luận APOD về việc giữ V5. Nếu chưa đủ bằng chứng khi chốt, nhóm ghi nhận kết quả đã kiểm chứng và dùng V4 cho bài nộp;
 - notebook `Group16_Final.ipynb` cập nhật kết quả V4 ở mục 6, kết quả và giới hạn của thử nghiệm V5 ở mục 6–7. Ghim SHA có đủ helper và pipeline, chạy từ Colab trống và đối chiếu số liệu trong lời văn với output;
 - khung slide Beamer và kịch bản video thuyết trình được cập nhật sẵn sàng cho giai đoạn hoàn thiện cuối cùng.
+
+Kết quả cần có khi kết thúc `P11`:
+
+- codebase và thư mục repo được tái cấu trúc khoa học, chuyên nghiệp; dọn dẹp thư mục gốc làm nổi bật các sản phẩm cốt lõi; 100% file nguồn có comment tác giả chuẩn xác theo quy định;
+- tài liệu `README.md` chính ở gốc repo được chuẩn hóa hoàn chỉnh (sơ đồ kiến trúc, bảng so sánh phiên bản V0–V5, hướng dẫn build, chạy benchmark và chạy kiểm thử);
+- bộ kiểm thử tự động V0, GPU (V1–V5) và Python đạt 100% trên Colab T4, `compute-sanitizer` 0 lỗi; đóng băng mã nguồn `src/`;
+- công cụ Live Demo 1-click `scripts/live_demo.py` sẵn sàng cho khâu quay video của Thành ở P12;
+- slide Beamer `slides/project.tex` biên dịch PDF 16:9 sắc nét, khớp 100% số liệu với notebook và báo cáo APOD;
+- kịch bản phân cảnh video chi tiết (cue sheet) từng phút cho 4 phần và 4 thành viên theo đề bài;
+- notebook bài nộp `Group16_Final.ipynb` đủ 10 mục được trau chuốt văn phong tiếng Việt khoa học, chạy `Run all` thành công trên Colab T4 mới, lưu đầy đủ output và xuất bản in PDF `Group16_Final.pdf`.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

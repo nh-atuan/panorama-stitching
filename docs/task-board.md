@@ -2,7 +2,7 @@
 
 # Bảng công việc
 
-Quy tắc chung nằm trong [kế hoạch cuối kỳ](final-plan.md) (mốc hoàn thành **03/12 (Thứ 5)**). Bảng công việc và kế hoạch giữa kỳ (các giai đoạn P0–P4) được lưu trữ tại [kế hoạch giữa kỳ](archive/midterm-plan.md) và [bảng công việc giữa kỳ](archive/midterm-task-board.md).
+Quy tắc chung nằm trong [kế hoạch cuối kỳ](final-plan.md) (mốc nộp bài **04/12 (Thứ 6)**, ngày **03/12 (Thứ 5)** họp tổng duyệt thử thuyết trình). Bảng công việc và kế hoạch giữa kỳ (các giai đoạn P0–P4) được lưu trữ tại [kế hoạch giữa kỳ](archive/midterm-plan.md) và [bảng công việc giữa kỳ](archive/midterm-task-board.md).
 
 Kế hoạch được lập cuốn chiếu: chỉ giai đoạn hiện tại có task chi tiết; giai đoạn kế tiếp được lập khi giai đoạn trước hoàn thành. Hạn được ghi cho cả giai đoạn; mọi task trong giai đoạn phải xong trước hạn đó.
 
@@ -445,6 +445,104 @@ PR #48 và PR #49 đã merge vào `main`. Nhánh `tuan/p10` đã tích hợp đ�
 
 **Tiêu chí đánh giá V5.** Theo kế hoạch thí nghiệm, trên ca chính chạy 5 khối đo ghép cặp luân phiên thứ tự V4/V5. Đề xuất giữ V5 khi đạt correctness/memcheck, trace có overlap, thời gian đến S4 giảm, median speedup end-to-end đạt ít nhất 1,05× và ít nhất 4/5 khối cùng chiều. Đo lại các ca nghi ngờ để kiểm tra không có ca chuẩn nào chậm quá 5%. `Total_Kernel_ms` cộng thời lượng từng kernel nên có thể tính cả các khoảng chồng lấn. Dùng `Total_ms` sau D2H để kết luận về tốc độ toàn pipeline. Kết quả thực nghiệm cho thấy V5 đạt correctness tuyệt đối nhưng speedup toàn pipeline đạt 1,027× (dưới ngưỡng 1,05×), do đó nhóm chốt V4 làm production baseline cho bài nộp cuối kỳ và giữ V5 làm nghiên cứu chuyên sâu concurrency.
 
+## P11 - Chốt tài liệu tĩnh, tái cấu trúc codebase và chuẩn bị demo
+
+Hạn của giai đoạn: **23/11 (Thứ 2)**.
+
+Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự án, tái cấu trúc codebase khoa học và chuyên nghiệp, tổng duyệt kiểm thử toàn diện để đóng băng mã nguồn, rà soát và nghiệm thu notebook 10 mục (Thành và Chương phụ trách), biên dịch PDF slide Beamer và chuẩn bị công cụ Live Demo phục vụ quay video ở P12.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2">Tuấn</td>
+      <td>P11-T01</td>
+      <td>Tái cấu trúc codebase, dọn dẹp repo và chuẩn hóa <code>README.md</code> chính</td>
+      <td></td>
+      <td>Repo gọn gàng, chuyên nghiệp; dọn dẹp thư mục gốc; chuẩn hóa comment tác giả 100% file nguồn; <code>README.md</code> có đầy đủ sơ đồ kiến trúc, bảng so sánh V0–V5 và hướng dẫn build/run/test</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>tuan/p11</code></td>
+    </tr>
+    <tr>
+      <td>P11-T02</td>
+      <td>Tổng duyệt kiểm thử hồi quy toàn diện trên Colab T4 và đóng băng mã nguồn <code>src/</code></td>
+      <td>P11-T01</td>
+      <td>Toàn bộ 14 suite V0, 14 suite GPU (V1–V5), 193 test Python đạt sạch trên Colab T4; <code>compute-sanitizer</code> xác nhận 0 lỗi, 0 byte rò rỉ; chốt đóng băng mã nguồn</td>
+      <td>Chưa làm</td>
+      <td>Nhánh <code>tuan/p11</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Thành</td>
+      <td>P11-T03</td>
+      <td>Chuẩn hóa bộ công cụ <code>scripts/</code> và xây dựng công cụ Live Demo 1-click</td>
+      <td></td>
+      <td>Rà soát các script đo đạc; hoàn thiện <code>scripts/live_demo.py</code> kèm hướng dẫn chạy demo CLI mượt mà phục vụ riêng cho khâu quay video của Thành ở P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>P11-T04</td>
+      <td>Rà soát, chuẩn hóa văn phong và hình thức notebook bài nộp 10 mục</td>
+      <td></td>
+      <td>Rà soát toàn diện <code>Group16_Final.ipynb</code>; trau chuốt văn phong tiếng Việt khoa học tự nhiên theo chuẩn; hoàn thiện công thức KaTeX, bảng biểu, sơ đồ</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đế</td>
+      <td>P11-T05</td>
+      <td>Hoàn thiện slide thuyết trình Beamer và đồng bộ số liệu APOD</td>
+      <td></td>
+      <td>Hoàn thiện <code>slides/project.tex</code> và <code>slides/performance.tex</code>; đồng bộ 100% số liệu speedup V0–V5; biên dịch PDF slide chính thức 16:9 sắc nét</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Chương</td>
+      <td>P11-T06</td>
+      <td>Nghiệm thu thực thi trọn vẹn notebook trên Colab T4 và xuất file PDF bài nộp</td>
+      <td>P11-T04</td>
+      <td>Chạy <code>Run all</code> trên Colab T4 mới exit 0; lưu sẵn output đầy đủ; đối chiếu số liệu văn bản khớp 100% output cell; xuất bản in PDF <code>Group16_Final.pdf</code></td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+## P12 - Quay video thuyết trình
+
+Hạn của giai đoạn: **26/11 (Thứ 5)**.
+
+Kế hoạch chi tiết được lập sau khi hoàn thành P11. Phân công 4 phần video (thời lượng 20–30 phút) theo đúng yêu cầu đề bài:
+- Tuấn (4–6 phút): *Problem overview and approach* — Tổng quan bài toán, pipeline 6 stage và hướng tiếp cận GPU.
+- Thành (6–9 phút): *Live demonstration of running code* — Live demo chạy trực tiếp mã nguồn trên terminal / Colab T4 theo công cụ đã chuẩn bị ở P11-T03.
+- Đế (6–9 phút): *Performance results and analysis* — Kết quả thực nghiệm, biểu đồ speedup, profiling Nsight và chu trình APOD V0–V5.
+- Chương (4–6 phút): *Key optimizations and lessons learned* — Các tối ưu chính, bài học kinh nghiệm, giới hạn concurrency và hướng phát triển tiếp theo.
+
+## P13 - Biên tập video và cập nhật bài nộp
+
+Hạn của giai đoạn: **29/11 (Chủ nhật)**.
+
+Kế hoạch chi tiết được lập sau khi hoàn thành P12. Tuấn đảm nhận edit chính: cắt ghép, khử ồn, chèn slide, làm intro/outro, render 1080p chuẩn 20–30 phút, upload YouTube Unlisted, dán link vào `Group16_Final.ipynb` và `README.md`, hoàn tất bản nộp video.
+
+## P14 - Họp nhóm tổng duyệt thử thuyết trình
+
+Hạn của giai đoạn: **03/12 (Thứ 5)**.
+
+Kế hoạch chi tiết được lập sau khi hoàn thành P13. Họp nhóm tổng duyệt thử thuyết trình trực tiếp (Dry Run: 10 phút thuyết trình + 5 phút demo). Trong thời gian từ sau P13 đến ngày họp (30/11 – 03/12), các thành viên có thể điều chỉnh slide ở các phần mình phụ trách cho phù hợp bài nói trực tiếp; phân vai thuyết trình trực tiếp chi tiết sẽ được chốt sau khi hoàn thành P13.
+
+Mốc nộp bài cuối cùng: **04/12 (Thứ 6)** — Kiểm tra toàn bộ checklist và chính thức nộp bài.
+
 ## Quyết định đã chốt
 
 Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình làm.
@@ -471,3 +569,5 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 16/11 | Chốt kế hoạch Phase 9 (hạn 19/11, Thứ 5): sprint 3 ngày kết hợp hai nhánh việc chạy song song: tối ưu kernel S6 V4 (Single-pass Canvas Fusion giải quyết điểm nghẽn mới lộ diện tại site2/large của V3) và chuẩn bị khung bài nộp cuối kỳ (khung slide Beamer do người làm tự quyết định bố cục, kèm chuẩn bị sơ bộ cho video thuyết trình, và sườn notebook Group16_Final.ipynb); phân công độc lập: Tuấn & Đế (khung slide Beamer & chuẩn bị tư liệu video), Chương & Thành (sườn notebook 10 mục), Chương (kernel S6 V4), Thành (v4_pipeline & CLI), Tuấn (test tích hợp V4 & memcheck T4), Đế (benchmark V4, profiling Nsight & báo cáo APOD V4); các thành viên toàn quyền tự quyết phương án kỹ thuật và thiết kế trong phạm vi module mình phụ trách; video thuyết trình chính thức sẽ thực hiện tập trung ở giai đoạn sau |
 | 20/11 | Chốt bảy task P10 đến 23:59 thứ Ba 24/11. Chương điều phối, chốt baseline với Đế và triển khai dispatcher V5. Thành tách S1–S3, Tuấn nghiệm thu trên T4, Đế đo benchmark và profiling. Thành và Chương tích hợp kết quả vào notebook, Tuấn và Đế chốt slide và kịch bản. |
 | 20/11 | Tuấn (nhóm trưởng) tiếp quản làm thay các task còn lại của Phase 10 (P10-T02, P10-T04, P10-T05, hoàn thiện P10-T06 và P10-T07) trên nhánh `tuan/p10` để Chương nghỉ ngơi sau khi đã hoàn thành khối lượng rất lớn; chốt V4 là production baseline cho bài nộp và V5 là nghiên cứu chuyên sâu concurrency; hoàn thành toàn bộ 7 task của Phase 10. |
+| 20/11 | Chốt lộ trình 4 giai đoạn cuối hoàn thiện bài nộp: P11 (hạn 23/11), P12 (hạn 26/11), P13 (hạn 29/11), P14 (hạn 03/12 họp thử thuyết trình 10 phút + 5 phút demo), mốc nộp bài 04/12 |
+| 20/11 | Chốt phân công P11 (6 task) và phân vai P12: P11 gồm Tuấn (codebase, README & regression), Thành (scripts/demo & văn phong notebook), Đế (slide Beamer & số liệu APOD), Chương (nghiệm thu Colab T4 & PDF notebook); P12 quay video: Tuấn (Overview), Thành (Live demo), Đế (Performance), Chương (Optimizations & lessons); Tuấn edit chính ở P13 |

@@ -103,7 +103,6 @@ namespace {
 using Clock = std::chrono::steady_clock;
 
 ErrorCode remember(ErrorCode code, Stage stage, V5BranchEvents& event) {
-    if (code == ErrorCode::CudaFailure) throw CudaError(cudaErrorLaunchFailure);
     if (code != ErrorCode::Success && event.status == ErrorCode::Success) {
         event.status = code;
         event.failure = stage;
@@ -170,6 +169,72 @@ void schedule_dual(const Image& a, const Image& b, const Config& config, V5Devic
         if (!complete[0] || !complete[1]) std::this_thread::yield();
     }
 }
+
+__global__ void merge_counts(DeviceCounts* out, const DeviceCounts* a, const DeviceCounts* b,
+                              ErrorCode host_a, Stage stage_a, ErrorCode host_b, Stage stage_b) {
+    if (threadIdx.x || blockIdx.x) return;
+    out->keypointsA = a->keypointsA; out->keypointsB = b->keypointsA;
+    out->descriptorsA = a->descriptorsA; out->descriptorsB = b->descriptorsA;
+    out->matches = 0;
+    const ErrorCode status_a = host_a == ErrorCode::Success ? a->status : host_a;
+    const ErrorCode status_b = host_b == ErrorCode::Success ? b->status : host_b;
+    const Stage rank_a = host_a == ErrorCode::Success ? Stage::Describe : stage_a;
+    const Stage rank_b = host_b == ErrorCode::Success ? Stage::Describe : stage_b;
+    out->status = status_a;
+    if (status_a == ErrorCode::Success ||
+        (status_b != ErrorCode::Success && static_cast<unsigned>(rank_b) < static_cast<unsigned>(rank_a)))
+        out->status = status_b;
+}
 }  // namespace
+
+ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
+                       V5DeviceOwner& owner, V5Schedule schedule, KernelTiming& kernels,
+                       bool measured, V1StageFailure& failure) {
+    (void)measured;
+    (void)schedule;  // Sequential scheduling is introduced in the next change.
+    failure = V1StageFailure();
+    try {
+        kernels.reset();
+        KernelTimingScope timing_scope(kernels);
+        const cudaStream_t control = owner.control.get();
+        CUDA_CHECK(cudaMemsetAsync(owner.view.d_counts, 0, sizeof(DeviceCounts), control));
+        CUDA_CHECK(cudaMemsetAsync(owner.view.d_homography, 0, sizeof(Homography), control));
+        owner.origin.record(control);
+        schedule_dual(a, b, config, owner);
+        for (int i = 0; i < 2; ++i) {
+            if (owner.events[i].status == ErrorCode::CudaFailure) {
+                owner.drain();
+                return ErrorCode::CudaFailure;
+            }
+            owner.events[i].done.wait_on(control);
+        }
+        PANORAMA_LAUNCH_KERNEL(control, merge_counts<<<1, 1, 0, control>>>(
+            owner.view.d_counts, owner.branch[0].counts, owner.branch[1].counts,
+            owner.events[0].status, owner.events[0].failure,
+            owner.events[1].status, owner.events[1].failure));
+        CUDA_CHECK(cudaGetLastError());
+        owner.ready.record(control);
+        const GpuStage downstream[] = {v1_match, v3_homography, v4_warp_blend};
+        for (int i = 0; i < 3; ++i) {
+            failure.stage = static_cast<Stage>(i + 3);
+            owner.downstream_start[i].record(control);
+            const ErrorCode code = downstream[i](owner.view, config, control);
+            if (code != ErrorCode::Success) {
+                const DeviceCounts counts = v1_read_counts(owner.view, control);
+                if (counts.status != ErrorCode::Success) {
+                    failure.on_device = true;
+                    return counts.status;
+                }
+                return code;
+            }
+            CUDA_CHECK(cudaGetLastError());
+            owner.downstream_stop[i].record(control);
+        }
+        return ErrorCode::Success;
+    } catch (const CudaError&) {
+        owner.drain();
+        return ErrorCode::CudaFailure;
+    }
+}
 }  // namespace panorama
 #endif

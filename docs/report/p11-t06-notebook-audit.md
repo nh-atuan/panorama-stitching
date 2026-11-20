@@ -116,7 +116,7 @@ Dữ liệu dùng tính là **bảng mean đã công bố**, [APOD V5 mục 4](p
 
 Không có metric nào ở trên xác nhận trung bình nhân 1,027×. Hai ca site1/small và site3/small có ratio lớn; không tự loại chúng hoặc chọn tập con để làm khớp kết luận. Cần raw để kiểm session, warm-up, số run, CPU/GPU, binary, thứ tự đo, clock/variance và cả V5 sequential. Mean từng case không chứng minh ý nghĩa thống kê.
 
-Challenge small là 112,074 / 113,776 = **0,985040×**: có chậm hơn V4 theo bảng; giữ riêng, không đưa vào aggregate chín cấu hình chuẩn. Challenge medium/large NumericalFailure không có timing/speedup hợp lệ. Status parity không đồng nghĩa ảnh challenge small có chất lượng tốt.
+Challenge small là 112,074 / 113,776 = **0,985041×**: có chậm hơn V4 theo bảng; giữ riêng, không đưa vào aggregate chín cấu hình chuẩn. Challenge medium/large NumericalFailure không có timing/speedup hợp lệ. Status parity không đồng nghĩa ảnh challenge small có chất lượng tốt.
 
 **Phạm vi metric:** bảng trên là `Total_ms`, có D2H/host orchestration theo contract, loại disk I/O. Không thay mẫu số bằng `Total_Kernel_ms`, sum stage, hoặc pre-S4. Với dual stream, sum khoảng stage/H2D của A+B có thể lớn hơn elapsed pipeline do overlap; parser hiện có xử lý riêng V5. Raw sidecar cần được kiểm song song CSV chính.
 
@@ -145,3 +145,79 @@ V5 sequential/dual 15,310→12,680 ms hiện chỉ có trong report. Chưa đủ
 Từ bảng mean công bố, geomean 1,10133× lớn hơn ngưỡng 1,05× được report nhắc đến, trong khi ca chính site2/large 1,02859× thấp hơn ngưỡng đó. Vì vậy câu “geomean không vượt 1,05×” không đứng vững theo bảng. Phải ghi rõ tiêu chí áp dụng cho **ca chính đã chọn trước** hay toàn bộ ma trận, kiểm raw và độ ổn định, rồi người phụ trách xác nhận lại lý do giữ V4. Audit không tạo tiêu chí mới sau khi xem kết quả.
 
 `fn.best_version()` chọn theo geomean speedup so V0 trên chín cấu hình. Hiện chỉ có V0–V4 vì candidate list. Khi thêm V5, nếu V5 đứng đầu thì chart/gallery chọn V5 là hợp lệ dưới nhãn “nhanh nhất theo metric”, nhưng không được tự gọi đó là production. Cần nêu rõ lựa chọn này và giữ gallery production V4 nếu dùng để demo bản nộp.
+
+## 9. Colab Readiness and Automated Checks
+
+[Utility audit](../../scripts/audit_final_notebook.py) chỉ đọc notebook, Git và evidence. Không exec code notebook, không gọi CUDA, không fetch/push hoặc sửa output. Có unit test độc lập với GPU, đăng ký cùng Python suites trong [runner](../../tests/run_tests.py).
+
+Các kiểm tra tự động: schema qua nbformat khi có thư viện; đúng 10 heading/thứ tự; cell ID; AST Python; literal `SOURCE_REF` và commit/file inventory; minimum timed runs; cấu hình bắt buộc; error output/missing output/execution count; marker TODO/TBD/FIXME/PLACEHOLDER; đường dẫn tuyệt đối máy cá nhân; file đích của Markdown link local; version-dependent CSV qua parser hiện có; công thức tổng hợp APOD và pre-S4. Link local chỉ kiểm file tồn tại, không chứng minh đúng anchor hoặc nguồn hỗ trợ claim. URL ngoài không được kiểm online trong audit này. Schema/regex không xác minh tính khoa học của lời văn.
+
+### Local Validation Results
+
+| Check | Command or method | Actual result |
+|---|---|---|
+| Audit unit tests | `python -m unittest discover -s tests/python -p test_notebook_audit.py -v` | **13 tests, PASS**. Kiểm các failure paths, giữ riêng mean share/ratio of means, schema từng version, summaries và raw pairing chưa có. |
+| Full Python regression | `python -m unittest discover -s tests/python` | **206 tests, 0 failures/errors, 2 skips**. Skip snapshot giữa kỳ có output không commit và test dependency-missing T02 vì implementation thật đã có. Không phải GPU regression. |
+| Notebook schema | nbformat 5.x, bản copy trong memory | Validate được với warning **2 cell thiếu ID (31,32)**. Không normalize file gốc. |
+| Python syntax | `ast.parse()` cho 19 code cell | **19/19 parse được**. Không thay cho Run all. |
+| Historical CPU execution | Chạy tuần tự cell 8,10,14,19,21,23,25,27 với `REPO_ROOT` hiện tại | **8/8 chạy được**: tham số/source, bảng V0, V1/V2/V3, V4 timing/profiling/verification. Backend Agg cảnh báo không interactive khi `show()`, không lỗi. Không chạy producer/benchmark GPU. |
+| Source pin | `git cat-file -e <pin>^{commit}`, `git cat-file -e <pin>:<path>`, `git show` | Commit tồn tại; **thiếu implementation T02** tại pin; candidate list không có V5. |
+| CSV thực có sẵn | `check_csv(.../logs/site{1,2,3}_production.stdout, version=4, runs=5)` | **3/3 hợp lệ**, 11 cột theo V4; Average/Minimum khớp tính lại. Total mean 106,882882 / 69,684386 / 100,512491 ms. Không gọi đây là kiểm CSV V5. |
+| Probe evidence integrity | SHA-256 từng entry `checksums.json` | **84/84 khớp**. Mean và share tính trực tiếp 15 run của 3 ca. |
+| Audit result | Lệnh bên dưới | **25 findings**: 22 BLOCKER (19 missing-output entries, một aggregate unexecuted, một pin file, một freeze), 1 MAJOR (V5 detection), 2 MINOR (IDs). Exit **1 đúng dự kiến**, không phải acceptance PASS. |
+| Local references / paths / placeholders | Utility inventory và đọc thủ công nội dung | Không thấy file đích link Markdown local bị thiếu, absolute machine path hoặc marker được utility nhận diện. Vẫn có lời văn mang tính giao việc/“sẽ bổ sung” trong cell 2,37,41,42; cần T04 biên tập. |
+| Whitespace / preservation | `git diff --check`; `git diff --exit-code 4a20d1a -- Group16_Final.ipynb src docs/report/p10-t05-v5-apod.md` | Sạch; notebook/source/APOD gốc không đổi. |
+
+Môi trường local là Windows/Python 3.14. nbformat có sẵn trong tool directory `group16-p9-notebook-tools`, được thêm qua PYTHONPATH để chạy kiểm tra; không thêm dependency C++/CUDA nào. Không tìm thấy `nvcc` hoặc `pandoc` trên PATH; có XeLaTeX/Tectonic nhưng chưa thử export notebook cuối. Không chạy Colab, GPU suites hay sanitizer trong audit local.
+
+Tái lập kiểm tra, sau khi cài `nbformat` trong Python environment của người kiểm tra:
+
+```bash
+python -m unittest discover -s tests/python -p test_notebook_audit.py -v
+python scripts/audit_final_notebook.py \
+  --notebook Group16_Final.ipynb \
+  --apod docs/report/p10-t05-v5-apod.md \
+  --pres4-raw results/Group16_P10_T01_PreS4_Evidence/Group16_P10_T01_PreS4_Evidence/raw_timing.csv \
+  --output build/p11-t06-audit.json
+```
+
+Nếu không có evidence T01 local, bỏ `--pres4-raw`; khi đó không được kết luận probe đã xác minh lại. Sau freeze, thêm `--frozen-source <full_40_character_SHA>` để đối chiếu pin. Không truyền SHA tự chọn chỉ để bỏ finding freeze. JSON trong `build/` là output tái tạo được, không commit. Báo cáo này giữ các kết quả chính để đọc khi không có thư mục build.
+
+## 10. PDF Export Risks
+
+Chưa có PDF nên chưa chứng nhận layout. Cần kiểm sau khi notebook đã chạy và lưu output:
+
+- Bảng stage/speedup rộng, bảng team và evidence có URL dài có thể tràn trang; không thu font tới mức khó đọc.
+- Chữ tiếng Việt, dấu `×`, mũi tên B→A và công thức inline/display phải render đúng. Xác nhận font có đủ glyph và engine xử lý công thức, không chỉ KaTeX trong giao diện Colab.
+- Chart/gallery phải có ảnh embedded và nhãn đủ lớn; không phụ thuộc file ảnh local khi đọc PDF hoặc notebook nộp độc lập. Xem vùng seam ở panorama rộng, thêm crop nếu cần để đánh giá.
+- Link tương đối `docs/...` dùng được trong checkout nhưng PDF tách rời không bảo đảm truy cập. Giữ tên nguồn/caption/phiên đo tự đủ nghĩa, và chuyển link cần thiết sang permalink public phù hợp SHA release.
+- Code output dài có thể bị cắt hoặc thu gọn. PDF phải thể hiện bảng môi trường/source/dataset, kết quả lỗi challenge và kết luận, không chỉ đầu cell output.
+- Chỉ xuất từ **notebook có output đã nghiệm thu**; sau export kiểm bằng render từng trang, kiểm thiếu ảnh/công thức, trang trống, bảng bị cắt. Không xuất bản PDF từ notebook rỗng rồi coi đó là hoàn tất T06.
+
+## 11. Required Fixes and Ownership
+
+| Priority | Work item | Owner / dependency | Exit evidence |
+|---|---|---|---|
+| BLOCKER | Source freeze và hồi quy cuối; cung cấp full SHA đã nghiệm thu | **Tuấn P11-T02**, sau T01 | SHA, build flags, log suites/memcheck theo thực tế, source/binary hash; không chỉ ghi số test dự kiến. |
+| BLOCKER | Chốt lại các claim V5 bằng raw benchmark + sidecar + trace + manifest | **Tuấn** người công bố APOD, phối hợp **Đế** hiệu năng; **Chương** đối chiếu | Raw archive hash/đường dẫn, executed source SHA, session/GPU, sequential/dual/V4, công thức/filter, lý do lựa chọn V4 được xác nhận. |
+| BLOCKER | Pin/producer tải đúng source và không dùng session cũ sai provenance | **Thành P11-T04**, phối hợp Tuấn về helper/integration | Assert đúng SHA, V5 được thử/capture có chủ đích, kiểm binary hash/session; thử từ checkout trống. |
+| MAJOR | Sửa cell 31 và mục 9, ghi đúng probe/production, bỏ khẳng định tuyệt đối | **Thành P11-T04**, Chương review số | Lời văn liên kết đến output có công thức/tập ca cụ thể; vẫn V4 production/V5 case study. |
+| MAJOR | Hoàn thiện năm phần V5, bảng ablation/profiling; thêm cặp mẫu môn học, panorama V0/V1 hoặc dẫn rõ output tương ứng | **Thành P11-T04**, Tuấn cung cấp cặp mẫu và evidence nếu chưa bàn giao | Cell có input/output thực, status/chất lượng giải thích; không dùng instruction text thay kết quả. |
+| MINOR | Hai cell ID, đóng góp V5, ngôn ngữ thống nhất, AI declaration và nguồn P10 | **Thành P11-T04** | Notebook ổn định schema/anchors; danh mục nguồn/đóng góp khớp thực tế. |
+| BLOCKER | Fresh T4 Run all, lưu output, đối chiếu mọi số, xuất/kiểm PDF | **Chương P11-T06** sau T02/T04 | Executed notebook, PDF, audit JSON, source/dataset/binary hashes, runtime identity, raw logs/CSV và checklist. |
+
+Task board P10 ở nền audit còn ghi T02/T04/T05 “Chưa làm”, T03 “Bị chặn”, trong khi source và report đã được merge qua PR #50. Đây là chênh tracker/evidence, cần lead đối chiếu log rồi cập nhật riêng; audit không nhận thay việc xác nhận hoàn thành hoặc tự sửa trạng thái task của người khác. T06 P11 chỉ chuyển **Đang làm**, chưa thể Xong.
+
+## 12. Final Acceptance Prerequisites and Prompt 2
+
+Thực hiện theo thứ tự để tránh đo lại một notebook chưa chốt:
+
+1. Nhận raw V5 có provenance, giải quyết N01–N07 với người công bố. Nếu evidence chưa có, giữ các claim V5 ở trạng thái chưa xác minh; không tự thay số công bố bằng số tính lại từ bảng.
+2. Tuấn hoàn tất P11-T02 và bàn giao SHA freeze. Thành hoàn tất P11-T04: source checkout, helper V5, cache provenance, 10 mục, gallery/cặp mẫu, quyết định production và lời văn. Chương review diff và chạy lại audit/unit tests local.
+3. **Prompt 2: preflight** trên bản đã bàn giao: kiểm Git SHA/file inventory, schema/IDs, code dependencies, dataset download/hash, clean benchmark output directory, version detection và máy in PDF dự kiến. Trả lỗi rõ nếu V5 bị bỏ qua hoặc session không đúng; không triển khai kernel/refactor thay owner.
+4. Sau preflight đạt, người dùng mở notebook trên Colab T4 trống, Run all. Lưu notebook có execution counts/output, raw CSV cả 9 chuẩn và 3 challenge, binary/source/environment, cùng test/memcheck report liên quan SHA freeze. Mọi phiên bản trong bảng cuối dùng cùng phiên đo. Không lấy acceptance/sanitizer timing làm benchmark.
+5. Chương đối chiếu lời văn với output mới, đọc gallery/crop, kiểm đúng metric và ngưỡng đã chốt. Export `Group16_Final.pdf`, render/đọc từng trang và lưu hash notebook/PDF/evidence. Chỉ khi đủ các điều kiện này mới xác nhận hoàn tất P11-T06. Video link còn được bổ sung theo P12/P13 trước nộp.
+
+**Kết luận audit:** chưa đủ điều kiện nghiệm thu T06; công cụ và baseline audit đã hoàn thành local. Không đổi source pin, quyết định adoption hoặc số liệu gốc. Không có remote write.
+
+**AUDIT COMPLETE — BLOCKERS IDENTIFIED**

@@ -114,3 +114,59 @@ T03 khai báo `V5DeviceOwner` tại `src/v5/v5_pipeline.h`, chứa hai branch ow
 Downstream `DeviceWorkspace` trỏ mượn RGB/gray/keypoint/descriptor hai nhánh, sở hữu record counts hợp nhất, match/H/canvas metadata và scratch S4/S5 riêng. Giữ scratch S5 sống qua S6 để lấy diagnostics. Chỉ một owner giải phóng mỗi allocation. `d_panorama` tiếp tục alias `d_canvas`. Tránh đặt view có con trỏ mượn vào `V1DeviceOwner`, vì destructor đó giải phóng tất cả pointer fields.
 
 Khởi tạo có thể thất bại giữa chừng. Owner lưu các allocation thành công ngay, và chỉ gọi free sau khi mọi stream có thể dùng chúng đã được drain. Hai chế độ giữ cùng hai scratch allocations suốt lượt đo để đối chứng memory footprint công bằng. S6 giữ chính sách cấp canvas theo kích thước H của V4 trong vùng đo, pinned output được reserve bằng warm-up ngoài lượt đo.
+
+## 4. Scheduler và điều kiện hội tụ
+
+T03 dùng `enum class V5Schedule { Sequential, DualStream };` và thêm cờ `--v5-schedule sequential|dual`, chỉ hợp lệ với version 5. Mặc định là `dual`. Chế độ này điều khiển thứ tự phát việc, giữ cùng kernel, Config, storage, event và số lượng phép đo. T05 ghi rõ mode trong lệnh và thư mục evidence.
+
+```text
+control: drain prior run → reset downstream → record origin
+                     ↙                            ↘
+A: wait origin → reset → H2D → S1 → S2 candidates → countReadyA
+B: wait origin → reset → H2D → S1 → S2 candidates → countReadyB
+host: enqueue both prefixes, then query countReadyA/B
+ready branch: finish S2 top-K → S3 → done + private status copy
+control: wait doneA + doneB → merge counts/status → readyS4 → S4 → S5 → S6 → D2H → stop
+```
+
+Host một thread enqueue prefix cả A và B trước khi chờ count. Poll bằng `cudaEventQuery`, cho nhánh ready thực hiện finish/S3 trước. Nếu cả hai ready cùng lần poll thì phát A trước. Trả `cudaErrorNotReady` nghĩa là tiếp tục chờ, mọi lỗi khác đi vào cleanup. Host polling dùng yield để tránh vòng lặp bận không giới hạn. Tách NVTX `V5.A/B.count_wait` để định lượng chi phí host.
+
+Ghi `done` sau S3 và copy private metadata cần dùng về pinned storage nếu có debug. Sự kiện phụ thuộc của control phải ghi sau mọi thao tác mà merge cần. Hợp nhất counts/status trên control bằng kernel nhỏ sau hai event. Kernel hội tụ ánh xạ local counts của A/B về production fields, chọn lỗi theo mục 6 và giữ matches = 0. S4 có thể enqueue theo stream ordering và đọc status device như V4, nên không cần một vòng D2H counts để quyết định trên host.
+
+Chế độ Sequential dùng đúng hai branch streams và event như DualStream, nhưng B chờ `doneA` rồi host mới phát prefix B. Các endpoint và timing vẫn ghi cho cả hai. Control chờ cả hai done ở cả hai mode. Thời gian B chờ A không được cộng vào các interval H2D/S1/S2/S3 riêng của B.
+
+Stream wait là dependency trên device. Host đọc count phải query/synchronize countReady. Downstream chỉ dùng private feature buffers sau hai done và merge trên control. Final output chỉ host-visible sau D2H stop hoàn tất. Tham khảo semantics `cudaStreamWaitEvent` và event timing của [CUDA Runtime API](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__STREAM.html) và [Best Practices Guide](https://docs.nvidia.com/cuda/archive/13.0.0/cuda-c-best-practices-guide/index.html#asynchronous-and-overlapping-transfers-with-computation).
+
+## 5. Timing và artifact chi tiết
+
+Giữ stdout V5 đúng header mà `version_columns(5)` hiện tại tạo ra, rồi các run, Average, Minimum theo parser production.
+
+```text
+Run_Index,S1_V5_ms,S2_V5_ms,S3_V5_ms,S4_V5_ms,S5_V5_ms,S6_V5_ms,Total_ms,H2D_ms,D2H_ms,Total_Kernel_ms
+```
+
+| Đại lượng | Cách đo đã chốt |
+|---|---|
+| H2D A/B | Hai CUDA events trên đúng branch stream bao quanh copy ảnh, sau reset |
+| S1, S2, S3 A/B | Events bao quanh mỗi stage trên branch stream. S2 start trước score/NMS, stop sau top-K/publish, gồm cả khoảng chờ host tiếp tục |
+| Cột S1–S3 chính | Tổng interval A+B của cùng stage. Tổng có thể vượt wall time khi overlap |
+| `H2D_ms` chính | Tổng duration H2D A+B, không gồm D2H candidate metadata |
+| S4–S6 | Hai events mỗi stage trên control stream, giữ semantics V4, gồm setup hoặc chờ nằm trong interval |
+| `D2H_ms` | Event quanh copy panorama cuối trên control |
+| `Total_ms` | Host steady_clock từ trước reset per-run đến khi D2H stop synchronized. Cấp phát dài hạn, nạp pattern, I/O ảnh và ghi log ngoài vùng đo |
+| `Total_Kernel_ms` | Tổng event duration từng kernel, bao gồm reset/publish/merge kernel khi instrumented, cộng cả interval đang overlap |
+| Thời gian đến S4 | `origin` trên control trước upload, hai branches chờ origin. Control chờ hai done, merge rồi record `readyS4`. CUDA event elapsed origin → readyS4 là thời gian pre-S4, gồm reset, branch work và merge |
+| Host pre-S4 | steady_clock mốc đầu run → host submit S4. Báo riêng với tên host, không dùng thay GPU event pre-S4 |
+| Candidate-count wait | steady_clock đo thời gian CPU chờ count; đây là host wait, không gán thành kernel duration |
+
+Mọi event đo thời gian được tạo ngoài run với timing enabled. Sự kiện chỉ dùng dependency có thể disable timing. Mốc origin và nhánh stop cùng CUDA device. Chỉ lấy elapsed sau khi các endpoint hoàn tất. Tránh event trên default stream làm phát sinh thứ tự ngầm. Reuse events sau khi run trước đã drain.
+
+Đặt dữ liệu chi tiết tại sidecar CSV riêng bằng cờ `--v5-detail-csv <path>`. Header được chốt cho T03 như sau, đơn vị ms trừ bytes. Sidecar ghi timed runs, không ghi warm-up, giữ stdout đúng schema chính.
+
+```text
+Run_Index,Mode,H2D_A_ms,H2D_B_ms,S1_A_ms,S1_B_ms,S2_A_ms,S2_B_ms,S3_A_ms,S3_B_ms,PreS4_ms,Host_PreS4_ms,CountWait_A_ms,CountWait_B_ms
+```
+
+Owner dùng một host thread enqueue lên hai stream. Có thể dùng một `KernelTiming` như hiện tại, vì counter của nó tăng lúc host phát lệnh và mỗi event pair được record trên stream tương ứng. Warm-up phải bao phủ cùng launch count với timed runs của mode đó. Khi launch count thay đổi, xử lý lại capacity trước đo theo semantics hiện có. Nếu triển khai nhiều host threads sau này phải tách collectors hoặc đồng bộ host instrumentation.
+
+Một warm-up precedes ít nhất năm timed runs. Timing benchmark không có profiler. Peak VRAM thu ở lượt chẩn đoán riêng bằng NSYS allocation timeline và device-owned bytes, bổ sung `cudaMemGetInfo` tại các checkpoint. Ghi free/total, asyncEngineCount và concurrentKernels vào environment artifact. Gắn nhãn sampled headroom nếu chỉ lấy mẫu, không gọi nó là peak chính xác. [Kernel instrumentation](../../src/common/kernel_timing.cuh) · [CSV parser](../../scripts/run_benchmark.py)

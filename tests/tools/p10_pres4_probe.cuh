@@ -69,6 +69,7 @@ struct Context {
     }
     void boundary(cudaStream_t stream) {
         ready.record(stream);
+        ready.synchronize();  // Isolated probe observes completed S1-S3 before S4.
         host_ready_ms = std::chrono::duration<double, std::milli>(Clock::now() - host_origin).count();
     }
     void write(const TimingStats& timing, const DeviceWorkspace& w) {
@@ -82,7 +83,7 @@ struct Context {
         existing.close();
         std::ofstream out(path, std::ios::app);
         out.imbue(std::locale::classic());
-        if (header) out << "PreS4_ms,Host_PreS4_Submit_ms,H2D_A_ms,H2D_B_ms,S1_A_ms,S1_B_ms,"
+        if (header) out << "PreS4_ms,Host_PreS4_ms,H2D_A_ms,H2D_B_ms,S1_A_ms,S1_B_ms,"
             "S2_A_ms,S2_B_ms,S3_A_ms,S3_B_ms,CountD2H_A_ms,CountD2H_B_ms,"
             "CountWait_A_ms,CountWait_B_ms,WorkspaceFree_bytes,AfterD2HFree_bytes,"
             "TotalVRAM_bytes,Scratch_bytes,Total_ms\n";

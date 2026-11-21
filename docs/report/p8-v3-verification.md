@@ -86,7 +86,7 @@ Cả hai lượt đạt: exit 0, có đủ dòng `ERROR SUMMARY` và `LEAK SUMMA
 
 ## 10. Reproduction
 
-Mở [notebook P8](../../Group16_P8_V3_Verification.ipynb), chọn T4, điền `PRODUCTION_SHA`, `VERIFICATION_REF` và `T02_CSV_HEADER`. Để trống `DATASET_INPUT` và `SYNTHETIC_INPUT` để notebook tải dữ liệu từ Drive. Notebook ưu tiên `dataset.zip` trong thư mục cuối kỳ, rồi thử chuẩn bị lại từ ảnh gốc theo quy trình P7 nếu cần. Synthetic được sinh từ ảnh nguồn của P7. Nếu Drive giới hạn tải hoặc dữ liệu tái tạo lệch hash, điền đường dẫn ZIP hoặc thư mục đúng bộ P7 vào ô cấu hình. Các lệnh chính tương đương:
+Mở [notebook P8](../../notebooks/Group16_P8_V3_Verification.ipynb), chọn T4, điền `PRODUCTION_SHA`, `VERIFICATION_REF` và `T02_CSV_HEADER`. Để trống `DATASET_INPUT` và `SYNTHETIC_INPUT` để notebook tải dữ liệu từ Drive. Notebook ưu tiên `dataset.zip` trong thư mục cuối kỳ, rồi thử chuẩn bị lại từ ảnh gốc theo quy trình P7 nếu cần. Synthetic được sinh từ ảnh nguồn của P7. Nếu Drive giới hạn tải hoặc dữ liệu tái tạo lệch hash, điền đường dẫn ZIP hoặc thư mục đúng bộ P7 vào ô cấu hình. Các lệnh chính tương đương:
 
 ```bash
 python3 scripts/build.py --compiler nvcc --require-t4 --out-dir build

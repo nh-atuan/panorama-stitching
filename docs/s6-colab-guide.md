@@ -4,7 +4,7 @@ Người soạn: Lê Hà Thanh Chương (23120195). Cập nhật: 30/10/2026. Ph
 
 ## Files to Prepare
 
-Mở [`Group16_S6_CUDA_Verification.ipynb`](../Group16_S6_CUDA_Verification.ipynb) trên Colab. Notebook này dành riêng cho kiểm chứng S6; không thay notebook báo cáo giữa kỳ và không gọi scaffold V1 để giả lập kết quả ghép ảnh GPU.
+Mở [`Group16_S6_CUDA_Verification.ipynb`](../notebooks/Group16_S6_CUDA_Verification.ipynb) trên Colab. Notebook này dành riêng cho kiểm chứng S6; không thay notebook báo cáo giữa kỳ và không gọi scaffold V1 để giả lập kết quả ghép ảnh GPU.
 
 | File | Bạn cần làm |
 |---|---|

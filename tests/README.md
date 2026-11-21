@@ -12,8 +12,8 @@ tests/
 ├── run_tests.py     # Trình chạy kiểm thử thống nhất cho cả C++/CUDA và Python
 ├── support/         # Header dùng chung: feature_test_support.h, v0_reference.h, gpu_compare.h
 ├── v0/              # 14 suite C++: 13 suite cho S1-S6 và V0 pipeline, 1 suite cho tiện ích tham chiếu
-├── gpu/             # Các suite .cu đối chiếu kết quả GPU (V1, V2, V3) với V0
-├── python/          # 7 suite Python unittest kiểm thử scripts/, runner và cấu trúc notebook
+├── gpu/             # Các suite .cu đối chiếu kết quả GPU (V1–V5) với V0
+├── python/          # 15 suite Python unittest kiểm thử scripts/, runner, CLI và cấu trúc notebook
 └── tools/           # Công cụ CLI sinh bảng hằng và xuất ảnh/trace trung gian để debug
 ```
 
@@ -115,6 +115,22 @@ python3 scripts/verify_v3_cli.py --stitch build/stitch --dataset dataset \
 ```bash
 python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v4_s6 \
   --require-t4 --v4-synthetic-dir results/synthetic
+```
+
+### Kiểm thử tích hợp V4 (P9-T02) và V5 (P10-T04)
+
+Suite `gpu_v4_pipeline` và `gpu_v5_pipeline` kiểm tra end-to-end 4 tầng (trạng thái → homography H → canvas/offset → Max RGB ≤ 1) trên 6 cặp synthetic và 12 cấu hình dataset thật. Riêng `gpu_v5_pipeline` đối chiếu thêm hai chế độ `--v5-schedule sequential` và `dual` (yêu cầu khớp từng bit giữa hai chế độ).
+
+```bash
+# Nghiệm thu pipeline V4 và V5 trên Colab T4
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v4_pipeline \
+  --require-t4 --v4-synthetic-dir results/synthetic --v4-dataset-dir dataset
+python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v5_pipeline \
+  --require-t4 --v5-synthetic-dir results/synthetic --v5-dataset-dir dataset
+
+# Kiểm tra CLI, CSV 11 cột và sidecar CSV 14 cột (V5)
+python3 scripts/verify_v4_cli.py --stitch build/stitch --dataset dataset --out results/v4-cli --require-t4
+python3 scripts/verify_v5_cli.py --stitch build/stitch --dataset dataset --out results/v5-cli --require-t4
 ```
 
 ## 4. Công cụ phát triển trong `tests/tools/`

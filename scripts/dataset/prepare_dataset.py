@@ -9,7 +9,7 @@ For each pair: apply EXIF orientation, require equal left/right sizes, cut both 
 and save JPEG quality 95 without EXIF. dataset/manifest.csv records sources, crop box and SHA-256.
 
 Example:
-  python scripts/prepare_dataset.py --raw raw --out dataset \\
+  python scripts/dataset/prepare_dataset.py --raw raw --out dataset \\
       --pair site1=tuan-standard1 --pair site2=chuong-standard1 --pair challenge=tuan-challenge1
 """
 
@@ -22,8 +22,8 @@ import sys
 
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dataset_common import MIN_HEIGHT, MIN_WIDTH, SIZES, crop_box_16_9, load_oriented, pair_paths  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dataset.dataset_common import MIN_HEIGHT, MIN_WIDTH, SIZES, crop_box_16_9, load_oriented, pair_paths  # noqa: E402
 
 SITE_NAME = re.compile(r"^(site\d+|challenge\d*)$")
 JPEG_QUALITY = 95

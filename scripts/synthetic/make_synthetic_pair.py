@@ -10,7 +10,7 @@ Each size is generated directly. Output: <out>/<case>/<size>_left.png (A), <size
 <size>_truth.json (H_gt and how the pair was made).
 
 Example:
-  python scripts/make_synthetic_pair.py --source raw/tuan/standard2_left.jpg --out results/synthetic
+  python scripts/synthetic/make_synthetic_pair.py --source raw/tuan/standard2_left.jpg --out results/synthetic
 """
 
 import argparse
@@ -22,9 +22,9 @@ import sys
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dataset_common import SIZES, load_oriented  # noqa: E402
-from homography_common import project, save_truth  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dataset.dataset_common import SIZES, load_oriented  # noqa: E402
+from synthetic.homography_common import project, save_truth  # noqa: E402
 
 CASES = ("translation", "projective")
 OVERLAP_SHIFT = 0.55   # B starts at round(0.55 * (W - 1)) in A, about 45% overlap

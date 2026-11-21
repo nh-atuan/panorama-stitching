@@ -21,7 +21,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from midterm_notebook import (CSV_COLUMNS, SITES, SIZES, collect_benchmark_csv,
+from notebook.midterm_notebook import (CSV_COLUMNS, SITES, SIZES, collect_benchmark_csv,
                               parse_stitch_csv, safe_extract, sha256,
                               source_manifest, validate_dataset, overlap_box)
 

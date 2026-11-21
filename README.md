@@ -135,7 +135,7 @@ python3 scripts/plot_benchmark.py --input-dir results/bench --out-dir results/be
 | `Group16_Final.ipynb` | Notebook báo cáo cuối kỳ đầy đủ 10 mục theo đề bài (chạy `Run all` trên Colab T4) |
 | `src/` | Toàn bộ mã nguồn C/C++/CUDA (`common/`, `v0/` đến `v5/`, `main.cu`, `versions.h`) — xem [src/README.md](src/README.md) |
 | `tests/` | Bộ kiểm thử tự động C++/CUDA/Python và runner thống nhất (`run_tests.py`) — xem [tests/README.md](tests/README.md) |
-| `scripts/` | Công cụ build (`build.py`), tải dataset, benchmark đa phiên bản, profiling Nsight và kiểm chứng CLI |
+| `scripts/` | Công cụ build (`build.py`), tải dataset, benchmark đa phiên bản, profiling Nsight và kiểm chứng CLI — xem [scripts/README.md](scripts/README.md) |
 | `experiments/` | Các notebook kiểm chứng, benchmark/profiling theo giai đoạn P5–P10 và lưu trữ giữa kỳ — xem [experiments/README.md](experiments/README.md) |
 | `slides/` | Mã nguồn slide thuyết trình LaTeX Beamer (`project.tex`, `performance.tex`) và kịch bản video |
 | `docs/` | Kế hoạch, bảng công việc, contract (`interface.md`), dataset, nhật ký APOD, thiết kế 6 stage và báo cáo thực nghiệm — xem [docs/README.md](docs/README.md) |

@@ -8,7 +8,10 @@ import math
 from pathlib import Path
 import statistics
 import subprocess
+import sys
 import zipfile
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 SITES = ("site1", "site2", "site3")
 MANIFEST_SHA256 = "99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d"
@@ -56,7 +59,7 @@ def recorded(command, root, label, cwd, *, env=None, required=True, timeout=1800
 
 
 def dataset_manifest(dataset):
-    from midterm_notebook import validate_dataset
+    from notebook.midterm_notebook import validate_dataset
     dataset = Path(dataset)
     if sha256(dataset / "manifest.csv") != MANIFEST_SHA256:
         raise ValueError("Official dataset manifest hash differs from P7-P9.")

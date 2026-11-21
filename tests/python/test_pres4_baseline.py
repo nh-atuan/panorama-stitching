@@ -10,8 +10,8 @@ import unittest
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-import pres4_baseline as baseline
-from build_pres4_probe import overlay_sources, replace_once
+from profiling import pres4_baseline as baseline
+from profiling.build_pres4_probe import overlay_sources, replace_once
 from run_benchmark import version_columns
 
 

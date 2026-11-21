@@ -19,16 +19,17 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw
 
-from dataset_common import SIZES
-from fetch_and_prepare_dataset import CHOSEN_PAIRS
-from homography_common import as_matrix, project
-from homography_error import parse_estimate
-from package_s6_verification import EXTENSIONS, PREFIXES, git_output
-from profiling_common import capture, inspect_environment, reject_stub, write_json
-from run_benchmark import parse_version_csv, read_error_code, sha256, version_columns
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dataset.dataset_common import SIZES  # noqa: E402
+from fetch_and_prepare_dataset import CHOSEN_PAIRS  # noqa: E402
+from synthetic.homography_common import as_matrix, project  # noqa: E402
+from synthetic.homography_error import parse_estimate  # noqa: E402
+from notebook.package_s6_verification import EXTENSIONS, PREFIXES, git_output  # noqa: E402
+from profiling.profiling_common import capture, inspect_environment, reject_stub, write_json  # noqa: E402
+from run_benchmark import parse_version_csv, read_error_code, sha256, version_columns  # noqa: E402
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 RUNS = 5
 VERSIONS = (0, 1, 2)
 PAIRWISE = ((0, 1), (0, 2), (1, 2))

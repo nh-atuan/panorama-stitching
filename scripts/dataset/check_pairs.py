@@ -11,7 +11,7 @@ The overlap is an estimate from a horizontal shift search and only supports the 
 Prints Markdown: a result table for section 5.3 and a suggested priority order for section 6.
 The order is a script suggestion, not the members' review.
 
-Example: python scripts/check_pairs.py --raw raw --out results/check_pairs.md
+Example: python scripts/dataset/check_pairs.py --raw raw --out results/check_pairs.md
 """
 
 import argparse
@@ -21,8 +21,8 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dataset_common import MEMBERS, MIN_HEIGHT, MIN_WIDTH, crop_box_16_9, exif_fields, load_oriented, scan_member  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dataset.dataset_common import MEMBERS, MIN_HEIGHT, MIN_WIDTH, crop_box_16_9, exif_fields, load_oriented, scan_member  # noqa: E402
 
 PASS, FAIL, REVIEW, SKIP = "Đạt", "Chưa đạt", "Cần review", "—"
 MAX_GAP_SECONDS = 60

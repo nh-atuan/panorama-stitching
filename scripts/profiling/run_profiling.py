@@ -5,9 +5,11 @@
 import argparse
 from pathlib import Path
 import sys
-from profiler_batch import collect
-from profiling_common import BatchError, inspect_environment, write_json
-from synthetic_batch import check_case, inputs, write_summary
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from profiling.profiler_batch import collect  # noqa: E402
+from profiling.profiling_common import BatchError, inspect_environment, write_json  # noqa: E402
+from synthetic.synthetic_batch import check_case, inputs, write_summary  # noqa: E402
 
 
 def parse_args(argv=None):

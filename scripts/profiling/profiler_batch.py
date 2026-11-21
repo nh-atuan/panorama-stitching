@@ -3,7 +3,10 @@
 """Collect Nsight reports without treating profiler-instrumented runs as benchmarks."""
 from pathlib import Path
 import shutil
-from profiling_common import capture, reject_stub
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from profiling.profiling_common import capture, reject_stub  # noqa: E402
 
 
 def collect(profiler, command, folder, kernel_regex=None, launch_count=1, scope="pipeline"):

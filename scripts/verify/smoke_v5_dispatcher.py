@@ -7,8 +7,10 @@ import math
 from pathlib import Path
 import re
 import subprocess
+import sys
 
-from run_benchmark import parse_version_csv
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from run_benchmark import parse_version_csv  # noqa: E402
 
 DETAIL_COLUMNS = [
     "Run_Index", "Mode", "H2D_A_ms", "H2D_B_ms", "S1_A_ms", "S1_B_ms",

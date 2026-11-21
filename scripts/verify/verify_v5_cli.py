@@ -13,10 +13,11 @@ import sys
 
 from PIL import Image
 
-from package_s6_verification import git_output
-from profiling_common import BatchError, capture, inspect_environment, reject_stub, write_json
-from run_benchmark import input_paths, parse_version_csv, read_debug_config, read_error_code, version_columns
-from verify_v2_dataset import CANVAS, RGB_TOLERANCE, rgb_delta, stitch_command
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from notebook.package_s6_verification import git_output  # noqa: E402
+from profiling.profiling_common import BatchError, capture, inspect_environment, reject_stub, write_json  # noqa: E402
+from run_benchmark import input_paths, parse_version_csv, read_debug_config, read_error_code, version_columns  # noqa: E402
+from verify.verify_v2_dataset import CANVAS, RGB_TOLERANCE, rgb_delta, stitch_command  # noqa: E402
 
 
 RUNS = 2  # Exercise distinct Average and Minimum rows with more than one measured run.

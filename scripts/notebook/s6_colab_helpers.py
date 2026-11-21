@@ -139,9 +139,9 @@ def prepare_source():
     snapshot = hashlib.sha256(json.dumps(SOURCE_HASHES, sort_keys=True).encode()).hexdigest()
     if snapshot != SOURCE["snapshot_sha256"]:
         raise ValueError("Source snapshot digest is invalid")
-    if SOURCE_HASHES.get("scripts/s6_colab_helpers.py") != HELPER_SHA256:
+    if SOURCE_HASHES.get("scripts/notebook/s6_colab_helpers.py") != HELPER_SHA256:
         raise ValueError("Notebook/helper version mismatch: regenerate the notebook and source ZIP together")
-    spec = importlib.util.spec_from_file_location("s6_snapshot_midterm", PROJECT / "scripts/midterm_notebook.py")
+    spec = importlib.util.spec_from_file_location("s6_snapshot_midterm", PROJECT / "scripts/notebook/midterm_notebook.py")
     DATA_HELPERS = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(DATA_HELPERS)
     STATE["source"] = True

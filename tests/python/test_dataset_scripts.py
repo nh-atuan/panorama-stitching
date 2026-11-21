@@ -2,7 +2,7 @@
 # Authors: Nguyen Ho Anh Tuan (23120185)
 # External source: none
 
-"""Tests for scripts/prepare_dataset.py, scripts/check_pairs.py and scripts/dataset_common.py on synthetic photos."""
+"""Tests for scripts/dataset/prepare_dataset.py, scripts/dataset/check_pairs.py and scripts/dataset/dataset_common.py on synthetic photos."""
 
 import csv
 from datetime import datetime
@@ -16,9 +16,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import check_pairs  # noqa: E402
-import dataset_common  # noqa: E402
-import prepare_dataset  # noqa: E402
+from dataset import check_pairs, dataset_common, prepare_dataset  # noqa: E402
 
 ORIENTATION, DATETIME_ORIGINAL, MAKE, MODEL = 274, 36867, 271, 272
 

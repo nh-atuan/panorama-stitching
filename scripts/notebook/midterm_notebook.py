@@ -173,8 +173,12 @@ def overlap_box(log_text, width_a, height_a, width_b, height_b):
     It is the axis-aligned intersection envelope, not an exact validity mask.
     """
     import re
-    from homography_error import parse_estimate
-    from homography_common import project
+    import sys
+    scripts_dir = str(Path(__file__).resolve().parents[1])
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    from synthetic.homography_error import parse_estimate
+    from synthetic.homography_common import project
     import numpy as np
 
     match = re.search(r"\[debug\] S6 canvas=(\d+)x(\d+) offset=\((-?\d+),(-?\d+)\)", log_text)

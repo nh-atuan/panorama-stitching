@@ -10,12 +10,12 @@ from pathlib import Path
 import subprocess
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PREFIXES = ("src", "scripts", "tests")
 EXTENSIONS = {".h", ".hpp", ".cuh", ".cpp", ".cu", ".py", ".md", ".json"}
 REQUIRED = {"src/main.cu", "src/common/common.h", "src/common/cuda_utils.cuh",
             "src/v1/v1_warp_blend.h", "src/v1/v1_warp_blend.cu",
-            "scripts/build.py", "scripts/midterm_notebook.py", "tests/run_tests.py",
+            "scripts/build.py", "scripts/notebook/midterm_notebook.py", "tests/run_tests.py",
             "tests/gpu/test_gpu_s6_warp_blend.cu"}
 
 

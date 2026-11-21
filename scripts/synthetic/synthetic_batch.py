@@ -3,9 +3,12 @@
 """Evaluate the six documented image pairs for selected executable versions."""
 import csv
 from pathlib import Path
-from homography_common import load_truth
-from homography_error import EvaluationError, evaluate, parse_estimate
-from profiling_common import BatchError, capture, reject_stub, write_json
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from synthetic.homography_common import load_truth  # noqa: E402
+from synthetic.homography_error import EvaluationError, evaluate, parse_estimate  # noqa: E402
+from profiling.profiling_common import BatchError, capture, reject_stub, write_json  # noqa: E402
 
 CASES = ("translation", "projective")
 SIZES = ("small", "medium", "large")

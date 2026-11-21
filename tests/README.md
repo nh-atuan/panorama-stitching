@@ -68,7 +68,7 @@ compute-sanitizer --tool memcheck --leak-check full --error-exitcode 99 \
   build/tests_gpu/gpu_v2_pipeline --require-v2-pipeline --dataset dataset
 ```
 
-Tạo `results/synthetic` bằng `scripts/make_synthetic_pair.py` với ảnh nguồn synthetic của nhóm. Nếu không truyền `--v2-synthetic-dir`, suite dùng sáu fixture tịnh tiến nhúng. Khi chỉ định dataset, suite yêu cầu đủ 12 cấu hình, gồm hai ca lỗi dự kiến `challenge/medium` và `challenge/large`. Để thử một cặp chuẩn, có thể truyền hai đường dẫn ảnh vào executable.
+Tạo `results/synthetic` bằng `scripts/synthetic/make_synthetic_pair.py` với ảnh nguồn synthetic của nhóm. Nếu không truyền `--v2-synthetic-dir`, suite dùng sáu fixture tịnh tiến nhúng. Khi chỉ định dataset, suite yêu cầu đủ 12 cấu hình, gồm hai ca lỗi dự kiến `challenge/medium` và `challenge/large`. Để thử một cặp chuẩn, có thể truyền hai đường dẫn ảnh vào executable.
 
 Suite kiểm tra lần lượt trạng thái, sai số chiếu B→A, hình học canvas và RGB. Ngưỡng synthetic là RMSE ≤ 0,5 px và Max ≤ 1 px trên lưới 20×20 lọc bằng ground truth. Độ lệch chiếu giữa phiên bản phải dưới 0,1 px. Kích thước và offset phải khớp chính xác, sai số RGB tối đa là 1 mức mỗi kênh. Khi RGB vượt ngưỡng, suite chạy lại S6 với cùng H để phân biệt ảnh hưởng từ H với lỗi lấy mẫu hoặc bàn giao canvas. Lệnh CLI `stitch --version 2` và CSV timing cần kiểm tra cùng dispatcher của P7-T02.
 
@@ -104,7 +104,7 @@ Lượt nghiệm thu yêu cầu cả sáu fixture translation/projective và 12 
 `verify_v3_cli.py` chạy `site1/small` qua CLI V2 và V3, xác nhận canvas mở rộng chứa A, đọc hết PNG sau D2H và so RGB. Harness yêu cầu `challenge/medium` tái lập `NumericalFailure` ở S6, exit 1 và không xuất CSV/PNG. Hai ca lỗi CLI kiểm tra file thiếu và `--runs 0`. Log lưu argv, stdout, stderr, trạng thái và summary. Header V3 phải khớp parser benchmark hiện hành. Khi T02 bàn giao, đối chiếu parser với header production và contract được thống nhất trước khi dùng kết quả làm bằng chứng.
 
 ```bash
-python3 scripts/verify_v3_cli.py --stitch build/stitch --dataset dataset \
+python3 scripts/verify/verify_v3_cli.py --stitch build/stitch --dataset dataset \
   --out results/p8-v3-cli-smoke --require-t4
 ```
 
@@ -129,8 +129,8 @@ python3 tests/run_tests.py --compiler nvcc --group gpu --suite gpu_v5_pipeline \
   --require-t4 --v5-synthetic-dir results/synthetic --v5-dataset-dir dataset
 
 # Kiểm tra CLI, CSV 11 cột và sidecar CSV 14 cột (V5)
-python3 scripts/verify_v4_cli.py --stitch build/stitch --dataset dataset --out results/v4-cli --require-t4
-python3 scripts/verify_v5_cli.py --stitch build/stitch --dataset dataset --out results/v5-cli --require-t4
+python3 scripts/verify/verify_v4_cli.py --stitch build/stitch --dataset dataset --out results/v4-cli --require-t4
+python3 scripts/verify/verify_v5_cli.py --stitch build/stitch --dataset dataset --out results/v5-cli --require-t4
 ```
 
 ## 4. Công cụ phát triển trong `tests/tools/`

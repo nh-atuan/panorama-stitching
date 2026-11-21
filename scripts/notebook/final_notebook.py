@@ -18,8 +18,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from midterm_notebook import SIZES, preview_image, safe_extract, sha256, validate_dataset  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from notebook.midterm_notebook import SIZES, preview_image, safe_extract, sha256, validate_dataset  # noqa: E402
 from run_benchmark import (  # noqa: E402
     BASE_STAGE_COLUMNS, BENCHMARK_SITES, CHALLENGE_SITE, CUDA_EXTRA_COLUMNS, FAILURE_COLUMNS,
     PCT_COLUMNS, SPEEDUP_COLUMNS, SUMMARY_COLUMNS, input_paths,

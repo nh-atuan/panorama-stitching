@@ -11,7 +11,7 @@ NRMSE = RMSE / diagonal of A. H_est is the float32 H that stitch prints with --d
 Example:
   ./stitch results/synthetic/translation/small_left.png results/synthetic/translation/small_right.png \\
       results/synthetic/translation/small_pano.png --version 0 --runs 1 --debug 2> small.log
-  python scripts/homography_error.py --truth results/synthetic/translation/small_truth.json --log small.log
+  python scripts/synthetic/homography_error.py --truth results/synthetic/translation/small_truth.json --log small.log
 """
 
 import argparse
@@ -21,8 +21,8 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from homography_common import as_matrix, load_truth, project  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from synthetic.homography_common import as_matrix, load_truth, project  # noqa: E402
 
 GRID = 20
 H_PREFIX = "[debug] H(B->A)="

@@ -2,7 +2,7 @@
 # Authors: Tran Huu Kim Thanh (23120166)
 # External source: none
 
-"""Tests for scripts/final_notebook.py on benchmark folders with known numbers.
+"""Tests for scripts/notebook/final_notebook.py on benchmark folders with known numbers.
 
 The fixtures are written by the run_benchmark.py writers, so the loader reads the same files
 that a real session produces. No stitch binary or GPU is needed.
@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import final_notebook as fn  # noqa: E402
+from notebook import final_notebook as fn  # noqa: E402
 import run_benchmark as rb  # noqa: E402
 
 SIZES = ("small", "medium", "large")

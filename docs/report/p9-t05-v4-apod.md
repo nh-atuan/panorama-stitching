@@ -16,7 +16,7 @@ Single-pass Canvas Fusion thay ba lượt xóa canvas, chép A và gather/blend 
 
 [Kernel S6 V4](../../src/v4/s6/v4_warp_blend.cu) dùng block 32×8, mỗi thread sở hữu một pixel canvas, xác định vùng A/B, đọc A trực tiếp, nội suy B và ghi màu cuối cùng. Giữ thứ tự phép tính, snap/clamp và làm tròn; giữ phần setup canvas dùng chung. [Pipeline V4](../../src/v4/v4_pipeline.cu) tái sử dụng S1–S4 V1 và S5 V3.
 
-[Notebook P9](../../Group16_P9_T05_Benchmark_Profiling.ipynb) ghim source `ba97ed780785135e9d20ce36aac852efc4ebc898`. `src/` và `scripts/build.py` khớp source nghiệm thu P9-T02 `ab8df98d7f15bb42d5e3306cf03a38311248b4a8` qua `git diff --exit-code`. [P9-T02](p9-v4-verification.md) đã kiểm 6 synthetic, 12 cấu hình thật, CLI/CSV/D2H và memcheck T4; 10 ca thành công có Max RGB = 0, 2 challenge medium/large giữ NumericalFailure tại S6. Timing nghiệm thu không được dùng trong bảng benchmark.
+[Notebook P9](../../experiments/Group16_P9_T05_Benchmark_Profiling.ipynb) ghim source `ba97ed780785135e9d20ce36aac852efc4ebc898`. `src/` và `scripts/build.py` khớp source nghiệm thu P9-T02 `ab8df98d7f15bb42d5e3306cf03a38311248b4a8` qua `git diff --exit-code`. [P9-T02](p9-v4-verification.md) đã kiểm 6 synthetic, 12 cấu hình thật, CLI/CSV/D2H và memcheck T4; 10 ca thành công có Max RGB = 0, 2 challenge medium/large giữ NumericalFailure tại S6. Timing nghiệm thu không được dùng trong bảng benchmark.
 
 ## 4. Result: benchmark không có profiler
 

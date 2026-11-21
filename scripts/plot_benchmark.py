@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from midterm_notebook import SIZES  # noqa: E402
+from notebook.midterm_notebook import SIZES  # noqa: E402
 from run_benchmark import BENCHMARK_SITES, CHALLENGE_SITE, PCT_COLUMNS, BASE_STAGE_COLUMNS  # noqa: E402
 
 STAGE_COLUMNS = BASE_STAGE_COLUMNS

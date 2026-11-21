@@ -83,7 +83,7 @@ def normalize_raw_names(raw_dir: Path):
 
 
 def run_prepare_dataset(raw_dir: Path, out_dir: Path):
-    script = Path(__file__).resolve().parent / "prepare_dataset.py"
+    script = Path(__file__).resolve().parent / "dataset" / "prepare_dataset.py"
     cmd = [
         sys.executable,
         str(script),

@@ -11,7 +11,7 @@ import unittest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from verify_v2_dataset import V2_HEADER, memcheck_result, parse_v2_csv, projection_drift, rgb_delta
+from verify.verify_v2_dataset import V2_HEADER, memcheck_result, parse_v2_csv, projection_drift, rgb_delta
 
 
 def csv_text(rows):

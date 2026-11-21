@@ -1,10 +1,12 @@
+<!-- Authors: Le Ha Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185). External source: none. -->
+
 # S6 CUDA Verification on Colab
 
 Người soạn: Lê Hà Thanh Chương (23120195). Cập nhật: 30/10/2026. Phạm vi: P5-T12/P5-T13.
 
 ## Files to Prepare
 
-Mở [`Group16_S6_CUDA_Verification.ipynb`](../notebooks/Group16_S6_CUDA_Verification.ipynb) trên Colab. Notebook này dành riêng cho kiểm chứng S6; không thay notebook báo cáo giữa kỳ và không gọi scaffold V1 để giả lập kết quả ghép ảnh GPU.
+Mở [`Group16_S6_CUDA_Verification.ipynb`](../../notebooks/Group16_S6_CUDA_Verification.ipynb) trên Colab. Notebook này dành riêng cho kiểm chứng S6; không thay notebook báo cáo giữa kỳ và không gọi scaffold V1 để giả lập kết quả ghép ảnh GPU.
 
 | File | Bạn cần làm |
 |---|---|
@@ -86,6 +88,6 @@ READY chỉ là bằng chứng đủ điều kiện review trên T4. Task còn c
 
 Bản trong Git được giữ không có output. Kiểm tra local trước đó dùng WSL/GTX 1650 để kiểm tra luồng notebook, không thay thế Colab T4.
 
-Lượt Run all trên Colab Tesla T4 ngày 30/10/2026 đã đạt tất cả gate, gồm 13 suite V0, fixture S6, 12 case thật và hai lượt memcheck. Chi tiết, hash source và giới hạn kết luận được ghi trong [báo cáo nghiệm thu T4](report/p5-s6-cuda-verification.md). Notebook có output gốc và bundle evidence được giữ ngoài Git. Khi thay source hoặc tham số, cần tạo lại gói và kiểm chứng lại; không dùng log cũ để nghiệm thu code mới.
+Lượt Run all trên Colab Tesla T4 ngày 30/10/2026 đã đạt tất cả gate, gồm 13 suite V0, fixture S6, 12 case thật và hai lượt memcheck. Chi tiết, hash source và giới hạn kết luận được ghi trong [báo cáo nghiệm thu T4](../report/p5-s6-cuda-verification.md). Notebook có output gốc và bundle evidence được giữ ngoài Git. Khi thay source hoặc tham số, cần tạo lại gói và kiểm chứng lại; không dùng log cũ để nghiệm thu code mới.
 
 Tài liệu API: [Colab FAQ](https://research.google.com/colaboratory/faq.html), [NVIDIA Compute Sanitizer](https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html), [gdown](https://github.com/wkentaro/gdown).

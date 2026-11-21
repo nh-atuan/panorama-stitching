@@ -449,7 +449,7 @@ Mục 6 của tài liệu thiết kế stage và các phần phân tích cần s
       <td>P3-T04</td>
       <td>Run all thành công trên một phiên Colab T4 mới; không dùng <code>%%writefile</code>; notebook commit không kèm output</td>
       <td>Xong</td>
-      <td>Notebook lấy <code>src/</code> upload qua panel Files và <code>Group16_support.zip</code> (dataset, <code>scripts/</code>, <code>tests/</code>, ảnh nguồn synthetic) từ Drive chung; benchmark gọi <code>scripts/run_benchmark.py</code>, Amdahl tính cho S2 + S4 + S6. Run all trên Colab T4 ngày 21/10 đạt mọi kiểm tra tự động: build, test, 6 cặp synthetic, 4 panorama, benchmark 9 cấu hình. Notebook commit không kèm output. Hướng dẫn chạy ở <a href="../notebook-guide.md">notebook-guide</a>.</td>
+      <td>Notebook lấy <code>src/</code> upload qua panel Files và <code>Group16_support.zip</code> (dataset, <code>scripts/</code>, <code>tests/</code>, ảnh nguồn synthetic) từ Drive chung; benchmark gọi <code>scripts/run_benchmark.py</code>, Amdahl tính cho S2 + S4 + S6. Run all trên Colab T4 ngày 21/10 đạt mọi kiểm tra tự động: build, test, 6 cặp synthetic, 4 panorama, benchmark 9 cấu hình. Notebook commit không kèm output. Hướng dẫn chạy ở <a href="notebook-guide.md">notebook-guide</a>.</td>
     </tr>
     <tr>
       <td>P3-T10</td>

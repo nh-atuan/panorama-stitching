@@ -62,7 +62,7 @@ Ghi chú: Nhóm chọn **V4** làm phiên bản sản phẩm chính thức do V5
 Bộ dataset gồm 4 cặp ảnh (24 file ảnh ở 3 độ phân giải `small` 1280×720, `medium` 1920×1080, `large` 3840×2160) kèm `manifest.csv` được lưu trên Google Drive chung. Tải và kiểm tra SHA-256 tự động bằng lệnh:
 
 ```bash
-python3 scripts/fetch_and_prepare_dataset.py --out-dir dataset
+python3 scripts/fetch_and_prepare_dataset.py --out dataset
 ```
 
 ### 5.2 Biên dịch
@@ -138,7 +138,7 @@ python3 scripts/plot_benchmark.py --input-dir results/bench --out-dir results/be
 | `scripts/` | Công cụ build (`build.py`), tải dataset, benchmark đa phiên bản, profiling Nsight và kiểm chứng CLI |
 | `notebooks/` | Các notebook giữa kỳ, kiểm chứng và benchmark/profiling của từng giai đoạn P5–P10 |
 | `slides/` | Mã nguồn slide thuyết trình LaTeX Beamer (`project.tex`, `performance.tex`) và kịch bản video |
-| `docs/` | Kế hoạch cuối kỳ (`final-plan.md`), bảng công việc (`task-board.md`), contract (`interface.md`), dataset (`dataset.md`), nhật ký APOD (`apod-log.md`), thiết kế 6 stage (`stages/`) và các báo cáo kiểm chứng/APOD (`report/`) |
+| `docs/` | Kế hoạch, bảng công việc, contract (`interface.md`), dataset, nhật ký APOD, thiết kế 6 stage và báo cáo thực nghiệm — xem [docs/README.md](docs/README.md) |
 | `AGENTS_TEMPLATE.md` | Khuôn mẫu quy tắc làm việc dùng chung cho thành viên |
 
 ## 7. Tài nguyên và Video thuyết trình

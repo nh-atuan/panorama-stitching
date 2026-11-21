@@ -86,4 +86,4 @@ Phần tích hợp thuộc P6:
 3. Hoàn thiện GPU timing, kernel-only total và transfer/end-to-end trên pipeline tích hợp. Notebook này không có số đo kernel S6 hoặc speedup GPU.
 4. Benchmark/profiling V1 trên dataset cuối kỳ đã chốt, rồi mới quyết định tối ưu V2/V3.
 
-Quy trình tái lập: [S6 Colab guide](../s6-colab-guide.md); thiết kế và lệnh test: [S6](../stages/s6-warp-blend.md). Gói evidence gốc chứa 30 command record, log stdout/stderr, source manifest, input hash và H của từng case; notebook có output và gói này được giữ làm tài liệu review ngoài Git.
+Quy trình tái lập: [S6 Colab guide](../archive/s6-colab-guide.md); thiết kế và lệnh test: [S6](../stages/s6-warp-blend.md). Gói evidence gốc chứa 30 command record, log stdout/stderr, source manifest, input hash và H của từng case; notebook có output và gói này được giữ làm tài liệu review ngoài Git.

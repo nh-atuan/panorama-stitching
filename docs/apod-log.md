@@ -50,7 +50,7 @@ Tài liệu theo dõi các chu trình tối ưu hóa song song theo quy trình *
 - **Optimize:** V4 thay chuỗi xóa canvas, copy A và gather/blend B bằng `render_canvas_kernel`; giữ setup, quy tắc số học và S1–S5 của bản đối chứng.
 - **Result:** V4/V3 trung bình nhân 1,0086× trên chín ca chuẩn; 8/9 ca nhanh hơn. Riêng S6 đạt 1,0357×. Tại site2/large, total giảm 62,874 → 62,197 ms; S6 giảm 28,712 → 28,190 ms. Năm khối đo luân phiên cho median 1,0270×, min–max 0,9774–1,0409×, 4/5 khối cùng chiều; chưa đạt mức cải thiện 5% từng được đề xuất.
 - **Verification:** Source production khớp `ab8df98d` đã nghiệm thu P9-T02. Challenge medium/large giữ NumericalFailure; không tính speedup cho ca lỗi. Đủ 8 NSYS và 12 NCU. NSYS xác nhận 3 → 1 thao tác dựng canvas mỗi lượt. NCU ghi nhận DRAM đọc + ghi tăng 13,6–26,0% trong bốn ca lấy mẫu, phạm vi gồm copy A + gather B ở V3 và renderer ở V4. Memset V3 nằm ngoài tổng counter.
-- **Bằng chứng:** [P9-T05](report/p9-t05-v4-apod.md), [notebook benchmark/profiling](../notebooks/Group16_P9_T05_Benchmark_Profiling.ipynb), [nghiệm thu P9-T02](report/p9-v4-verification.md).
+- **Bằng chứng:** [P9-T05](report/p9-t05-v4-apod.md), [notebook benchmark/profiling](../experiments/Group16_P9_T05_Benchmark_Profiling.ipynb), [nghiệm thu P9-T02](report/p9-v4-verification.md).
 
 ### Chu trình V4 -> V5: Optimize Round 4 — Thử nghiệm hai CUDA Stream (P10-T05)
 
@@ -59,4 +59,4 @@ Tài liệu theo dõi các chu trình tối ưu hóa song song theo quy trình *
 - **Result:** Trên Tesla T4 (5 runs + 1 warm-up), đoạn pre-S4 tại ca chính `site2/large` giảm từ ~15,288 ms xuống ~12,680 ms (nhanh hơn **1,207×**, tiết kiệm ~2,6 ms). Toàn pipeline đạt 20,686–102,925 ms trên 9 ca chuẩn (21,29–109,07× so với V0), trung bình nhân **1,027×** so với V4 (`site2/large`: 61,655 → 59,941 ms, **1,029×**).
 - **Verification & Profiling:** [P10-T04](report/p10-v5-verification.md) xác nhận 6 cặp synthetic và 12 cấu hình thật đạt ngưỡng tuyệt đối (drift = 0 px, Max RGB = 0 so với V4 và giữa `dual`/`sequential`; `compute-sanitizer` 0 lỗi, 0 byte rò rỉ). Nsight Systems cho thấy H2D chồng lấn tốt với S1 nhờ 3 Copy Engine của T4, nhưng các kernel tính toán nặng ở S2/S3 bão hòa 40 SM nên mức overlap bị giới hạn, cộng thêm ~0,15–0,25 ms overhead thăm dò host.
 - **Conclusion:** Do speedup toàn pipeline chưa vượt ngưỡng kỳ vọng 1,05×, nhóm giữ **V4** làm bản production chính thức và giữ nguyên **V5** trong mã nguồn như một nghiên cứu chuyên sâu (case study) về giới hạn đa stream trên Tesla T4.
-- **Bằng chứng:** [P10-T05](report/p10-t05-v5-apod.md), [notebook benchmark/profiling V5](../notebooks/Group16_P10_T05_Benchmark_Profiling.ipynb), [nghiệm thu P10-T04](report/p10-v5-verification.md).
+- **Bằng chứng:** [P10-T05](report/p10-t05-v5-apod.md), [notebook benchmark/profiling V5](../experiments/Group16_P10_T05_Benchmark_Profiling.ipynb), [nghiệm thu P10-T04](report/p10-v5-verification.md).

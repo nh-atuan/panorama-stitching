@@ -18,7 +18,7 @@ V3 thay cách thực thi S5 bằng warp shuffle reduction cho MSAC, đặt ma tr
 
 Kernel nằm trong `src/v3/s5/`; `src/v3/v3_pipeline.cu` gọi `v3_homography` ở vị trí S5 và dùng lại hạ tầng pipeline GPU cùng các stage S1–S4/S6 của V1. `compute_hypotheses` dùng `__launch_bounds__(128, 4)`. Các thay đổi được đánh giá chung như phiên bản V3; lượt đo này không tách riêng tác dụng từng thay đổi bằng ablation.
 
-Notebook [Group16_P8_T03_Benchmark_Profiling.ipynb](../../notebooks/Group16_P8_T03_Benchmark_Profiling.ipynb) ghim checkout `b3c79d783aa79401cfe2b2a03add1e03f55a32d0` và đối chiếu `src/`, `scripts/build.py` với SHA production đã nghiệm thu `1cf86ad939fb821c3b2ee50fca47375ea8ae874a`. Build dùng script của repo và kiến trúc `sm_75`.
+Notebook [Group16_P8_T03_Benchmark_Profiling.ipynb](../../experiments/Group16_P8_T03_Benchmark_Profiling.ipynb) ghim checkout `b3c79d783aa79401cfe2b2a03add1e03f55a32d0` và đối chiếu `src/`, `scripts/build.py` với SHA production đã nghiệm thu `1cf86ad939fb821c3b2ee50fca47375ea8ae874a`. Build dùng script của repo và kiến trúc `sm_75`.
 
 ## 4. Result
 

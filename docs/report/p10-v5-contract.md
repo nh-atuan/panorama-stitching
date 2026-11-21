@@ -53,7 +53,7 @@ GPU idle là phần bù của hợp các khoảng GPU copy/kernel trong cửa s�
 
 ### Notebook thu baseline
 
-Chạy [Group16_P10_T01_PreS4_Baseline.ipynb](../../notebooks/Group16_P10_T01_PreS4_Baseline.ipynb) trên Colab T4 từ nhánh `chuong/p10-v5`. Notebook dùng binary production và probe riêng, hỗ trợ đủ ba site large, một warm-up và ít nhất năm measured runs, dataset Drive đã kiểm hash, NSYS tùy khả dụng và cell tải ZIP.
+Chạy [Group16_P10_T01_PreS4_Baseline.ipynb](../../experiments/Group16_P10_T01_PreS4_Baseline.ipynb) trên Colab T4 từ nhánh `chuong/p10-v5`. Notebook dùng binary production và probe riêng, hỗ trợ đủ ba site large, một warm-up và ít nhất năm measured runs, dataset Drive đã kiểm hash, NSYS tùy khả dụng và cell tải ZIP.
 
 Probe build bằng `python scripts/build_pres4_probe.py --out-dir build/pres4`. Script tạo source overlay trong build và kiểm tra từng anchor trước khi chèn event. Source production không đổi. Probe ghi CUDA event origin ngay trước H2D(A), ready sau S3(B) và trước S4. Có readiness synchronize bổ sung để đo host-observed pre-S4 completion. Timing probe bao gồm overhead event và chờ này, nên notebook lưu Total production riêng.
 

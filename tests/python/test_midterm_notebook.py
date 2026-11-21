@@ -183,7 +183,7 @@ class ReproducibilityTests(unittest.TestCase):
             overlap_box("missing diagnostics", 4, 3, 4, 3)
 
 
-NOTEBOOK = ROOT / "notebooks" / "Group16_Midterm.ipynb"
+NOTEBOOK = ROOT / "experiments" / "Group16_Midterm.ipynb"
 
 
 # The Colab workspace holds src/, scripts/, tests/ and data, not the notebook file itself.

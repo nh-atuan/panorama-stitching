@@ -311,7 +311,7 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>P8-T01, P8-T02</td>
       <td>Đo thời gian V3 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0, V1 và V2; người làm tự lựa chọn các metric NCU/NSYS để phân tích vi kiến trúc kernel S5 V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v3/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V3 trong <code>docs/report/</code></td>
       <td>Xong</td>
-      <td>16/11: Đế đã chạy <a href="../notebooks/Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đã cập nhật <code>apod-log.md</code> và hoàn tất bàn giao Drive chung <code>v3/</code>; PR #40 đã merge vào <code>main</code>.</td>
+      <td>16/11: Đế đã chạy <a href="../experiments/Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đã cập nhật <code>apod-log.md</code> và hoàn tất bàn giao Drive chung <code>v3/</code>; PR #40 đã merge vào <code>main</code>.</td>
     </tr>
     <tr>
       <td>Chương, Thành</td>
@@ -320,7 +320,7 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
       <td>Xong</td>
-      <td>Chương bàn giao suite, harness CLI và <a href="../notebooks/Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
+      <td>Chương bàn giao suite, harness CLI và <a href="../experiments/Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
     </tr>
   </tbody>
 </table>
@@ -469,16 +469,16 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>Tái cấu trúc codebase, dọn dẹp repo và chuẩn hóa <code>README.md</code> chính</td>
       <td></td>
       <td>Repo gọn gàng, chuyên nghiệp; dọn dẹp thư mục gốc; chuẩn hóa comment tác giả 100% file nguồn; <code>README.md</code> có đầy đủ sơ đồ kiến trúc, bảng so sánh V0–V5 và hướng dẫn build/run/test</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p11</code></td>
+      <td>Xong</td>
+      <td>21/11, nhánh <code>tuan/p11</code> (<code>f2837a8</code>): gom 9 notebook phụ vào <code>experiments/</code> (kèm <code>experiments/README.md</code>), cập nhật toàn bộ liên kết trong <code>docs/</code> và <code>test_midterm_notebook.py</code>; rà 178/178 file nguồn đủ header; viết lại <code>README.md</code> chuẩn nộp bài V0–V5, cập nhật <code>src/README.md</code>, <code>tests/README.md</code> và đồng bộ <code>docs/apod-log.md</code>.</td>
     </tr>
     <tr>
       <td>P11-T02</td>
       <td>Tổng duyệt kiểm thử hồi quy toàn diện trên Colab T4 và đóng băng mã nguồn <code>src/</code></td>
       <td>P11-T01</td>
       <td>Toàn bộ 14 suite V0, 14 suite GPU (V1–V5), 193 test Python đạt sạch trên Colab T4; <code>compute-sanitizer</code> xác nhận 0 lỗi, 0 byte rò rỉ; chốt đóng băng mã nguồn</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p11</code></td>
+      <td>Xong</td>
+      <td>21/11, nhánh <code>tuan/p11</code> (Colab Tesla T4, driver 580.82.07, nvcc 13.0.88, SHA <code>f2837a8</code>): build <code>sm_75</code> đạt; 14 suite V0 (45.284 checks), 16 suite GPU V1–V5 (69.336 checks), 15 suite Python (193 tests) đạt; <code>compute-sanitizer</code> trên <code>gpu_v4_pipeline</code> và <code>gpu_v5_pipeline</code> đạt 0 lỗi, 0 byte rò rỉ. Chi tiết tại <a href="report/p11-t02-freeze-verification.md">báo cáo đóng băng mã nguồn</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Thành</td>

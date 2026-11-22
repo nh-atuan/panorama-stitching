@@ -486,8 +486,8 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>Chuẩn hóa bộ công cụ <code>scripts/</code> và xây dựng công cụ Live Demo 1-click</td>
       <td></td>
       <td>Rà soát các script đo đạc; hoàn thiện <code>scripts/live_demo.py</code> kèm hướng dẫn chạy demo CLI mượt mà phục vụ riêng cho khâu quay video của Thành ở P12</td>
-      <td>Đang làm</td>
-      <td>22/11: <code>scripts/live_demo.py</code>, 10 test và mục "Live demo" trong <code>scripts/README.md</code> ở <a href="https://github.com/nh-atuan/panorama-stitching/pull/54">PR #54</a>, chờ merge. Colab T4, SHA <code>55c9f95</code>: demo chạy V0, V4, V5 dual trên site2/small, ghi đủ ba panorama, ca challenge/medium dừng với <code>NumericalFailure</code> ở S6. Suite Python đạt 16 suite, 203 test. Còn phần rà soát các script đo đạc.</td>
+      <td>Xong</td>
+      <td>22/11: <code>scripts/live_demo.py</code>, 10 test và mục "Live demo" trong <code>scripts/README.md</code> ở <a href="https://github.com/nh-atuan/panorama-stitching/pull/54">PR #54</a>, chờ merge. Colab T4, SHA <code>55c9f95</code>: demo chạy V0, V4, V5 dual trên site2/small, ghi đủ ba panorama, ca challenge/medium dừng với <code>NumericalFailure</code> ở S6. Suite Python đạt 16 suite, 203 test. Rà soát script sau khi P11-T01 chuyển thư mục: cả 27 script trong <code>scripts/</code> import và nhận đối số được ở vị trí mới. Trên T4, <code>run_benchmark.py</code> (V0, V4, V5, có challenge), <code>plot_benchmark.py</code>, <code>homography_error.py</code>, <code>verify_v5_cli.py</code> và <code>run_profiling.py</code> (NSYS, V5 site2/small) đều chạy hết và ghi đủ output. Lệnh mẫu trong <code>docs/dataset.md</code> và <code>docs/stages/s5-homography.md</code> còn đường dẫn script cũ, báo lại cho cả Nhóm để cùng quyết định cách sửa.</td>
     </tr>
     <tr>
       <td>P11-T04</td>

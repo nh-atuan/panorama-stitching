@@ -19,10 +19,41 @@ from urllib.parse import unquote, urlsplit
 import run_benchmark as rb
 
 SECTIONS = (
-    "Team Information", "Introduction", "Chosen Methods", "V0 Sequential",
-    "V1 Basic CUDA", "Optimized Versions", "Final Comparison", "Results Gallery",
-    "Conclusion", "References",
+    "Thông tin nhóm", "Giới thiệu", "Phương pháp đã chọn", "V0 tuần tự",
+    "V1 CUDA cơ bản", "Các phiên bản tối ưu", "So sánh tổng hợp", "Kết quả ghép ảnh",
+    "Kết luận", "Tài liệu tham khảo",
 )
+ANCHORS = ("team-information", "introduction", "chosen-methods", "v0-sequential",
+           "v1-basic-cuda", "optimized-versions", "final-comparison", "results-gallery",
+           "conclusion", "references")
+CODE_ROLES = ("runtime-setup", "thanh-producer", "method-settings", "thanh-v0-tables",
+              "thanh-v1-tables", "thanh-v4-tables", "thanh-v5-tables",
+              "thanh-comparison-tables", "thanh-charts", "thanh-gallery")
+
+
+def section_structure(cells):
+    """Validate numbered sections by stable anchors, independently of display language."""
+    found, problems = [], []
+    roles = {c.get("id") for c in cells if c.get("cell_type") == "code"}
+    for index, cell in enumerate(cells, 1):
+        if cell.get("cell_type") != "markdown":
+            continue
+        source = "".join(cell.get("source", ""))
+        headings = list(re.finditer(r"^## (\d+)\. (.+)$", source, re.M))
+        for heading in headings:
+            number, title = int(heading[1]), heading[2].strip()
+            anchors = re.findall(r'<a\s+(?:id|name)=[\'"]([^\'"]+)[\'"]\s*>', source)
+            if not 1 <= number <= 10 or anchors != [ANCHORS[number - 1]]:
+                problems.append(f"Cell {index}: missing/wrong section anchor for section {number}")
+            if len(source[heading.end():].strip()) < 20:
+                problems.append(f"Cell {index}: section {number} has no substantive body")
+            found.append((number, title, index))
+    if [n for n, _, _ in found] != list(range(1, 11)):
+        problems.append(f"Missing, duplicated or unordered sections: {[n for n, _, _ in found]}")
+    missing = sorted(set(CODE_ROLES) - roles)
+    if missing:
+        problems.append(f"Missing essential executable cell roles: {missing}")
+    return found, problems
 PIN_FILES = (
     *(f"src/v{v}/v{v}_pipeline.{ 'cpp' if v == 0 else 'cu'}" for v in range(6)),
     "src/v5/v5_image_branch.h", "src/v5/v5_image_branch.cu", "src/main.cu",
@@ -108,8 +139,9 @@ def audit(notebook, root, frozen_source=None):
             add("MAJOR", "LOCAL_MACHINE_PATH", "Review machine-specific absolute path.", index)
         if re.search(r"\b(?:TODO|TBD|FIXME|PLACEHOLDER)\b", source):
             add("MAJOR", "PLACEHOLDER", "Unresolved marker; manual review required.", index)
-    if [(n, title) for n, title, _ in headings] != list(enumerate(SECTIONS, 1)):
-        add("BLOCKER", "SECTION_ORDER", f"Found headings: {headings}")
+    headings, structure_errors = section_structure(data["cells"])
+    for error in structure_errors:
+        add("BLOCKER", "SECTION_ORDER", error)
     if unexecuted:
         add("BLOCKER", "UNEXECUTED_CELLS", f"No execution count: {unexecuted}")
     pin = config.get("SOURCE_REF")

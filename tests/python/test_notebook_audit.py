@@ -25,11 +25,13 @@ class NotebookAuditTests(unittest.TestCase):
         self.path = self.root / "report.ipynb"
         self.pin = "a" * 40
         cells = [dict(cell_type="markdown", id=f"section-{i}", metadata={},
-                      source=f"## {i}. {title}") for i, title in enumerate(audit.SECTIONS, 1)]
-        cells.insert(1, dict(cell_type="code", id="setup", metadata={}, execution_count=1,
+                      source=f'<a id="{audit.ANCHORS[i-1]}"></a>\n## {i}. {title}\n\nSubstantive fixture content for this section.') for i, title in enumerate(audit.SECTIONS, 1)]
+        cells.insert(1, dict(cell_type="code", id="runtime-setup", metadata={}, execution_count=1,
                              outputs=[dict(output_type="stream", name="stdout", text="ok\n")],
                              source=f'SOURCE_REF = "{self.pin}"\nREPO_URL="https://example.org"\n'
                                     'BASELINE_VERSIONS=(0,1,2,3,4)\nTIMED_RUNS=5\nprint("ok")'))
+        cells.extend(dict(cell_type="code", id=role, metadata={}, execution_count=1,
+                          outputs=[], source="value = 1") for role in audit.CODE_ROLES if role != "runtime-setup")
         self.data = dict(nbformat=4, nbformat_minor=5, metadata={}, cells=cells)
 
     def run_audit(self, data=None, missing_file=None):
@@ -60,8 +62,16 @@ class NotebookAuditTests(unittest.TestCase):
 
     def test_wrong_section_order(self):
         data = copy.deepcopy(self.data)
-        data["cells"][-1], data["cells"][-2] = data["cells"][-2], data["cells"][-1]
+        data["cells"][2], data["cells"][3] = data["cells"][3], data["cells"][2]
         self.assertIn("SECTION_ORDER", self.codes(self.run_audit(data)))
+
+    def test_titles_can_change_but_anchors_and_roles_cannot(self):
+        data = copy.deepcopy(self.data)
+        data["cells"][0]["source"] = data["cells"][0]["source"].replace(audit.SECTIONS[0], "Team Information")
+        self.assertNotIn("SECTION_ORDER", self.codes(self.run_audit(data)))
+        data["cells"][0]["source"] = data["cells"][0]["source"].replace('id="team-information"', 'id="broken"')
+        self.assertIn("SECTION_ORDER", self.codes(self.run_audit(data)))
+        self.assertTrue(audit.section_structure(self.data["cells"][:-1])[1])
 
     def test_syntax_and_unsaved_execution_are_distinct(self):
         data = copy.deepcopy(self.data)

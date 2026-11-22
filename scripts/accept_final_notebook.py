@@ -15,7 +15,7 @@ import traceback
 import uuid
 import zipfile
 
-from audit_final_notebook import SECTIONS, local_links, reconcile_apod
+from audit_final_notebook import SECTIONS, local_links, reconcile_apod, section_structure
 from export_notebook_pdf import executed_notebook, export
 from notebook.midterm_notebook import sha256
 from notebook_preflight import dataset, environment, VERSIONS
@@ -104,12 +104,9 @@ print("Timed runs:", TIMED_RUNS)
 
 def inspect_outputs(path):
     notebook = executed_notebook(path)
-    headings = []
-    import re
-    for cell in notebook.cells:
-        headings.extend((int(n), t.strip()) for n, t in re.findall(r"^## (\d+)\. (.+)$", cell.source, re.M))
-    if headings != list(enumerate(SECTIONS, 1)):
-        raise ValueError("Notebook sections/order differ from final assignment")
+    _, errors = section_structure(notebook.cells)
+    if errors:
+        raise ValueError("; ".join(errors))
     by_id = {c.get("id"): c for c in notebook.cells}
     for cell_id in VISIBLE_CELLS:
         if cell_id not in by_id or not by_id[cell_id].get("outputs"):

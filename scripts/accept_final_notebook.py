@@ -231,7 +231,9 @@ def execute(args):
         from notebook import final_notebook as fn
         data_path, _ = fn.fetch_dataset(args.dataset, run.parent / "dataset_drive")
         dataset(data_path, run)
-        original = args.notebook or source / "Group16_Final.ipynb"
+        # Use the current authored report from the tools bundle even when production
+        # is pinned to an earlier, verified revision. Record its independent hash.
+        original = args.notebook or Path(__file__).resolve().parents[1] / "Group16_Final.ipynb"
         shutil.copy2(original, run / "Group16_Final.input.ipynb")
         notebook = prepare_notebook(original, source, args.source_sha, run,
                                     Path(__file__).parent, candidate=not args.frozen)

@@ -26,7 +26,7 @@ Sau khi các công cụ được commit local, chạy từ gốc repository:
 
 ```bash
 python scripts/package_notebook_acceptance.py --ref HEAD \
-  --output build/p11-t06-integrated/Group16_P11_T06_Source.zip
+  --output build/p11-t06-review/Group16_P11_T06_Source.zip
 ```
 
 Nhận hai file cùng thư mục:
@@ -241,4 +241,12 @@ Checklist trước khi Chương ghi T06 Xong:
 - [ ] Export Group16_Final.pdf và kiểm thực tế từng trang; đủ heading/ảnh/bảng/công thức, tiếng Việt và đường dẫn nguồn.
 - [ ] Tải ZIP evidence, kiểm checksum local, giữ cả failure attempts và nhận xét review.
 
-**INTEGRATION COMPLETE — READY FOR P10-T06**
+## 13. P10-T06 Review Update
+
+Nội dung kỹ thuật P10-T06 đã chốt và chuyển Chờ review: thứ tự V4, five-part V5, kết luận, các metric tính lại và giới hạn raw evidence. [Phân tích](p10-t06-v5-analysis.md) và [review handoff](p11-t06-review-handoff.md) là trạng thái mới hơn các snapshot audit/integration cũ.
+
+Regression mới đạt **242 test Python, 2 skip**. Smoke mới cho lời văn/kết luận có 5 trang, một Mermaid và inline MathJax đã render; đã xem tất cả trang. Lượt đầu phát hiện `$H$` còn thô do template nbconvert dùng cấu hình v2; exporter đã thay bằng MathJax 3 với inline/display delimiters và có negative test khi template không nhận diện được. Giữ cả hai lượt smoke ở folder khác nhau, không đưa chúng vào gói source làm evidence T4.
+
+Gói source cho lần bàn giao mới nằm tại `build/p11-t06-review/`, tạo từ commit cuối và kiểm round-trip. P11-T06 vẫn Đang làm: source thực chạy/evidence phù hợp SHA, Run all T4, output đầy đủ, gallery/cặp mẫu và PDF cuối còn phải nghiệm thu. Không push hoặc mở PR trong lượt chuẩn bị.
+
+**READY TO PUSH AND OPEN PR**

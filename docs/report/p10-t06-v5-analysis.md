@@ -72,3 +72,7 @@ Giữ quyết định đã công bố: **V4 production baseline, V5 concurrency 
 V0 → V1 làm bottleneck chuyển từ công việc so khớp/pixel sang RANSAC; V2/V3 giảm S5, V4 gộp renderer S6 với lợi ích nhỏ đã đo. V5 tối ưu execution trước S4, không thay downstream hoặc mô hình hình học. Report NSYS gợi ý overlap copy/compute và contention; số SM/copy engines chỉ mô tả khả năng thiết bị, chưa đủ chứng minh hiệu quả thực tế khi thiếu trace. Phân tích giữ các nhận xét đó theo nguồn report, không nâng thành kết luận nhân quả đã được audit độc lập.
 
 Kết luận notebook đã bỏ placeholder V5, giữ giới hạn chất lượng panorama và phạm vi parity. Dữ liệu lịch sử đã đối soát về số học và nguồn đo; raw provenance còn thiếu được ghi như giới hạn bằng chứng, không là metric mới để chứng nhận V5. Hạ tầng chuẩn bị có thể review/merge, còn release acceptance phải có T4/output/PDF thật.
+
+## 7. Local Verification
+
+Đã chạy các cell evidence theo thứ tự trên CPU, kiểm per-case/geomean bằng Decimal độc lập, thử bỏ một ca chuẩn và thay toàn bộ cột speedup rounded/challenge timing để bắt nhầm input. Notebook giữ 43 cell/20 code và anchors; không lưu output vào bản Git. Regression toàn repo sau chỉnh sửa đạt 242 test (2 skip), `test_final_notebook.py` đạt 20 test. Raw probe T01 kiểm 84/84 hash. Giữ nguyên pin, APOD gốc và production code. [Bàn giao review](p11-t06-review-handoff.md) ghi giới hạn và thủ tục công bố do người dùng thực hiện.

@@ -34,6 +34,23 @@ class PDFTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing"):
             pdf.executed_notebook(self.path)
 
+    def test_mermaid_copy_preserves_authored_source(self):
+        source = 'Giới thiệu\n```mermaid\nflowchart LR\n A["Ảnh A"] --> B["Panorama"]\n```\n'
+        self.notebook.cells.insert(0, self.nbf.v4.new_markdown_cell(source))
+        rendered, diagrams = pdf.prepare_mermaid(self.notebook)
+        self.assertEqual(self.notebook.cells[0].source, source)
+        self.assertEqual(diagrams, ['flowchart LR\n A["Ảnh A"] --> B["Panorama"]\n'])
+        self.assertIn('class="group16-mermaid"', rendered.cells[0].source)
+        self.assertNotIn('```mermaid', rendered.cells[0].source)
+
+    def test_mermaid_failure_cannot_fall_back_to_raw_latex_code(self):
+        self.notebook.cells.insert(0, self.nbf.v4.new_markdown_cell('```mermaid\nflowchart LR\n A --> B\n```'))
+        self.save()
+        with patch.object(pdf, "browser_pdf", side_effect=RuntimeError("diagram renderer unavailable")):
+            with self.assertRaisesRegex(RuntimeError, "raw Mermaid"):
+                pdf.export(self.path, self.root / "out", smoke=True)
+        self.assertTrue((self.root / "out/mermaid_sources.json").is_file())
+
     def test_errors_and_skipped_counts_rejected(self):
         for count, output in [(None, []), (2, []), (1, [self.nbf.v4.new_output("error", ename="Error", evalue="x", traceback=[])])]:
             self.notebook.cells[0].execution_count = count

@@ -7,6 +7,7 @@
 import argparse
 from datetime import datetime, timezone
 import importlib.util
+import html as html_escape
 import json
 from pathlib import Path
 import re
@@ -34,6 +35,22 @@ img { max-height: 170mm; object-fit: contain; }
 h1, h2, h3, h4 { break-after: avoid; }
 .jp-InputPrompt, .jp-OutputPrompt { min-width: 32px; font-size: 8pt; }
 """
+
+
+def prepare_mermaid(notebook):
+    """Render-only copy; retain exact authored diagram text for provenance and fallback errors."""
+    import copy
+    rendered = copy.deepcopy(notebook)
+    diagrams = []
+    for cell in rendered.cells:
+        if cell.cell_type != "markdown":
+            continue
+        def replace(match):
+            code = match.group(1)
+            diagrams.append(code)
+            return '<div class="group16-mermaid">' + html_escape.escape(code) + '</div>'
+        cell.source = re.sub(r"(?m)^```mermaid\s*\n(.*?)^```\s*$", replace, cell.source, flags=re.S)
+    return rendered, diagrams
 
 
 def dependencies():
@@ -99,6 +116,20 @@ def browser_pdf(html, output, browser_path=None):
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(Path(html).resolve().as_uri(), wait_until="networkidle", timeout=90000)
             page.add_style_tag(content=PRINT_CSS)
+            mermaid_count = page.locator(".group16-mermaid").count()
+            if mermaid_count:
+                page.evaluate("""async () => {
+                    const {default: mermaid} = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+                    mermaid.initialize({startOnLoad:false, securityLevel:'strict', theme:'neutral',
+                        fontFamily:'DejaVu Sans, Arial', flowchart:{htmlLabels:false}});
+                    const nodes = Array.from(document.querySelectorAll('.group16-mermaid'));
+                    for (let i=0; i<nodes.length; i++) {
+                        const {svg} = await mermaid.render('group16diagram'+i, nodes[i].textContent);
+                        nodes[i].innerHTML = svg;
+                    }
+                }""")
+                if page.locator(".group16-mermaid svg").count() != mermaid_count:
+                    raise RuntimeError("Mermaid did not render every diagram; refuse raw Mermaid PDF")
             has_math = page.locator(".math").count() > 0
             if has_math:
                 page.wait_for_function("window.MathJax && window.MathJax.startup && window.MathJax.typesetPromise", timeout=60000)
@@ -111,11 +142,12 @@ def browser_pdf(html, output, browser_path=None):
                 raise RuntimeError("MathJax reported an equation rendering error")
             if errors:
                 raise RuntimeError(f"HTML JavaScript rendering errors: {errors}")
-            widths = page.evaluate("""() => Array.from(document.querySelectorAll('table,pre,img'))
+            widths = page.evaluate("""() => Array.from(document.querySelectorAll('table,pre,img,.group16-mermaid svg'))
                 .filter(e => e.getBoundingClientRect().right > innerWidth)
                 .map(e => ({tag:e.tagName, width:e.getBoundingClientRect().width}))""")
             page.pdf(path=str(output), prefer_css_page_size=True, print_background=True)
             return dict(math_rendered=page.locator("mjx-container").count(),
+                        mermaid_rendered=mermaid_count,
                         html_images=page.locator("img").count(), clipping_candidates=widths)
         finally:
             browser.close()
@@ -131,10 +163,12 @@ def export(notebook_path, directory, smoke=False, browser_path=None):
                   dependencies=dependencies(), input_sha256=sha256(notebook_path), smoke=smoke, attempts=[])
     try:
         notebook = executed_notebook(notebook_path)
+        rendered_notebook, diagrams = prepare_mermaid(notebook)
+        write_json(directory / "mermaid_sources.json", diagrams)
         from nbconvert import HTMLExporter
         exporter = HTMLExporter(embed_images=True)
         exporter.mathjax_url = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"
-        html, _ = exporter.from_notebook_node(notebook, resources={"metadata": {"path": str(Path(notebook_path).parent)}})
+        html, _ = exporter.from_notebook_node(rendered_notebook, resources={"metadata": {"path": str(Path(notebook_path).parent)}})
         html_path = directory / "Group16_Final.html"
         html_path.write_text(html, encoding="utf-8")
         try:
@@ -143,6 +177,8 @@ def export(notebook_path, directory, smoke=False, browser_path=None):
         except Exception:
             (directory / "chromium-error.log").write_text(traceback.format_exc(), encoding="utf-8")
             report["attempts"].append(dict(engine="chromium-html", status="failed", log="chromium-error.log"))
+            if diagrams:
+                raise RuntimeError("Mermaid/Chromium export failed; raw Mermaid LaTeX fallback is disabled. Retain HTML/source/log and retry Chromium.")
             # Explicit fallback keeps executed outputs and uses XeLaTeX's Unicode support.
             if not all(report["dependencies"]["latex"].values()):
                 raise RuntimeError("Chromium failed; fallback needs pandoc + xelatex. See retained HTML/log.")

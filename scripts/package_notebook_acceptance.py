@@ -46,7 +46,7 @@ def package(root, ref, output):
         raise FileExistsError(f"Refuse to overwrite source archive: {output}")
     revision = full_sha(command(root, "rev-parse", f"{ref}^{{commit}}"))
     names = command(root, "ls-tree", "-r", "--name-only", revision).splitlines()
-    names = [n for n in names if n.split("/", 1)[0] in {*PREFIXES, "docs"} or n in ROOT_FILES]
+    names = [n for n in names if n.split("/", 1)[0] in {*PREFIXES, "docs", "experiments"} or n in ROOT_FILES]
     # Git archive uses committed blobs, never untracked or modified working-tree files.
     payload_zip = command(root, "archive", "--format=zip", revision, "--", *names, binary=True)
     with zipfile.ZipFile(io.BytesIO(payload_zip)) as bundle:
@@ -103,11 +103,11 @@ def verify_tree(root, expected_sha):
         manifest = json.loads((root / MANIFEST).read_text(encoding="utf-8"))
         if manifest["git_commit"] != expected_sha:
             raise ValueError("Extracted source revision mismatch")
-        tracked_payload = {p.relative_to(root).as_posix() for prefix in (*PREFIXES, "docs")
+        tracked_payload = {p.relative_to(root).as_posix() for prefix in (*PREFIXES, "docs", "experiments")
                            for p in (root / prefix).rglob("*")
                            if p.is_file() and "__pycache__" not in p.parts}
         expected_payload = {n for n in manifest["payload_files"]
-                            if n.split("/", 1)[0] in {*PREFIXES, "docs"}}
+                            if n.split("/", 1)[0] in {*PREFIXES, "docs", "experiments"}}
         if tracked_payload != expected_payload:
             raise ValueError("Extracted source inventory changed")
         for name, digest in manifest["payload_files"].items():

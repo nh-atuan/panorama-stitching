@@ -23,6 +23,9 @@ class SourceTests(unittest.TestCase):
             p = self.root / name
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text("committed\n")
+        fixture = self.root / "experiments/Group16_Midterm.ipynb"
+        fixture.parent.mkdir()
+        fixture.write_text("committed notebook fixture\n")
         self.git("init")
         self.git("add", ".")
         self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.org", "commit", "-m", "fixture")
@@ -41,6 +44,7 @@ class SourceTests(unittest.TestCase):
         source.verify_archive(self.archive, self.out, self.sha, metadata["archive_sha256"])
         self.assertEqual((self.out / "src/main.cu").read_text(), "committed\n")
         self.assertFalse((self.out / "src/private.tmp").exists())
+        self.assertTrue((self.out / "experiments/Group16_Midterm.ipynb").is_file())
         self.assertEqual(json.loads(self.archive.with_suffix(".json").read_text())["source_sha"], self.sha)
         with self.assertRaises(FileExistsError):
             source.verify_archive(self.archive, self.out, self.sha, metadata["archive_sha256"])

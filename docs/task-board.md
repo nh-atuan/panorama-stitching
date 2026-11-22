@@ -513,7 +513,7 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>P11-T04</td>
       <td>Chạy <code>Run all</code> trên Colab T4 mới exit 0; lưu sẵn output đầy đủ; đối chiếu số liệu văn bản khớp 100% output cell; xuất bản in PDF <code>Group16_Final.pdf</code></td>
       <td>Đang làm</td>
-      <td>Audit local 20/11: <a href="report/p11-t06-notebook-audit.md">baseline và blockers T06</a>; đã có utility/test audit, notebook điều phối và <a href="report/p11-t06-colab-runbook.md">runbook T4/PDF</a>, hỗ trợ ZIP source local không cần push. Chờ source freeze P11-T02, notebook P11-T04 và raw evidence V5 để chốt số liệu; chưa nghiệm thu Run all T4/PDF.</td>
+      <td>22/11: đã tích hợp main 26c8f24 vào nhánh local, sửa import/package, kiểm section tiếng Việt bằng anchor, đối chiếu pin 696fc82 với freeze f2837a8, bổ sung render Mermaid/PDF và cập nhật <a href="report/p11-t06-colab-runbook.md">runbook</a>. Xem <a href="report/p11-t06-integration.md">kết quả tích hợp</a>. T06 vẫn Đang làm: còn chốt lời văn V5, source thực chạy, raw evidence, Run all T4 và PDF cuối; công cụ chưa push.</td>
     </tr>
   </tbody>
 </table>

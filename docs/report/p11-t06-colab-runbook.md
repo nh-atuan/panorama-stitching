@@ -6,7 +6,9 @@
 
 Dùng [notebook điều phối](../../Group16_P11_T06_Acceptance.ipynb) để chạy bản sao của [notebook báo cáo](../../Group16_Final.ipynb) trên Colab T4 và thu evidence/PDF. Không cần push nhánh local, tạo PR hoặc công bố evidence. Notebook điều phối không thay thế báo cáo 10 mục cần nộp.
 
-Tại lượt kiểm tra 20/11/2026, `origin/main` vẫn là `4a20d1a93607851a8fc48bccbbfe206a07c0a787`; chưa có xác nhận source freeze P11-T02. Pin trong báo cáo gốc vẫn là `d42000c4d2847aeb8e1adea66132d35c23a9cb63`, thiếu implementation T02 của V5. Không đổi pin này thành SHA tự chọn rồi gọi đó là release. Cấu hình hiện tại mặc định **candidate**, không chứng nhận hoàn tất T06.
+Đã tích hợp `origin/main` tại `26c8f241e056a7cf5e0c5bb0d85f036d9eafd9e1` ngày 22/11/2026. Notebook hiện có 43 cell, 20 cell code, đủ 10 mục tiếng Việt và anchor ổn định. Pin được giữ là `696fc82c72b2098ea7ca24c7c89efdab9d3452ec`. Báo cáo source freeze của Tuấn kiểm SHA `f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7`: `src/` và `scripts/build.py` tại pin khớp phạm vi production đã nghiệm thu. Helper, tài liệu và notebook được ghi riêng, không coi chúng đã được kiểm toàn bộ bởi lượt GPU cũ.
+
+`main` mới có thêm thay đổi production ở `src/v5/v5_image_branch.cu`. Vì vậy ZIP local mới vẫn mặc định **candidate**. Controller ghi `freeze_comparison.json`, tách SHA thực chạy và SHA báo cáo freeze; `--frozen` bị từ chối nếu phạm vi src/build khác hoặc không so sánh được. Không tự đổi pin theo HEAD mới.
 
 Các điều kiện còn thiếu về số liệu V5, cặp mẫu môn học và nội dung T04 được ghi trong [audit](p11-t06-notebook-audit.md). Giữ quyết định V4 production/V5 case study; không tự thay số công bố chỉ để khớp output mới. Tiêu chí cuối cùng theo [đề môn học](../specs/CSC14120_2026_Final%20Project.md), mục 4.2 và 5.2.
 
@@ -24,7 +26,7 @@ Sau khi các công cụ được commit local, chạy từ gốc repository:
 
 ```bash
 python scripts/package_notebook_acceptance.py --ref HEAD \
-  --output build/p11-t06-source/Group16_P11_T06_Source.zip
+  --output build/p11-t06-integrated/Group16_P11_T06_Source.zip
 ```
 
 Nhận hai file cùng thư mục:
@@ -42,11 +44,11 @@ Chỉ dùng sau khi Tuấn bàn giao SHA freeze đã public và có log hồi qu
 
 ```python
 SOURCE_MODE = "published"
-FROZEN_SOURCE_SHA = "<full 40-character SHA confirmed by T02>"
+FROZEN_SOURCE_SHA = "696fc82c72b2098ea7ca24c7c89efdab9d3452ec"
 FREEZE_CONFIRMED = True
 ```
 
-Vẫn upload ZIP local và sidecar để mang **công cụ acceptance chưa public** lên runtime. Production source được fetch read-only từ URL GitHub của nhóm theo SHA chỉ định, checkout detached, kiểm SHA và file V0–V5/helper. Công cụ không fetch `main` thay cho SHA lỗi. Tools SHA và production SHA có thể khác nhau; notebook in rõ cả hai.
+Cấu hình trên dùng snapshot có src/build khớp phạm vi T02, không phải HEAD mới. Vẫn upload ZIP local và sidecar để mang **công cụ acceptance chưa public** lên runtime. Production source được fetch read-only từ URL GitHub của nhóm theo SHA chỉ định, checkout detached, kiểm SHA và file V0–V5/helper. Công cụ không fetch `main` thay cho SHA lỗi. Tools SHA và production SHA có thể khác nhau; notebook in rõ cả hai.
 
 Nếu frozen source không có script acceptance thì dùng script từ ZIP công cụ; không chép production kernels từ ZIP lên checkout frozen. Không cần nhánh `chuong/p11-t06-notebook-acceptance` tồn tại trên GitHub.
 
@@ -62,7 +64,7 @@ FREEZE_CONFIRMED = False
 
 Upload ZIP/JSON đã tạo ở mục 3. Source SHA lấy từ sidecar và phải khớp manifest; toàn ZIP phải khớp SHA-256. Controller giải nén lại vào source directory mới và build từ chính archive này. Không clone GitHub hoặc thay archive bằng checkout khác.
 
-Chỉ đặt `FREEZE_CONFIRMED=True` nếu Tuấn xác nhận **đúng SHA trong archive** là source freeze có evidence hồi quy; giá trị này là khai báo của người vận hành, không phải thuật toán tự xác minh quyết định nhóm. Source archive ứng viên hiện tại không được tự coi là bản frozen. Không upload source ZIP lên GitHub.
+Chỉ đặt `FREEZE_CONFIRMED=True` nếu Tuấn xác nhận **đúng SHA trong archive** là source freeze có evidence hồi quy; giá trị này là khai báo của người vận hành, không phải thuật toán tự xác minh quyết định nhóm. Manifest ZIP có đối chiếu Git với freeze f2837a8. Source archive ứng viên hiện tại không được tự coi là bản frozen. Không upload source ZIP lên GitHub.
 
 ## 6. Dataset and Build Preparation
 
@@ -104,13 +106,13 @@ Trên runtime, producer thử V0–V5 rõ ràng và dừng nếu thiếu version
 3. Cell Execute gọi `scripts/accept_final_notebook.py`; theo dõi tên cell đang chạy và thư mục evidence được in ra. Notebook báo cáo chạy trong kernel con theo thứ tự, không chạy song song cell.
 4. Sau execution, notebook điều phối luôn cho tải ZIP, kể cả khi report bị lỗi. Cell timeout mặc định 3600 giây/cell; không tự bỏ qua cell chậm hoặc giữ output cũ.
 
-Controller giữ nguyên notebook input trong `Group16_Final.input.ipynb`, tạo bản chạy với đúng SHA ở runtime. **Overlay công khai** gồm:
+Controller mặc định lấy báo cáo mới nhất trong ZIP công cụ, hoặc notebook rời được upload; không lấy notebook cũ từ production pin để thay báo cáo mới. Controller giữ nguyên notebook input trong `Group16_Final.input.ipynb`, tạo bản chạy với đúng SHA ở runtime. **Overlay công khai** gồm:
 
 - Thay cell ID `runtime-setup`: dùng source đã kiểm, path dataset/evidence, SHA thực, 5 timed runs và V0–V5; từ chối cache benchmark tồn tại.
 - Trong `thanh-producer`, đổi lời gọi thành `fn.supported_versions(STITCH, candidates=BASELINE_VERSIONS)`. Không sửa implementation helper/kernel.
 - Bổ sung ID ổn định cho cell thiếu ID; clear output chỉ trên bản chuẩn bị **trước execution**, không clear sau chạy.
 
-Không thay Markdown, phương pháp, số đo, thuật toán hoặc plotting code. Thay đổi được ghi vào `runtime_overlay.json` và metadata của notebook output. Nếu Thành đổi anchor/API, công cụ dừng để review thay vì đoán replacement. Vì nguyên văn được giữ, các claim chưa chốt trong input vẫn cần sửa bởi T04 rồi chạy lại; PDF export thành công không làm claim đó đúng.
+Không thay Markdown, phương pháp, số đo, thuật toán hoặc plotting code. Thay đổi được ghi vào `runtime_overlay.json` và metadata của notebook output. Validator dùng số mục/anchor/thứ tự, nội dung body và các code role thiết yếu, không ép heading về tiếng Anh hay cố định tổng số cell. Nếu Thành đổi anchor/API, công cụ dừng để review thay vì đoán replacement. Vì nguyên văn được giữ, các claim chưa chốt trong input vẫn cần sửa bởi T04 rồi chạy lại; PDF export thành công không làm claim đó đúng.
 
 Binary tự thực hiện warm-up/timing; Python chỉ điều phối. `Total_ms` không tính disk I/O, có D2H theo contract. CSV mỗi version được kiểm bằng parser hiện có, gồm Average/Minimum, không giả định vị trí cột V2 giống V1/V3–V5. Benchmark folder mới cho mỗi run, kiểm binary hash của session với binary vừa build.
 
@@ -156,9 +158,9 @@ Controller tạo run-ID mới, không xóa failed run. Notebook JSON/schema/AST,
 
 Exporter `scripts/export_notebook_pdf.py` nhận **notebook đã chạy có output**, từ chối notebook chưa chạy, count bị bỏ/skipped, error output hoặc thiếu output visible. Output cuối tên `Group16_Final.pdf`.
 
-Luồng ưu tiên: nbconvert HTML có embedded images → Chromium headless → MathJax 3 SVG đã typeset → PDF A4 landscape. Print CSS wrap code/URL, lặp table header, giữ ảnh trong bề ngang trang; không sửa ảnh benchmark. Trước in, chờ font/ảnh/công thức load xong; lỗi MathJax hoặc ảnh không tải được là lỗi export, không được in TeX thô rồi coi đạt.
+Luồng ưu tiên: Mermaid fence được phát hiện trên bản copy dùng để render, giữ nguyên source trong `pdf/mermaid_sources.json`, chuyển sang SVG bằng Mermaid 11.4.1 (`mermaid.render`, theo [API chính thức](https://mermaid.js.org/config/usage.html)). Đếm đủ SVG trước in, lỗi renderer/CDN dừng rõ ràng. Sau đó nbconvert HTML có embedded images → Chromium headless → MathJax 3 SVG đã typeset → PDF A4 landscape. Print CSS wrap code/URL, lặp table header, giữ ảnh trong bề ngang trang; không sửa ảnh benchmark. Trước in, chờ font/ảnh/công thức load xong; lỗi MathJax hoặc ảnh không tải được là lỗi export, không được in TeX thô rồi coi đạt.
 
-Nếu Chromium lỗi, giữ `chromium-error.log` và HTML. Fallback XeLaTeX được thử khi có cả `pandoc` và `xelatex`; dùng lại notebook/output gốc. Trên Colab, nếu cần fallback:
+Nếu Chromium lỗi, giữ `chromium-error.log` và HTML. Với notebook có Mermaid, không fallback LaTeX vì sẽ có nguy cơ in mã sơ đồ thô: sửa dependency/mạng và chạy lại Chromium. Fallback LaTeX bên dưới chỉ dành cho notebook không có Mermaid. Fallback XeLaTeX được thử khi có cả `pandoc` và `xelatex`; dùng lại notebook/output gốc. Trên Colab, nếu cần fallback:
 
 ```bash
 apt-get update -qq
@@ -211,12 +213,14 @@ Nếu setup lỗi trước controller, log nằm tại path `group16-p11-bootstr
 
 ## 12. Local Validation and Final Checklist
 
-Đã kiểm local bằng Windows/Python 3.14 và venv không commit tại `build/p11-venv`. Bộ test notebook audit/preflight/source/PDF/acceptance có **28 test đạt**. Manifest chính thức có đúng 24 path/pair và hash; chưa có đủ ảnh trong dataset local để gọi đó là kiểm 24 ảnh runtime. Build command in đúng sm_75/V0–V5, chưa compile CUDA ở máy này.
+Kiểm local sau tích hợp bằng Windows/Python 3.14, venv `build/p11-venv` không commit:
 
-Toàn bộ Python regression sau tích hợp: **221 test, không failures/errors, 2 skip** (snapshot giữa kỳ có output không commit; test thiếu T02 không áp dụng vì implementation thật đã có). Các test failure-path cố ý in log lỗi hoặc trạng thái failed; không phải lỗi regression. Source archive generation/extraction được kiểm trên Git fixture đã commit, gồm sửa working tree, file untracked, checksum/SHA sai và traversal. Chưa chạy GPU, Run all T4 hoặc sanitizer trong lượt chuẩn bị này.
-
-PDF smoke riêng đã thực thi cell Python trên CPU và export bằng nbconvert 7.17.2, Playwright 1.65.2/Chrome: **2 trang, một công thức MathJax đã render, một biểu đồ embedded, không có clipping candidate hoặc lỗi QA tự động**. Text extraction có đúng tiếng Việt; đã render/xem cả hai trang. Output nằm trong `build/p11-pdf-smoke/`, tên **Group16_PDF_Smoke.pdf**, không commit và không dùng thay báo cáo cuối. Unit test cũng kiểm đường lỗi/fallback giữ log. Fallback XeLaTeX chưa smoke vì local không có pandoc.
-
+- **237 test Python, 0 failures/errors, 2 skip**; các test mới có case mất anchor/code role, thay ngôn ngữ title, phân biệt tooling/CUDA diff và từ chối Mermaid fallback thô.
+- Notebook gốc: nbformat valid, 43 cell / 20 code cell, 10 mục đúng thứ tự/anchor, AST parse toàn bộ code. Giữ nguyên byte so với `origin/main`.
+- **9 cell evidence lịch sử** (8,10,14,19,21,23,25,27,32) chạy được theo thứ tự trên CPU; không chạy producer GPU. Đây là kiểm đọc report/thuật toán tính bảng, không phải đo T4 mới.
+- Manifest dataset local có 24 path chính thức, hash đúng; kiểm ảnh thật vẫn phải chạy trên Colab. Build command giữ sm_75, V0–V5; chưa compile CUDA ở đây.
+- Smoke exporter **mới ngày 22/11**, riêng tại `build/p11-integrated-smoke/`: chạy cell CPU rồi export 2 trang, đúng sơ đồ Mermaid từ notebook, một công thức MathJax, một chart và tiếng Việt. QA tự động không lỗi, đã render/xem cả hai trang. Không dùng output này thay PDF cuối. Smoke 20/11 ở thư mục khác chỉ là lịch sử.
+- Archive round-trip và import/overlay được kiểm lại từ gói committed mới; không kèm log 221 test hoặc PDF cũ làm evidence cho source mới.
 Lệnh test:
 
 ```bash
@@ -227,7 +231,8 @@ git diff --check
 
 Checklist trước khi Chương ghi T06 Xong:
 
-- [ ] T02 xác nhận full frozen SHA và evidence hồi quy/memcheck tương ứng.
+- [x] Có báo cáo T02 tại f2837a8 và so sánh phạm vi production với pin 696fc82.
+- [ ] Chốt source thực chạy: nếu dùng code sau freeze thì cần nghiệm thu phù hợp SHA mới.
 - [ ] T04 chốt notebook 10 mục, sửa số V5/probe/production, có output làm căn cứ và gallery cặp mẫu.
 - [ ] Source mode/SHA/archive checksum rõ ràng; không có fallback sang main hoặc code local khác.
 - [ ] Fresh Colab T4/sm_75, dataset hash đúng; Run all không lỗi, đủ V0–V5 cùng session, không có cell bị bỏ qua.
@@ -236,4 +241,4 @@ Checklist trước khi Chương ghi T06 Xong:
 - [ ] Export Group16_Final.pdf và kiểm thực tế từng trang; đủ heading/ảnh/bảng/công thức, tiếng Việt và đường dẫn nguồn.
 - [ ] Tải ZIP evidence, kiểm checksum local, giữ cả failure attempts và nhận xét review.
 
-**PREFLIGHT READY — SOURCE FREEZE PENDING**
+**INTEGRATION COMPLETE — READY FOR P10-T06**

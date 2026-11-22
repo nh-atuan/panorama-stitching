@@ -225,3 +225,7 @@ Thực hiện theo thứ tự để tránh đo lại một notebook chưa chốt
 ## 13. Acceptance Workflow Follow-Up
 
 Lượt triển khai tiếp theo đã bổ sung [notebook điều phối T4](../../Group16_P11_T06_Acceptance.ipynb), preflight, source packaging theo commit, execution/evidence controller và PDF exporter. Cách chạy hai source mode, giữ log lỗi, tải evidence và giới hạn nghiệm thu được ghi tại [runbook](p11-t06-colab-runbook.md). Báo cáo gốc không bị sửa; bản chạy dùng overlay có provenance, không tự thay lời văn/số liệu. Có 28 test thuộc mảng notebook và 221 test Python tổng thể chạy không lỗi (2 skip). PDF smoke đã xem cả hai trang; không phải Group16_Final.pdf nghiệm thu. Source freeze, raw V5, T04 và Run all T4 thực vẫn chờ.
+
+## 14. Integration Update — 22 November
+
+Các mục 1–13 là snapshot audit/preflight ngày 20/11, không phải trạng thái main mới. Đã tích hợp PR #52–#55, có freeze report f2837a8 và pin mới 696fc82; công cụ đã chuyển sang package/anchor mới và hỗ trợ Mermaid. Trạng thái, so sánh production scope, kết quả **237 test Python** và những việc còn lại được ghi tại [báo cáo tích hợp 22/11](p11-t06-integration.md). Notebook gốc mới vẫn chưa có output; không lấy source freeze cũ để xác nhận thay đổi production sau đó.

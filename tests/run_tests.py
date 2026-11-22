@@ -66,6 +66,7 @@ V4_PIPELINE_SUITE = "gpu_v4_pipeline"
 V4_PIPELINE_SOURCE = "src/v4/v4_pipeline.cu"
 V4_PIPELINE_HEADER = "src/v4/v4_pipeline.h"
 V5_PIPELINE_SUITE = "gpu_v5_pipeline"
+V5_IMAGE_BRANCH_SUITE = "gpu_v5_image_branch"
 V5_PIPELINE_SOURCE = "src/v5/v5_pipeline.cu"
 V5_PIPELINE_HEADER = "src/v5/v5_pipeline.h"
 V5_IMAGE_BRANCH_SOURCE = "src/v5/v5_image_branch.cu"
@@ -206,12 +207,22 @@ GPU_SUITES = {
         V5_PIPELINE_SOURCE,
         "tests/gpu/test_gpu_v5_pipeline.cu",
     ],
+    V5_IMAGE_BRANCH_SUITE: [
+        *V0_ALL_SOURCES,
+        *V1_ALL_SOURCES,
+        "src/v3/s5/v3_homography.cu",
+        V4_PIPELINE_SOURCE,
+        "src/v4/s6/v4_warp_blend.cu",
+        V5_IMAGE_BRANCH_SOURCE,
+        "tests/gpu/test_gpu_v5_image_branch.cu",
+    ],
 }
 # Link options a suite needs in addition to its sources.
 GPU_LINK_FLAGS = {name: ["-Xlinker=--wrap=cudaMalloc"] for name in ("gpu_s6", "gpu_v4_s6")}
 # Suites decoding images with stb; stb_impl.cpp is built once, without the strict warnings.
 GPU_STB_SUITES = {"gpu_s6", "gpu_v4_s6", "gpu_reference", "gpu_s1", "gpu_s2", "gpu_s3", "gpu_pipeline",
-                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE, V4_PIPELINE_SUITE, V5_PIPELINE_SUITE}
+                  V2_PIPELINE_SUITE, V3_PIPELINE_SUITE, V4_PIPELINE_SUITE, V5_PIPELINE_SUITE,
+                  V5_IMAGE_BRANCH_SUITE}
 STB_SOURCE = "src/common/stb_impl.cpp"
 
 GPU_COMPILE_FLAGS = [
@@ -495,6 +506,9 @@ def run_gpu_group(args, environment):
                         *synthetic_arguments(args.v5_synthetic_dir)]
     suite_arguments = {V2_PIPELINE_SUITE: v2_arguments, V3_PIPELINE_SUITE: v3_arguments,
                        V4_PIPELINE_SUITE: v4_arguments, V5_PIPELINE_SUITE: v5_arguments}
+    if V5_IMAGE_BRANCH_SUITE in selected and args.v5_dataset_dir:
+        suite_arguments[V5_IMAGE_BRANCH_SUITE] = ["--require-v5-image-branch", "--dataset",
+                                                  str(args.v5_dataset_dir.resolve())]
     if args.v4_synthetic_dir:
         suite_arguments["gpu_v4_s6"] = synthetic_arguments(args.v4_synthetic_dir)
     stb_object = build / "stb_impl.o"

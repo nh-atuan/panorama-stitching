@@ -257,13 +257,13 @@ void compare_pair(const Image& a, const Image& b, const Config& config, const st
 }
 
 void test_parity(const Options& options, Totals& totals) {
-    const auto scene = make_test_image(760, 560, 2026);
-    const auto a = crop(scene, 640, 480, 20, 20);
-    const auto b = crop(scene, 640, 480, 56, 34);
+    auto scene = make_test_image(760, 560, 2026);
+    auto a = crop(scene, 640, 480, 20, 20);
+    auto b = crop(scene, 640, 480, 56, 34);
     const Config config = fixture_config(a.view());
     compare_pair(a.view(), b.view(), config, "synthetic 640x480", totals);
 
-    const auto small_b = crop(scene, 320, 240, 200, 120);  // A and B of different sizes.
+    auto small_b = crop(scene, 320, 240, 200, 120);  // A and B of different sizes.
     compare_pair(a.view(), small_b.view(), config, "different sizes 640x480 + 320x240", totals);
 
     Config capped = config;
@@ -293,7 +293,7 @@ void test_parity(const Options& options, Totals& totals) {
 // ------------------------------------------------------------------ host-side validation
 
 void test_validation() {
-    const auto image = make_test_image(160, 120, 7);
+    auto image = make_test_image(160, 120, 7);
     const Config config = fixture_config(image.view());
     const std::size_t bytes = scratch_for(image.view(), config);
     Stream stream;

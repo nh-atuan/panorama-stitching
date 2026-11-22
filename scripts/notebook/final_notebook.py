@@ -28,7 +28,7 @@ from run_benchmark import (  # noqa: E402
 DATASET_DRIVE_URL = "https://drive.google.com/drive/folders/1_J_q5q-K1g7ZNnczTWvXBzwpOsof9ghL?usp=sharing"
 # manifest.csv of the final dataset chosen on 03/11 (docs/dataset.md, section 8.3).
 DATASET_MANIFEST_SHA256 = "99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d"
-CANDIDATE_VERSIONS = (0, 1, 2, 3, 4)
+CANDIDATE_VERSIONS = (0, 1, 2, 3, 4, 5)
 STAGES = [column[:-3] for column in BASE_STAGE_COLUMNS]
 TEXT_COLUMNS = {"version", "site", "size", "stat", "hot_stage", "error"}
 MISSING = "—"

@@ -73,6 +73,11 @@ class NotebookAuditTests(unittest.TestCase):
         self.assertIn("SECTION_ORDER", self.codes(self.run_audit(data)))
         self.assertTrue(audit.section_structure(self.data["cells"][:-1])[1])
 
+    def test_code_roles_cannot_precede_their_inputs(self):
+        data = copy.deepcopy(self.data)
+        data["cells"][-1], data["cells"][-2] = data["cells"][-2], data["cells"][-1]
+        self.assertIn("SECTION_ORDER", self.codes(self.run_audit(data)))
+
     def test_syntax_and_unsaved_execution_are_distinct(self):
         data = copy.deepcopy(self.data)
         data["cells"][1].update(source="print(", execution_count=None, outputs=[])

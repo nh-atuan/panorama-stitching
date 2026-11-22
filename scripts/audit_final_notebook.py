@@ -53,6 +53,10 @@ def section_structure(cells):
     missing = sorted(set(CODE_ROLES) - roles)
     if missing:
         problems.append(f"Missing essential executable cell roles: {missing}")
+    positions = [next(i for i, c in enumerate(cells) if c.get("id") == role)
+                 for role in CODE_ROLES if role in roles]
+    if positions != sorted(positions):
+        problems.append("Essential code roles are out of dependency order: setup -> producer -> methods/results -> comparison -> charts -> gallery")
     return found, problems
 PIN_FILES = (
     *(f"src/v{v}/v{v}_pipeline.{ 'cpp' if v == 0 else 'cu'}" for v in range(6)),

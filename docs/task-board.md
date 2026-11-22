@@ -494,8 +494,8 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>Rà soát, chuẩn hóa văn phong và hình thức notebook bài nộp 10 mục</td>
       <td></td>
       <td>Rà soát toàn diện <code>Group16_Final.ipynb</code>; trau chuốt văn phong tiếng Việt khoa học tự nhiên theo chuẩn; hoàn thiện công thức KaTeX, bảng biểu, sơ đồ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>22/11: <a href="https://github.com/nh-atuan/panorama-stitching/pull/55">PR #55</a>, nhánh <code>thanh/p11-t04</code> tách từ PR #53, chờ merge sau #53. Viết lại bằng tiếng Việt toàn bộ lời văn tiếng Anh (mục 1–3, V0–V3, mục 7, 8, 10), Việt hóa tiêu đề và giữ nguyên anchor. Sơ đồ pipeline ở mục 2 chuyển sang Mermaid, mục 10 thêm liên kết báo cáo P10 và P11-T02. Số liệu, công thức, liên kết và 20 ô code giữ nguyên, <code>test_final_notebook.py</code> đạt 20 test. Còn kiểm tra hiển thị Mermaid trên Colab và PDF. Kết luận V5 ở mục 9 do Chương chốt.</td>
     </tr>
     <tr>
       <td>Đế</td>

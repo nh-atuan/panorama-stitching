@@ -1,4 +1,4 @@
-<!-- Authors: Nguyen Ho Anh Tuan (23120185) -->
+<!-- Authors: Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166) -->
 <!-- External source: none -->
 
 # Cấu trúc và hướng dẫn sử dụng `scripts/`
@@ -13,6 +13,7 @@ scripts/
 ├── fetch_and_prepare_dataset.py # Tải ảnh gốc từ Drive và gọi dataset/prepare_dataset.py
 ├── run_benchmark.py             # Chạy benchmark đa phiên bản (V0–V5, 3 site + challenge x 3 cỡ)
 ├── plot_benchmark.py            # Vẽ biểu đồ phân rã stage, speedup và bảng hot stage
+├── live_demo.py                 # Demo một lệnh cho video: chạy V0, V4, V5 trên một cặp ảnh và ca challenge
 ├── dataset/                     # Xử lý và kiểm tra bộ ảnh đầu vào
 │   ├── dataset_common.py        # Quy ước tên file, xoay EXIF, cắt khung 16:9
 │   ├── check_pairs.py           # Kiểm tra tự động các cặp ảnh ứng viên trong raw/
@@ -42,7 +43,7 @@ scripts/
     └── s6_colab_helpers.py      # Tiện ích nhúng trong notebook kiểm chứng S6 CUDA
 ```
 
-Các lệnh chạy thường xuyên nhất (`build.py`, `fetch_and_prepare_dataset.py`, `run_benchmark.py`, `plot_benchmark.py`) được đặt ngay tại gốc `scripts/` để giữ ngắn gọn cho tài liệu và notebook. Các module chuyên biệt được gom vào 5 thư mục con tương ứng.
+Các lệnh chạy thường xuyên nhất (`build.py`, `fetch_and_prepare_dataset.py`, `run_benchmark.py`, `plot_benchmark.py`, `live_demo.py`) được đặt ngay tại gốc `scripts/` để giữ ngắn gọn cho tài liệu và notebook. Các module chuyên biệt được gom vào 5 thư mục con tương ứng.
 
 ## 2. Quy ước import và chạy script
 
@@ -61,8 +62,28 @@ Các lệnh chạy thường xuyên nhất (`build.py`, `fetch_and_prepare_datas
 
 ## 3. Kiểm thử
 
-Toàn bộ script trong thư mục này được kiểm thử tự động bởi 15 suite trong `tests/python/`:
+Toàn bộ script trong thư mục này được kiểm thử tự động bởi 16 suite trong `tests/python/`:
 
 ```bash
 python3 tests/run_tests.py --group python
 ```
+
+## 4. Live demo
+
+`live_demo.py` phục vụ phần demo trong video (P12). Script không thay cho benchmark chính thức: số đo dùng để kết luận vẫn lấy từ `run_benchmark.py` và notebook. Mỗi lần chạy, script làm lần lượt các bước sau:
+
+1. In tên GPU, phiên bản nvcc và SHA của source.
+2. Build `build/stitch` bằng `build.py` nếu chưa có file này.
+3. Chạy từng phiên bản trên một cặp ảnh, mặc định V0, V4 và V5 (`--v5-schedule dual`) trên `site2/small`. Mỗi phiên bản có một lượt warm-up của CLI và `--runs` lượt đo.
+4. In bảng thời gian trung bình theo stage, `Total_ms` và speedup so với phiên bản đầu tiên trong danh sách.
+5. Ghi panorama vào `results/demo/<site>_<size>/v<k>_panorama.jpg`.
+6. Chạy cặp challenge ở độ phân giải medium với phiên bản cuối trong danh sách, in exit code và mã lỗi (ở dataset hiện tại là `NumericalFailure` tại S6).
+
+Trên Colab T4, sau khi clone repo và chuẩn bị `dataset/` như [hướng dẫn dataset](../docs/dataset.md):
+
+```bash
+python3 scripts/live_demo.py --dataset dataset
+python3 scripts/live_demo.py --dataset dataset --site site1 --size medium --versions 0 1 4 --runs 5
+```
+
+Các cờ khác: `--stitch` (đường dẫn binary), `--out` (thư mục output), `--skip-build` (báo lỗi thay vì build khi thiếu binary) và `--skip-challenge`. Script trả exit code 0 khi mọi phiên bản trên cặp ảnh chính chạy xong. Lỗi của ca challenge là kết quả mong đợi nên không làm script thất bại.

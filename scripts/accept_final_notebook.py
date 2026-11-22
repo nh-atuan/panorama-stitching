@@ -15,7 +15,7 @@ import traceback
 import uuid
 import zipfile
 
-from audit_final_notebook import SECTIONS, local_links, reconcile_apod, section_structure
+from audit_final_notebook import SECTIONS, local_links, reconcile_apod, section_structure, compare_freeze, FREEZE_SHA
 from export_notebook_pdf import executed_notebook, export
 from notebook.midterm_notebook import sha256
 from notebook_preflight import dataset, environment, VERSIONS
@@ -215,8 +215,16 @@ def execute(args):
             manifest = verify_archive(args.source_archive, source, args.source_sha, args.archive_sha256)
             report["source_archive_sha256"] = sha256(args.source_archive)
             write_json(run / "source_manifest.json", manifest)
+            comparison = manifest.get("freeze_comparison", {"status": "comparison_unavailable", "src_build_equivalent": False})
         else:
             published(source, args.repo_url, args.source_sha)
+            from package_notebook_acceptance import command
+            command(source, "fetch", "--depth", "1", args.repo_url, FREEZE_SHA)
+            comparison = compare_freeze(source, args.source_sha)
+        report["freeze_comparison"] = comparison
+        write_json(run / "freeze_comparison.json", comparison)
+        if args.frozen and not comparison["src_build_equivalent"]:
+            raise ValueError("Execution source differs from tested freeze scope or comparison is unavailable; use candidate mode and obtain new T4 verification")
         (run / "source_sha.txt").write_text(args.source_sha + "\n", encoding="utf-8")
         report["environment"] = environment(run)
         # Use the established Drive loader and manifest verifier.

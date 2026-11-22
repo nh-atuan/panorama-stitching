@@ -64,6 +64,20 @@ class SourceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             source.full_sha("main")
 
+    def test_freeze_scope_distinguishes_tooling_from_cuda_changes(self):
+        (self.root / "scripts/tool.py").write_text("# Tooling only\n")
+        self.git("add", ".")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.org", "commit", "-m", "tooling")
+        check = source.compare_freeze(self.root, self.git("rev-parse", "HEAD"), self.sha)
+        self.assertTrue(check["src_build_equivalent"])
+        self.assertIn("scripts/tool.py", check["tooling_changes"])
+        (self.root / "src/main.cu").write_text("// Changed CUDA behavior\n")
+        self.git("add", ".")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.org", "commit", "-m", "production")
+        check = source.compare_freeze(self.root, self.git("rev-parse", "HEAD"), self.sha)
+        self.assertFalse(check["src_build_equivalent"])
+        self.assertEqual(check["production_changes"], ["src/main.cu"])
+
     def test_traversal_archive_rejected(self):
         # Even a locally supplied hash must not authorize path traversal.
         payload = b"malicious"

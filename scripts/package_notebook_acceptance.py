@@ -13,7 +13,7 @@ import re
 import subprocess
 import zipfile
 
-from audit_final_notebook import PIN_FILES
+from audit_final_notebook import PIN_FILES, compare_freeze
 from notebook.midterm_notebook import safe_extract, sha256
 from notebook.package_s6_verification import EXTENSIONS, PREFIXES
 
@@ -62,6 +62,7 @@ def package(root, ref, output):
     manifest = dict(schema=1, git_commit=revision, git_branch=ref, source_status="",
                     snapshot_sha256=hashlib.sha256(json.dumps(source_hashes, sort_keys=True).encode()).hexdigest(),
                     files=source_hashes, payload_files=hashes, packaging="committed Git blobs only")
+    manifest["freeze_comparison"] = compare_freeze(root, revision)
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, content in sorted({**payload, MANIFEST: (json.dumps(manifest, indent=2) + "\n").encode()}.items()):

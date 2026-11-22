@@ -57,9 +57,29 @@ def section_structure(cells):
 PIN_FILES = (
     *(f"src/v{v}/v{v}_pipeline.{ 'cpp' if v == 0 else 'cu'}" for v in range(6)),
     "src/v5/v5_image_branch.h", "src/v5/v5_image_branch.cu", "src/main.cu",
-    "src/versions.h", "scripts/build.py", "scripts/final_notebook.py",
-    "scripts/run_benchmark.py", "scripts/prepare_dataset.py",
+    "src/versions.h", "scripts/build.py", "scripts/notebook/final_notebook.py",
+    "scripts/notebook/midterm_notebook.py", "scripts/dataset/prepare_dataset.py",
+    "scripts/run_benchmark.py", "scripts/fetch_and_prepare_dataset.py",
 )
+FREEZE_SHA = "f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7"
+
+
+def compare_freeze(root, revision, freeze=FREEZE_SHA):
+    """Compare the tested production scope, keeping tooling/docs changes separate."""
+    result = dict(source_sha=revision, freeze_sha=freeze, src_build_equivalent=False)
+    if any(git(root, "cat-file", "-e", f"{ref}^{{commit}}")[0] for ref in (revision, freeze)):
+        return dict(result, status="comparison_unavailable")
+    status, paths = git(root, "diff", "--name-only", freeze, revision, "--", "src", "scripts/build.py")
+    if status:
+        return dict(result, status="comparison_unavailable")
+    result["production_changes"] = paths.splitlines()
+    result["src_build_equivalent"] = not paths
+    _, changes = git(root, "diff", "--name-only", "--no-renames", freeze, revision)
+    changed = changes.splitlines()
+    result["tooling_changes"] = [p for p in changed if p.startswith(("scripts/", "tests/")) and p != "scripts/build.py"]
+    result["documentation_changes"] = [p for p in changed if p.startswith("docs/") or p.endswith((".ipynb", ".md"))]
+    result["status"] = "same_production_scope" if not paths else "new_production_verification_required"
+    return result
 
 
 def git(root, *args):
@@ -155,14 +175,16 @@ def audit(notebook, root, frozen_source=None):
             availability[relative] = git(root, "cat-file", "-e", f"{pin}:{relative}")[0] == 0
             if not availability[relative]:
                 add("BLOCKER", "PIN_MISSING_FILE", relative)
-        _, helper = git(root, "show", f"{pin}:scripts/final_notebook.py")
+        _, helper = git(root, "show", f"{pin}:scripts/notebook/final_notebook.py")
         candidates = constants(helper).get("CANDIDATE_VERSIONS", ())
         if 5 not in candidates:
             add("MAJOR", "V5_NOT_PROBED", f"Pinned helper candidates: {candidates}")
     if frozen_source is None:
         add("BLOCKER", "FREEZE_UNCONFIRMED", "P11-T02 must supply a verified frozen SHA.")
     elif pin != frozen_source:
-        add("BLOCKER", "FREEZE_MISMATCH", f"Pin {pin} != declared freeze {frozen_source}")
+        comparison = compare_freeze(root, pin, frozen_source)
+        if not comparison["src_build_equivalent"]:
+            add("BLOCKER", "FREEZE_MISMATCH", f"Pin/freeze production scope not verified: {comparison}")
     if not isinstance(config.get("TIMED_RUNS"), int) or config["TIMED_RUNS"] < 5:
         add("BLOCKER", "TIMED_RUNS", "TIMED_RUNS must be an integer >= 5.")
     for key in ("REPO_URL", "BASELINE_VERSIONS"):

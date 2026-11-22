@@ -10,7 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from smoke_v5_dispatcher import DETAIL_COLUMNS, check_detail
+from verify.smoke_v5_dispatcher import DETAIL_COLUMNS, check_detail
 from run_benchmark import parse_version_csv, version_columns
 
 

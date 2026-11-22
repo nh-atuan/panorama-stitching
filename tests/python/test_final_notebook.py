@@ -2,7 +2,7 @@
 # Authors: Tran Huu Kim Thanh (23120166)
 # External source: none
 
-"""Tests for scripts/final_notebook.py on benchmark folders with known numbers.
+"""Tests for scripts/notebook/final_notebook.py on benchmark folders with known numbers.
 
 The fixtures are written by the run_benchmark.py writers, so the loader reads the same files
 that a real session produces. No stitch binary or GPU is needed.
@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import final_notebook as fn  # noqa: E402
+from notebook import final_notebook as fn  # noqa: E402
 import run_benchmark as rb  # noqa: E402
 
 SIZES = ("small", "medium", "large")
@@ -210,6 +210,13 @@ class ProducerTests(unittest.TestCase):
 
         with patch.object(fn.subprocess, "run", side_effect=fake_run):
             self.assertEqual(fn.supported_versions("stitch"), [0, 1, 2, 3])
+
+    def test_supported_versions_probes_v5(self):
+        def fake_run(command, **_):
+            return type("Result", (), {"stderr": "Error: [InvalidImage] ...", "returncode": 1})()
+
+        with patch.object(fn.subprocess, "run", side_effect=fake_run):
+            self.assertEqual(fn.supported_versions("stitch"), [0, 1, 2, 3, 4, 5])
 
     def test_session_refuses_a_used_folder(self):
         with tempfile.TemporaryDirectory() as temp:

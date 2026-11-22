@@ -2,7 +2,7 @@
 
 # Chạy profiling và kiểm chứng synthetic theo batch
 
-P5-T09 cung cấp `scripts/run_profiling.py`, tách phần lưu lệnh/log, gọi profiler và đánh giá synthetic thành các module riêng. Script dùng bộ đánh giá H đã có trong `homography_error.py`, giữ ngưỡng ground truth RMSE ≤ 0,5 px và Max ≤ 1 px.
+P5-T09 cung cấp `scripts/profiling/run_profiling.py`, tách phần lưu lệnh/log, gọi profiler và đánh giá synthetic thành các module riêng. Script dùng bộ đánh giá H đã có trong `scripts/synthetic/homography_error.py`, giữ ngưỡng ground truth RMSE ≤ 0,5 px và Max ≤ 1 px.
 
 ## 1. Môi trường và phạm vi
 
@@ -26,8 +26,8 @@ Runner có hai suite `gpu_s4`, `gpu_s5` và suite Python `test_profiling_scripts
 Ảnh nguồn là `raw/tuan/standard1_left.jpg`, SHA-256 `e9fbe7ecfed6344a36610fe50f2c6019bcd1525f4e217c033ed8ded4f90bf1e8`. Link `Group16_support.zip` và bước tải/kiểm tra dữ liệu có trong `Group16_Midterm.ipynb`. Khi giải nén gói hỗ trợ, chỉ lấy `dataset/` và `raw/`, giữ code đang kiểm chứng từ `src/` của repo.
 
 ```bash
-python3 scripts/make_synthetic_pair.py --source raw/tuan/standard1_left.jpg --out results/synthetic
-python3 scripts/run_profiling.py --stitch build/tool_gpu_s45 --synthetic results/synthetic --versions 0 1 --scope s45 --out results/p5-synthetic --require-t4
+python3 scripts/synthetic/make_synthetic_pair.py --source raw/tuan/standard1_left.jpg --out results/synthetic
+python3 scripts/profiling/run_profiling.py --stitch build/tool_gpu_s45 --synthetic results/synthetic --versions 0 1 --scope s45 --out results/p5-synthetic --require-t4
 ```
 
 Script kiểm tra đủ ảnh trái/phải và truth của hai case `translation`, `projective` ở ba kích thước trước khi chạy. Mỗi lượt lưu panorama, stdout, stderr, argv, exit code và `evaluation.json`. `synthetic.csv` tổng hợp sai số theo version/case/kích thước; `summary.json` giữ cả lượt thất bại. Lệnh trả mã khác 0 nếu có lượt không đạt.
@@ -37,8 +37,8 @@ Driver dùng ngưỡng so H CPU–GPU do Đế xác nhận: RMSE ≤ 0,0001 px, 
 ## 4. Profiling từng stage
 
 ```bash
-python3 scripts/run_profiling.py --out results/p5-profile-s4 --require-t4 --kernel-regex nearest_two --profile-command build/tests_gpu/gpu_s4
-python3 scripts/run_profiling.py --out results/p5-profile-s5 --require-t4 --kernel-regex compute_hypotheses --profile-command build/tests_gpu/gpu_s5
+python3 scripts/profiling/run_profiling.py --out results/p5-profile-s4 --require-t4 --kernel-regex nearest_two --profile-command build/tests_gpu/gpu_s4
+python3 scripts/profiling/run_profiling.py --out results/p5-profile-s5 --require-t4 --kernel-regex compute_hypotheses --profile-command build/tests_gpu/gpu_s5
 ```
 
 Mỗi lệnh chạy `nsys` và `ncu`. Nhánh Systems giữ timeline, xuất bảng kernel/copy và tổng hợp NVTX; nhánh Compute giữ `.ncu-rep` và xuất CSV. `--kernel-regex` lọc kernel cho Compute, `--launch-count` mặc định 1 để giới hạn số launch thu thập. Có thể chọn riêng profiler bằng `--profilers nsys` hoặc `--profilers ncu`. Cú pháp và hành vi thu thập được đối chiếu với [Nsight Systems User Guide](https://docs.nvidia.com/nsight-systems/UserGuide/index.html) và [Nsight Compute CLI](https://docs.nvidia.com/nsight-compute/NsightComputeCli/index.html).
@@ -46,7 +46,7 @@ Mỗi lệnh chạy `nsys` và `ncu`. Nhánh Systems giữ timeline, xuất bả
 Các lượt fixture ở trên kiểm tra công cụ thu thập bằng chứng. Muốn phân tích bottleneck trên ảnh thật sau khi có pipeline CUDA đầy đủ:
 
 ```bash
-python3 scripts/run_profiling.py --stitch build/stitch --dataset dataset --versions 1 --sites site1 --sizes medium --out results/profile-v1-site1-medium --require-t4
+python3 scripts/profiling/run_profiling.py --stitch build/stitch --dataset dataset --versions 1 --sites site1 --sizes medium --out results/profile-v1-site1-medium --require-t4
 ```
 
 Không gộp thời gian từ lượt có profiler vào bảng benchmark chính thức. Kernel filter, số launch và toàn bộ argv được lưu cùng report để đối chiếu phạm vi thu thập.

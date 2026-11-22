@@ -99,7 +99,7 @@ Phạm vi memcheck là hai target trong bảng. Dùng CSV từ lượt chạy th
 
 ## Reproduction and Review Handoff
 
-1. Mở [notebook](../../Group16_P7_V2_Verification.ipynb) trên Colab, chọn **T4 GPU**. Để tái lập bản đã kiểm tra, chọn `SOURCE_MODE = "github"` và đặt `GIT_REF` bằng commit khớp payload ở trên. Có thể dùng `SOURCE_MODE = "zip"` với gói source cùng hash snapshot.
+1. Mở [notebook](../../experiments/Group16_P7_V2_Verification.ipynb) trên Colab, chọn **T4 GPU**. Để tái lập bản đã kiểm tra, chọn `SOURCE_MODE = "github"` và đặt `GIT_REF` bằng commit khớp payload ở trên. Có thể dùng `SOURCE_MODE = "zip"` với gói source cùng hash snapshot.
 2. Dùng bộ dataset cuối kỳ có manifest phù hợp và sáu fixture đã ghi trong notebook. Lượt này sinh fixture từ `standard1_left.jpg` có SHA-256 `e9fbe7ecfed6344a36610fe50f2c6019bcd1525f4e217c033ed8ded4f90bf1e8`. Chọn **Run all**.
 3. Đính kèm evidence ở PR từ `chuong/p7` vào `main`. Notebook ghi tên ZIP `Group16_P7_T04_Evidence_20261108T030144Z.zip`. Bản đã giải nén dùng trong hậu kiểm chứa `verification_summary.json`, `dataset_manifest.csv`, `cases/`, `logs/`, panorama challenge và notebook có output. Cập nhật **Xong** sau khi PR merge.
 

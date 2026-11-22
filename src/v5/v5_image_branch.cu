@@ -1,5 +1,13 @@
-// Authors: Nguyen Ho Anh Tuan (23120185)
-// External source: none
+// Authors: Nguyen Ho Anh Tuan (23120185), Tran Huu Kim Thanh (23120166)
+// Adapted from: src/v1/s1/v1_preprocess.cu, src/v1/s1/v1_grayscale.cuh, src/v1/s2/v1_detect.cu,
+//   src/v1/s2/v1_fast_score.cuh, src/v1/s2/v1_nms.cuh, src/v1/s2/v1_topk_sort.cuh,
+//   src/v1/s3/v1_describe.cu, src/v1/s3/v1_brief_kernel.cuh, src/v1/s3/v1_compact.cuh
+//   by Tran Huu Kim Thanh (23120166)
+// Changes: The V1 kernels are copied into this file with a v5_ prefix and split into the
+//   per-image entry points of docs/report/p10-v5-contract.md section 3; S2 publishes the
+//   candidate count through pinned memory instead of synchronizing. P10-T02 review added the
+//   host checks of the contract (Config, scratch size and alignment, feature capacity, view
+//   sizes and upload strides) before any work is enqueued.
 
 #include "v5/v5_image_branch.h"
 #include "common/brief_pattern.h"
@@ -12,6 +20,7 @@
 #include "v1/s1/v1_preprocess.h"
 #include "v1/s2/v1_detect.h"
 #include "v1/s3/v1_describe.h"
+#include "v0/v0_detect.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -378,19 +387,64 @@ __global__ void v5_publish_kernel(DeviceCounts* counts, const std::uint32_t* tot
     counts->keypointsA = counts->descriptorsA = *total;
 }
 
+// -----------------------------------------------------------------------------
+// Host-side checks (contract section 3), done before any work is enqueued
+// -----------------------------------------------------------------------------
+
+// The S2 Config range of v1_detect / v0_detect.
+bool valid_detect_config(const Config& config) {
+    const float t = config.fast_threshold;
+    return std::isfinite(t) && t > 0.0f && t < 1.0f && config.max_keypoints >= 1 &&
+           config.max_keypoints <= kMaxKeypointsLimit;
+}
+
+bool valid_rgb_view(const Image& image) {
+    return image.channels == 3 && rows_fit(image.data, image.stride, image.width, image.height, 3, 1);
+}
+
+// Gray view usable by S1-S3 and of the same size as the RGB view.
+bool valid_gray_view(const V5ImageBranch& branch) {
+    std::size_t pixels = 0;
+    return valid_gray_image(branch.gray) && gray_pixel_count(branch.gray.width, branch.gray.height, pixels) &&
+           branch.gray.width == branch.image.width && branch.gray.height == branch.image.height;
+}
+
+// Scratch present, 16-byte aligned and at least `needed` bytes long.
+bool scratch_fits(const V5ImageBranch& branch, std::size_t needed) {
+    return branch.scratch && reinterpret_cast<std::uintptr_t>(branch.scratch) % kScratchAlignment == 0 &&
+           branch.scratch_bytes >= needed;
+}
+
+// Feature arrays hold max_keypoints entries, and the capacity fits the 32-bit counts of S3.
+bool features_fit(const V5ImageBranch& branch, const Config& config) {
+    const std::size_t int_max = static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max());
+    return branch.keypoints && branch.descriptors && branch.counts && config.max_keypoints >= 1 &&
+           branch.feature_capacity >= static_cast<std::size_t>(config.max_keypoints) &&
+           branch.feature_capacity <= int_max;
+}
+
+// S2 writes the candidate counter in the first 16 bytes even without a candidate region.
+std::size_t detect_scratch_needed(const DetectLayout& layout) {
+    return std::max(layout.total, kScratchAlignment);
+}
+
 }  // namespace
 
 ErrorCode v5_image_scratch_bytes(const Image& host, const Config& config, std::size_t& bytes) {
     bytes = 0;
     if (host.width <= 0 || host.height <= 0 || host.channels != 3) return ErrorCode::InvalidImage;
-    if (config.max_keypoints <= 0) return ErrorCode::InvalidConfig;
+    if (!valid_detect_config(config)) return ErrorCode::InvalidConfig;
 
     const std::size_t s1 = v1_preprocess_scratch_bytes(host.width, host.height);
     const std::size_t s2 = v1_detect_scratch_bytes(host.width, host.height);
     const std::size_t s3 = v1_describe_scratch_bytes(host.width, host.height, static_cast<std::size_t>(config.max_keypoints));
     if (s1 == 0 || s3 == 0) return ErrorCode::InvalidArgument;
 
-    bytes = align_up(std::max({s1, s2, s3}));
+    const std::size_t largest = std::max({s1, s2, s3, kScratchAlignment});
+    if (largest > std::numeric_limits<std::size_t>::max() - (kScratchAlignment - 1)) {
+        return ErrorCode::InvalidArgument;
+    }
+    bytes = align_up(largest);
     return ErrorCode::Success;
 }
 
@@ -418,9 +472,8 @@ ErrorCode v5_reset_image(V5ImageBranch& branch, cudaStream_t stream) {
 }
 
 ErrorCode v5_upload_image(const Image& pinned_host, V5ImageBranch& branch, cudaStream_t stream) {
-    if (!pinned_host.data || !branch.image.data ||
-        pinned_host.width != branch.image.width || pinned_host.height != branch.image.height ||
-        pinned_host.channels != 3 || branch.image.channels != 3) {
+    if (!valid_rgb_view(pinned_host) || !valid_rgb_view(branch.image) ||
+        pinned_host.width != branch.image.width || pinned_host.height != branch.image.height) {
         return ErrorCode::InvalidImage;
     }
     const std::size_t row_bytes = static_cast<std::size_t>(pinned_host.width) * 3;
@@ -432,7 +485,10 @@ ErrorCode v5_upload_image(const Image& pinned_host, V5ImageBranch& branch, cudaS
 }
 
 ErrorCode v5_preprocess_image(V5ImageBranch& branch, const Config& config, cudaStream_t stream) {
-    if (!branch.image.data || !branch.gray.data || !branch.scratch) return ErrorCode::InvalidArgument;
+    if (!valid_rgb_view(branch.image) || !valid_gray_view(branch)) return ErrorCode::InvalidImage;
+    if (!scratch_fits(branch, v1_preprocess_scratch_bytes(branch.gray.width, branch.gray.height))) {
+        return ErrorCode::InvalidArgument;
+    }
     V1GaussianWeights weights;
     const ErrorCode status = v1_make_gaussian_weights(config.gaussian_sigma, config.gaussian_radius, weights);
     if (status != ErrorCode::Success) return status;
@@ -445,9 +501,13 @@ ErrorCode v5_preprocess_image(V5ImageBranch& branch, const Config& config, cudaS
 }
 
 ErrorCode v5_detect_candidates(V5ImageBranch& branch, const Config& config, cudaStream_t stream) {
-    if (!branch.gray.data || !branch.scratch || !branch.host_candidates) return ErrorCode::InvalidArgument;
+    if (!valid_detect_config(config)) return ErrorCode::InvalidConfig;
+    if (!valid_gray_view(branch)) return ErrorCode::InvalidImage;
     DetectLayout layout;
-    if (!make_detect_layout(branch.gray.width, branch.gray.height, layout)) return ErrorCode::InvalidArgument;
+    if (!branch.host_candidates || !make_detect_layout(branch.gray.width, branch.gray.height, layout) ||
+        !scratch_fits(branch, detect_scratch_needed(layout))) {
+        return ErrorCode::InvalidArgument;
+    }
 
     uint32_t* d_count = reinterpret_cast<uint32_t*>(branch.scratch);
     if (layout.total != 0) {
@@ -478,10 +538,14 @@ ErrorCode v5_detect_candidates(V5ImageBranch& branch, const Config& config, cuda
 }
 
 ErrorCode v5_finish_detect(V5ImageBranch& branch, const Config& config, cudaStream_t stream) {
-    if (!branch.gray.data || !branch.scratch || !branch.keypoints || !branch.counts || !branch.host_candidates)
-        return ErrorCode::InvalidArgument;
+    if (!valid_detect_config(config)) return ErrorCode::InvalidConfig;
+    if (!valid_gray_view(branch)) return ErrorCode::InvalidImage;
     DetectLayout layout;
-    if (!make_detect_layout(branch.gray.width, branch.gray.height, layout)) return ErrorCode::InvalidArgument;
+    if (!branch.host_candidates || !features_fit(branch, config) ||
+        !make_detect_layout(branch.gray.width, branch.gray.height, layout) ||
+        !scratch_fits(branch, detect_scratch_needed(layout))) {
+        return ErrorCode::InvalidArgument;
+    }
 
     uint32_t kept = 0;
     if (layout.total != 0) {
@@ -499,11 +563,10 @@ ErrorCode v5_finish_detect(V5ImageBranch& branch, const Config& config, cudaStre
 }
 
 ErrorCode v5_describe_image(V5ImageBranch& branch, const Config& config, cudaStream_t stream) {
-    (void)config;
-    if (!branch.gray.data || !branch.scratch || !branch.keypoints || !branch.descriptors || !branch.counts)
-        return ErrorCode::InvalidArgument;
+    if (!valid_gray_view(branch)) return ErrorCode::InvalidImage;
+    if (!features_fit(branch, config)) return ErrorCode::InvalidArgument;
     const DescribeLayout layout = make_describe_layout(branch.gray.width, branch.gray.height, branch.feature_capacity);
-    if (layout.total == 0) return ErrorCode::InvalidArgument;
+    if (layout.total == 0 || !scratch_fits(branch, layout.total)) return ErrorCode::InvalidArgument;
 
     float* smoothed_data = reinterpret_cast<float*>(branch.scratch + layout.smoothed);
     float* temp = reinterpret_cast<float*>(branch.scratch + layout.temp);

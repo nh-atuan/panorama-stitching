@@ -311,7 +311,7 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>P8-T01, P8-T02</td>
       <td>Đo thời gian V3 trên Colab T4 (5 runs + warm-up), đối chiếu speedup với V0, V1 và V2; người làm tự lựa chọn các metric NCU/NSYS để phân tích vi kiến trúc kernel S5 V3; xuất đủ CSV và biểu đồ speedup vào Drive chung <code>v3/</code>; cập nhật <code>docs/apod-log.md</code> và hoàn thành mục báo cáo APOD V3 trong <code>docs/report/</code></td>
       <td>Xong</td>
-      <td>16/11: Đế đã chạy <a href="../Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đã cập nhật <code>apod-log.md</code> và hoàn tất bàn giao Drive chung <code>v3/</code>; PR #40 đã merge vào <code>main</code>.</td>
+      <td>16/11: Đế đã chạy <a href="../experiments/Group16_P8_T03_Benchmark_Profiling.ipynb">benchmark V0–V3</a> trên cùng phiên Tesla T4, một warm-up + 5 runs/cấu hình. V3/V2 trung bình nhân 1,85× trên 9 cấu hình chuẩn; 8/9 cấu hình nhanh hơn. Đã thu 30/30 mẫu NSYS/NCU và hoàn tất <a href="report/p8-t03-v3-apod.md">báo cáo APOD</a>. Đã cập nhật <code>apod-log.md</code> và hoàn tất bàn giao Drive chung <code>v3/</code>; PR #40 đã merge vào <code>main</code>.</td>
     </tr>
     <tr>
       <td>Chương, Thành</td>
@@ -320,7 +320,7 @@ Giai đoạn P8 áp dụng chu trình APOD tiếp tục tối ưu hóa kernel S5
       <td>P8-T01, P8-T02</td>
       <td>Người làm tự thiết kế bộ test case và kịch bản nghiệm thu trong <code>tests/gpu/test_gpu_v3_pipeline.cu</code>; đối chiếu H và canvas của V3 với V0/V1/V2 trên synthetic và dataset thật; chạy <code>compute-sanitizer</code> trên Colab Tesla T4 nghiệm thu 0 lỗi, 0 byte rò rỉ bộ nhớ</td>
       <td>Xong</td>
-      <td>Chương bàn giao suite, harness CLI và <a href="../Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
+      <td>Chương bàn giao suite, harness CLI và <a href="../experiments/Group16_P8_V3_Verification.ipynb">notebook Colab T4</a> qua <a href="https://github.com/nh-atuan/panorama-stitching/pull/37">PR #37</a>. Thành chạy nghiệm thu trên T4 ngày 16/11 tại SHA production <code>1cf86ad</code> và đưa kết quả vào <a href="https://github.com/nh-atuan/panorama-stitching/pull/39">PR #39</a>. Cả hai PR đã merge vào <code>main</code>. Cả 6 cặp synthetic đạt ngưỡng, 12/12 cấu hình ảnh thật khớp trạng thái, 10 panorama có Max RGB = 0, CLI/CSV/D2H đạt và hai lượt memcheck báo 0 lỗi, 0 byte rò rỉ. Xem <a href="report/p8-v3-verification.md">báo cáo và bằng chứng nghiệm thu</a>.</td>
     </tr>
   </tbody>
 </table>
@@ -422,11 +422,11 @@ Giai đoạn P9 kết hợp hai nhánh công việc chạy song song: tối ưu 
 | Task | Phụ trách | Loại việc · tải | Đầu ra cần bàn giao | Hạn (giờ Việt Nam) | Trạng thái | Ghi chú / PR |
 |---|---|---|---|---|---|---|
 | P10-T01 — Baseline và contract V5 | **Chương** | Thiết kế và đo baseline · Vừa | Chương tự rà evidence và thu baseline H2D đầu tiên đến khi S4 sẵn sàng trên `site1/large`, `site2/large`, `site3/large`, ghi điểm chờ ở S2 và VRAM còn trống. Chốt ca chính trước khi đo V5, giao diện xử lý một ảnh, ý nghĩa timing và ưu tiên lỗi. | **20/11 20:00** | Xong | 20/11: Đã nghiệm thu baseline Colab T4 tại SHA c4566e3. Năm lượt đo mỗi ca sau warm-up, 84 file khớp checksum, ba panorama probe khớp production và ba trace NSYS/SQLite đầy đủ. Giữ site2/large làm ca chính, pre-S4 mean 15,288 ms và share 21,44%. [Phân tích kết quả](report/p10-t01-pres4-baseline.md) · [Contract đã chốt](report/p10-v5-contract.md). Chương tiếp tục T03 theo API bàn giao T02. |
-| P10-T02 — Tách S1–S3 theo từng ảnh | **Thành** | C++/CUDA production · Nặng | Tách entry point một ảnh, scratch, counters/status và vùng host nhận candidate count theo nhánh. Tách bước phát hiện candidate của S2 khỏi bước hoàn tất top-K, khởi tạo BRIEF trước khi tách stream. Chạy A rồi B qua API mới và đối chiếu V4 về thứ tự keypoint cùng từng bit descriptor. | **21/11 18:00** | Chưa làm | Bàn giao API chạy được và kết quả đối chiếu cho Chương. |
+| P10-T02 — Tách S1–S3 theo từng ảnh | **Thành** | C++/CUDA production · Nặng | Tách entry point một ảnh, scratch, counters/status và vùng host nhận candidate count theo nhánh. Tách bước phát hiện candidate của S2 khỏi bước hoàn tất top-K, khởi tạo BRIEF trước khi tách stream. Chạy A rồi B qua API mới và đối chiếu V4 về thứ tự keypoint cùng từng bit descriptor. | **21/11 18:00** | Xong | API do Tuấn cài ở PR #50. Thành viết suite <code>gpu_v5_image_branch</code> và bổ sung kiểm tra host-side trong <code>src/v5/v5_image_branch.cu</code> ở [PR #52](https://github.com/nh-atuan/panorama-stitching/pull/52), chờ merge. Colab T4 ngày 22/11, SHA <code>5a16a33</code>: 370.496 checks, 46.168 keypoint của 12 cấu hình dataset và 5 ca synthetic giống V4 từng bit khi chạy A rồi B và khi chạy trên hai stream. Regression đầy đủ đạt (V0 45.284 checks, GPU 82.356 checks, Python 193 tests), memcheck 0 lỗi, 0 byte rò rỉ. Commit sửa <code>src/</code> sau khi đóng băng ở P11-T02 nên cần chạy lại hồi quy đóng băng. |
 | P10-T03 — Dispatcher hai stream, CLI và timing | **Chương** | C++/CUDA production · Nặng | Cài `v5_pipeline` và `--version 5`. Stream điều phối chờ `doneA` và `doneB`, hợp nhất status/counts, chạy S4–S6 rồi D2H. Có chế độ đối chứng nối tiếp dùng cùng API, workspace, pinned buffers và kernel. Giữ CSV chính tương thích runner, ghi timing từng nhánh và thời gian đến điểm hội tụ. Build `sm_75`, chạy thử cả hai chế độ, kiểm tra đường lỗi và thu hồi tài nguyên. | **22/11 10:00** | Bị chặn | Đã triển khai owner, hai mode dispatcher, join, CLI và timing trên chuong/p10-v5. Còn thiếu implementation T02 tại src/v5/v5_image_branch.cu và build/runtime CUDA. [Bàn giao T03](report/p10-t03-v5-handoff.md). V5 chỉ bật khi có T02 thực. |
 | P10-T04 — Regression, memcheck và evidence V5 | **Tuấn** | Code test và nghiệm thu T4 · Nặng | Mở rộng suite V4 cho hai ảnh khác kích thước, nhánh thiếu feature, lỗi từng nhánh và lặp lại trên cùng workspace. So status → keypoint/descriptor → match → H → canvas/offset → RGB. Chạy 6 synthetic và 12 cấu hình thật theo ngưỡng đã dùng ở V4. Chạy memcheck cho suite và CLI, yêu cầu 0 lỗi, 0 byte rò rỉ. Đăng ký test vào runner, lưu SHA, manifest, bảng parity và log T4. | **22/11 22:00** | Chưa làm | Chuẩn bị suite ngay sau T01. Bàn giao SHA đã nghiệm thu cho Đế trước benchmark chính thức. |
 | P10-T05 — Benchmark, NSYS và quyết định giữ V5 | **Đế** | Thực nghiệm và phân tích · Nặng khi có binary | So V4 production, prototype nối tiếp và prototype hai stream trên 9 ca chuẩn, ghi riêng challenge. Đo V0 cùng phiên để tính speedup V5/V0. Báo V5/V4, `Total_ms`, thời gian đến S4 và peak VRAM. Thu trace NSYS để xác định có overlap hay không và S4 bắt đầu khi nào. Bàn giao CSV, trace và báo cáo APOD có kết luận giữ hoặc dừng V5. | **23/11 22:00** | Chưa làm | Chuẩn bị script trước. Dùng SHA đạt T04, đủ một warm-up và ít nhất 5 lượt đo mỗi cấu hình. Thu profiling riêng. |
-| P10-T06 — Tích hợp kết quả vào notebook | **Thành** làm cell, **Chương** chốt lời văn | Python và tài liệu · Vừa | Đưa V4 chính thức vào mục 6 ngay. Sau T05, bổ sung kết quả và giới hạn của V5 vào mục 6–7. Ghim `SOURCE_REF` tới SHA đủ helper và pipeline, chạy từ Colab trống, so lời văn với output và ghi nhận tình trạng cặp ảnh mẫu của môn học. | **24/11 20:00** | Đang làm | Phần V4 của Chương đã xong trên chuong/p10-t06-v4-notebook: bổ sung bảng P9 chính thức, speedup, profiling, nghiệm thu và phân tích trong mục 6, thêm nguồn ở mục 10 và cập nhật kết luận. Đã chạy 10 cell evidence trên kernel Python sạch, mọi số tái hiện từ report. Ghim source d42000c để Colab tải đủ helper. Phần V5 và lượt Run all cuối trên T4 còn chờ kết quả tích hợp. |
+| P10-T06 — Tích hợp kết quả vào notebook | **Thành** làm cell, **Chương** chốt lời văn | Python và tài liệu · Vừa | Đưa V4 chính thức vào mục 6 ngay. Sau T05, bổ sung kết quả và giới hạn của V5 vào mục 6–7. Ghim `SOURCE_REF` tới SHA đủ helper và pipeline, chạy từ Colab trống, so lời văn với output và ghi nhận tình trạng cặp ảnh mẫu của môn học. | **24/11 20:00** | Đang làm | Phần V4 của Chương đã xong trên chuong/p10-t06-v4-notebook: bổ sung bảng P9 chính thức, speedup, profiling, nghiệm thu và phân tích trong mục 6, thêm nguồn ở mục 10 và cập nhật kết luận. Đã chạy 10 cell evidence trên kernel Python sạch, mọi số tái hiện từ report. Ghim source d42000c để Colab tải đủ helper. Phần V5 và lượt Run all cuối trên T4 còn chờ kết quả tích hợp. 22/11: phần cell V5 của Thành ở [PR #53](https://github.com/nh-atuan/panorama-stitching/pull/53), chờ merge. Notebook đo V0–V5 và đọc bảng của báo cáo P10-T05 và P10 verification. <code>SOURCE_REF</code> chuyển sang <code>696fc82</code> vì <code>d42000c</code> còn đường dẫn helper cũ và chưa có V5. Đã thử fetch, import helper và build V0–V5 từ thư mục trống trên Colab T4. |
 | P10-T07 — Chốt slide và kịch bản | **Tuấn**, phối hợp **Đế** | Tài liệu · Nhẹ–vừa | Dùng `slides/project.tex`. Tuấn chốt tổng quan, demo, phân vai và kịch bản 20–30 phút. Đế hoàn thiện phần hiệu năng và thêm kết luận V5 sau T05. Build deck Beamer và bàn giao kịch bản đủ để quay. | **24/11 20:00** | Chưa làm | Chuẩn bị deck và kịch bản song song với phần code. |
 
 **Thứ tự nghiệm thu và benchmark.** T01 chốt giao diện để Thành và Chương triển khai T02/T03. Tuấn có thể viết fixture ngay khi có contract và chạy nghiệm thu tích hợp khi nhận SHA từ Chương. Nếu T04 phát hiện lỗi, Thành hoặc Chương sửa phần phụ trách, Tuấn xác nhận lại trên SHA mới rồi Đế mới đo chính thức. Nếu đến hạn chốt vẫn thiếu bằng chứng, nhóm ghi rõ kết quả đã kiểm chứng và dùng V4 cho bài nộp.
@@ -469,16 +469,16 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>Tái cấu trúc codebase, dọn dẹp repo và chuẩn hóa <code>README.md</code> chính</td>
       <td></td>
       <td>Repo gọn gàng, chuyên nghiệp; dọn dẹp thư mục gốc; chuẩn hóa comment tác giả 100% file nguồn; <code>README.md</code> có đầy đủ sơ đồ kiến trúc, bảng so sánh V0–V5 và hướng dẫn build/run/test</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p11</code></td>
+      <td>Xong</td>
+      <td>21/11, nhánh <code>tuan/p11</code> (<code>f2837a8</code>): gom 9 notebook phụ vào <code>experiments/</code> (kèm <code>experiments/README.md</code>), cập nhật toàn bộ liên kết trong <code>docs/</code> và <code>test_midterm_notebook.py</code>; rà 178/178 file nguồn đủ header; viết lại <code>README.md</code> chuẩn nộp bài V0–V5, cập nhật <code>src/README.md</code>, <code>tests/README.md</code> và đồng bộ <code>docs/apod-log.md</code>.</td>
     </tr>
     <tr>
       <td>P11-T02</td>
       <td>Tổng duyệt kiểm thử hồi quy toàn diện trên Colab T4 và đóng băng mã nguồn <code>src/</code></td>
       <td>P11-T01</td>
       <td>Toàn bộ 14 suite V0, 14 suite GPU (V1–V5), 193 test Python đạt sạch trên Colab T4; <code>compute-sanitizer</code> xác nhận 0 lỗi, 0 byte rò rỉ; chốt đóng băng mã nguồn</td>
-      <td>Chưa làm</td>
-      <td>Nhánh <code>tuan/p11</code></td>
+      <td>Xong</td>
+      <td>21/11, nhánh <code>tuan/p11</code> (Colab Tesla T4, driver 580.82.07, nvcc 13.0.88, SHA <code>f2837a8</code>): build <code>sm_75</code> đạt; 14 suite V0 (45.284 checks), 16 suite GPU V1–V5 (69.336 checks), 15 suite Python (193 tests) đạt; <code>compute-sanitizer</code> trên <code>gpu_v4_pipeline</code> và <code>gpu_v5_pipeline</code> đạt 0 lỗi, 0 byte rò rỉ. Chi tiết tại <a href="report/p11-t02-freeze-verification.md">báo cáo đóng băng mã nguồn</a>.</td>
     </tr>
     <tr>
       <td rowspan="2">Thành</td>
@@ -486,16 +486,16 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
       <td>Chuẩn hóa bộ công cụ <code>scripts/</code> và xây dựng công cụ Live Demo 1-click</td>
       <td></td>
       <td>Rà soát các script đo đạc; hoàn thiện <code>scripts/live_demo.py</code> kèm hướng dẫn chạy demo CLI mượt mà phục vụ riêng cho khâu quay video của Thành ở P12</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Xong</td>
+      <td>22/11: <code>scripts/live_demo.py</code>, 10 test và mục "Live demo" trong <code>scripts/README.md</code> ở <a href="https://github.com/nh-atuan/panorama-stitching/pull/54">PR #54</a>, chờ merge. Colab T4, SHA <code>55c9f95</code>: demo chạy V0, V4, V5 dual trên site2/small, ghi đủ ba panorama, ca challenge/medium dừng với <code>NumericalFailure</code> ở S6. Suite Python đạt 16 suite, 203 test. Rà soát script sau khi P11-T01 chuyển thư mục: cả 27 script trong <code>scripts/</code> import và nhận đối số được ở vị trí mới. Trên T4, <code>run_benchmark.py</code> (V0, V4, V5, có challenge), <code>plot_benchmark.py</code>, <code>homography_error.py</code>, <code>verify_v5_cli.py</code> và <code>run_profiling.py</code> (NSYS, V5 site2/small) đều chạy hết và ghi đủ output. Lệnh mẫu trong <code>docs/dataset.md</code> và <code>docs/stages/s5-homography.md</code> còn đường dẫn script cũ, báo lại cho cả Nhóm để cùng quyết định cách sửa.</td>
     </tr>
     <tr>
       <td>P11-T04</td>
       <td>Rà soát, chuẩn hóa văn phong và hình thức notebook bài nộp 10 mục</td>
       <td></td>
       <td>Rà soát toàn diện <code>Group16_Final.ipynb</code>; trau chuốt văn phong tiếng Việt khoa học tự nhiên theo chuẩn; hoàn thiện công thức KaTeX, bảng biểu, sơ đồ</td>
-      <td>Chưa làm</td>
-      <td></td>
+      <td>Đang làm</td>
+      <td>22/11: <a href="https://github.com/nh-atuan/panorama-stitching/pull/55">PR #55</a>, nhánh <code>thanh/p11-t04</code> tách từ PR #53, chờ merge sau #53. Viết lại bằng tiếng Việt toàn bộ lời văn tiếng Anh (mục 1–3, V0–V3, mục 7, 8, 10), Việt hóa tiêu đề và giữ nguyên anchor. Sơ đồ pipeline ở mục 2 chuyển sang Mermaid, mục 10 thêm liên kết báo cáo P10 và P11-T02. Số liệu, công thức, liên kết và 20 ô code giữ nguyên, <code>test_final_notebook.py</code> đạt 20 test. Còn kiểm tra hiển thị Mermaid trên Colab và PDF. Kết luận V5 ở mục 9 do Chương chốt.</td>
     </tr>
     <tr>
       <td>Đế</td>

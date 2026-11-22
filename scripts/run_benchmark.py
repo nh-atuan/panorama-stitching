@@ -45,7 +45,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from midterm_notebook import SITES, SIZES, sha256  # noqa: E402
+from notebook.midterm_notebook import SITES, SIZES, sha256  # noqa: E402
 
 BENCHMARK_SITES = SITES[:3]  # The standard pairs: the main benchmark table.
 CHALLENGE_SITE = SITES[3]  # Failure analysis; benchmarked only with --include-challenge.

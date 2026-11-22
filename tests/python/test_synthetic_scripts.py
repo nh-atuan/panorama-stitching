@@ -2,7 +2,7 @@
 # Authors: Nguyen Ho Anh Tuan (23120185)
 # External source: none
 
-"""Tests for scripts/make_synthetic_pair.py, scripts/homography_error.py and scripts/homography_common.py.
+"""Tests for scripts/synthetic/make_synthetic_pair.py, scripts/synthetic/homography_error.py and scripts/synthetic/homography_common.py.
 
 Expected values come from crops and linear ramps whose answer is known without the code under test.
 """
@@ -18,9 +18,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import homography_common  # noqa: E402
-import homography_error  # noqa: E402
-import make_synthetic_pair  # noqa: E402
+from synthetic import homography_common, homography_error, make_synthetic_pair  # noqa: E402
 
 WIDTH, HEIGHT = 96, 54
 

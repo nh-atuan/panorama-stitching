@@ -3,30 +3,33 @@
 
 # Cấu trúc và quy ước thư mục `src/`
 
-Thư mục `src/` chứa toàn bộ mã nguồn C/C++/CUDA của chương trình ghép ảnh `stitch`. Mã nguồn được tách theo phần nền tảng dùng chung và từng phiên bản cài đặt (`V0`, `V1`, `V2`, `V3`) để bốn thành viên làm việc song song mà không nhân bản code giữa các phiên bản.
+Thư mục `src/` chứa toàn bộ mã nguồn C/C++/CUDA của chương trình ghép ảnh `stitch`. Mã nguồn được tách theo phần nền tảng dùng chung và từng phiên bản cài đặt (`V0` đến `V5`) để bốn thành viên làm việc song song mà không nhân bản code giữa các phiên bản.
 
 ## 1. Tổ chức thư mục
 
 ```text
 src/
 ├── main.cu          # Điểm vào CLI, đọc/ghi ảnh, vòng lặp warm-up + đo thời gian và in CSV
-├── versions.h       # Khai báo hàm chạy pipeline của các phiên bản (--version 0|1|2|...)
-├── common/          # Hợp đồng dữ liệu, cấu hình, tiện ích dùng chung và thư viện stb
+├── versions.h       # Khai báo hàm chạy pipeline của các phiên bản (--version 0..5)
+├── common/          # Contract dữ liệu, cấu hình, tiện ích dùng chung và thư viện stb
 ├── v0/              # Bản tuần tự C/C++ đóng băng (chuẩn tham chiếu cho các bản GPU)
 ├── v1/              # Basic CUDA, chia thư mục theo stage
 │   ├── common/      # Nhãn NVTX và Gaussian blur dùng chung giữa các stage V1
 │   ├── s1/ ... s5/  # Preprocess, detect, describe, matching, homography
 │   ├── v1_warp_blend.*  # S6
 │   └── v1_pipeline.*    # Bộ nhớ Device và điều phối sáu stage cho --version 1
-└── v2/, v3/         # Các phiên bản tối ưu
+├── v2/              # Tối ưu S5 (Parallel RANSAC & Inlier Reduction) + v2_pipeline.*
+├── v3/              # Tối ưu vi kiến trúc S5 (warp shuffle, shared-memory SVD) + v3_pipeline.*
+├── v4/              # Tối ưu S6 (Single-pass Canvas Fusion) + v4_pipeline.* (Production Baseline)
+└── v5/              # Thử nghiệm hai CUDA Stream cho nhánh H2D + S1–S3 + v5_pipeline.* (Case Study)
 ```
 
 Vai trò từng nhóm:
 
 - `common/`: chứa `common.h` (struct dữ liệu standard-layout đi qua ranh giới Host–Device), `cuda_utils.cuh` (macro kiểm tra lỗi CUDA và đo `cudaEvent`), `v0_config.*` (tham số thuật toán dùng chung cho mọi phiên bản), các module hình học/lọc/biên/mẫu (`image_layout.*`, `gaussian_kernel.*`, `gaussian_blur.*`, `feature_border.h`, `fast_corner.*`, `brief_pattern.*`, `feature_support.*`) và `stb_image.h`, `stb_image_write.h`, `stb_impl.cpp`.
 - `v0/`: cài đặt tuần tự 6 stage (`v0_preprocess.*`, `v0_detect.*`, `v0_describe.*`, `v0_match.*`, `v0_homography.*`, `v0_warp_blend.*`) và `v0_pipeline.*`.
-- `v1/` (Basic CUDA): chia theo stage trong `s1/` đến `s6/`, chỉ tạo thư mục khi có implementation. S1–S5 nằm trong `s1/` đến `s5/`, S6 đặt ở `v1_warp_blend.*`; tiện ích nội bộ dùng chung đặt trong `common/`. Pipeline ở cấp phiên bản: `v1_pipeline.*` cấp phát workspace Device và gọi sáu stage, giống vai trò của `v0_pipeline.*`.
-- `v2/`, `v3/` (Optimized CUDA): chỉ tạo file mới cho những stage/kernel có thay đổi ở phiên bản đó cùng `v2_pipeline.*` / `v3_pipeline.*`. Những stage giữ nguyên gọi lại trực tiếp hàm từ phiên bản trước, không chép lại file cũ sang thư mục mới.
+- `v1/` (Basic CUDA): chia theo stage trong `s1/` đến `s5/`, S6 đặt ở `v1_warp_blend.*`; tiện ích nội bộ dùng chung đặt trong `common/`. Pipeline ở cấp phiên bản: `v1_pipeline.*` cấp phát workspace Device và gọi sáu stage, giống vai trò của `v0_pipeline.*`.
+- `v2/`, `v3/`, `v4/`, `v5/` (Optimized CUDA): chỉ tạo file mới cho những stage/kernel hoặc bộ điều phối có thay đổi ở phiên bản đó cùng `v<k>_pipeline.*`. Những stage giữ nguyên gọi lại trực tiếp hàm từ phiên bản trước, không chép lại file cũ sang thư mục mới.
 
 ## 2. Quy ước viết code
 

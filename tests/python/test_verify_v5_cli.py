@@ -13,7 +13,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from run_benchmark import version_columns
-from verify_v5_cli import SIDECAR_HEADER, check_failure, check_panorama, smoke, verify_csv, verify_sidecar
+from verify.verify_v5_cli import SIDECAR_HEADER, check_failure, check_panorama, smoke, verify_csv, verify_sidecar
 
 
 def csv_text(rows):

@@ -21,7 +21,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from midterm_notebook import (CSV_COLUMNS, SITES, SIZES, collect_benchmark_csv,
+from notebook.midterm_notebook import (CSV_COLUMNS, SITES, SIZES, collect_benchmark_csv,
                               parse_stitch_csv, safe_extract, sha256,
                               source_manifest, validate_dataset, overlap_box)
 
@@ -183,7 +183,7 @@ class ReproducibilityTests(unittest.TestCase):
             overlap_box("missing diagnostics", 4, 3, 4, 3)
 
 
-NOTEBOOK = ROOT / "Group16_Midterm.ipynb"
+NOTEBOOK = ROOT / "experiments" / "Group16_Midterm.ipynb"
 
 
 # The Colab workspace holds src/, scripts/, tests/ and data, not the notebook file itself.

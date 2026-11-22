@@ -108,6 +108,7 @@ def demo_command(stitch, left, right, panorama, version, runs):
 def run_version(stitch, left, right, out_dir, version, runs):
     """Run one version; return its average timings or the error of a failed run."""
     panorama = Path(out_dir) / f"v{version}_panorama.jpg"
+    panorama.parent.mkdir(parents=True, exist_ok=True)  # stitch does not create folders.
     command = demo_command(stitch, left, right, panorama, version, runs)
     print("$ " + " ".join(command), flush=True)
     result = subprocess.run(command, capture_output=True, text=True)

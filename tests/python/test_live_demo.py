@@ -38,7 +38,8 @@ def fake_stitch(totals, failures=()):
     def run(command, **_):
         version = int(command[command.index("--version") + 1])
         runs = int(command[command.index("--runs") + 1])
-        Path(command[3]).parent.mkdir(parents=True, exist_ok=True)
+        if not Path(command[3]).parent.is_dir():  # Like stitch, never create the output folder.
+            return Result(1, "", "Error: [ImageWriteFailed] cannot write output\n")
         if version in failures or "challenge" in command[1]:
             return Result(1, "", "[debug] S6 warp_blend\nError: [NumericalFailure] S6 warp_blend failed\n")
         Path(command[3]).write_bytes(b"jpg")
@@ -123,6 +124,7 @@ class MainTests(unittest.TestCase):
             self.assertEqual(code, 0)
             for version in (0, 4, 5):
                 self.assertTrue((Path(temp) / "out" / "site2_small" / f"v{version}_panorama.jpg").is_file())
+            self.assertTrue((Path(temp) / "out" / "challenge").is_dir())
         self.assertIn("52.63x", text)
         self.assertIn("challenge/medium stopped with exit code 1: NumericalFailure", text)
 

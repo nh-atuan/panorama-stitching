@@ -15,8 +15,8 @@ import traceback
 import unicodedata
 
 from audit_final_notebook import SECTIONS
-from midterm_notebook import sha256
-from profiling_common import write_json
+from notebook.midterm_notebook import sha256
+from profiling.profiling_common import write_json
 
 PRINT_CSS = """
 @page { size: A4 landscape; margin: 12mm; }

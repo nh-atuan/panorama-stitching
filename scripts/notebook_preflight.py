@@ -13,8 +13,8 @@ from pathlib import Path
 import shutil
 import sys
 
-from profiling_common import capture, write_json
-from midterm_notebook import sha256, validate_dataset
+from profiling.profiling_common import capture, write_json
+from notebook.midterm_notebook import sha256, validate_dataset
 
 MANIFEST_SHA256 = "99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d"
 VERSIONS = tuple(range(6))

@@ -17,10 +17,10 @@ import zipfile
 
 from audit_final_notebook import SECTIONS, local_links, reconcile_apod
 from export_notebook_pdf import executed_notebook, export
-from midterm_notebook import sha256
+from notebook.midterm_notebook import sha256
 from notebook_preflight import dataset, environment, VERSIONS
 from package_notebook_acceptance import published, verify_archive, verify_tree
-from profiling_common import write_json
+from profiling.profiling_common import write_json
 from run_benchmark import parse_version_csv
 
 VISIBLE_CELLS = ("thanh-v0-tables", "thanh-v1-tables", "thanh-v4-tables",
@@ -126,7 +126,7 @@ def inspect_outputs(path):
 
 
 def benchmark_evidence(root, binary, expected_versions=VERSIONS):
-    import final_notebook as fn
+    from notebook import final_notebook as fn
     root = Path(root)
     benchmark = fn.load_benchmark(root, expected_versions)
     env = benchmark.environment
@@ -223,7 +223,7 @@ def execute(args):
         (run / "source_sha.txt").write_text(args.source_sha + "\n", encoding="utf-8")
         report["environment"] = environment(run)
         # Use the established Drive loader and manifest verifier.
-        import final_notebook as fn
+        from notebook import final_notebook as fn
         data_path, _ = fn.fetch_dataset(args.dataset, run.parent / "dataset_drive")
         dataset(data_path, run)
         original = args.notebook or source / "Group16_Final.ipynb"

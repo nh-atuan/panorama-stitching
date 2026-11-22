@@ -14,8 +14,8 @@ import subprocess
 import zipfile
 
 from audit_final_notebook import PIN_FILES
-from midterm_notebook import safe_extract, sha256
-from package_s6_verification import EXTENSIONS, PREFIXES
+from notebook.midterm_notebook import safe_extract, sha256
+from notebook.package_s6_verification import EXTENSIONS, PREFIXES
 
 MANIFEST = "source_manifest.json"
 ROOT_FILES = {"README.md", "Group16_Final.ipynb", "Group16_P11_T06_Acceptance.ipynb"}

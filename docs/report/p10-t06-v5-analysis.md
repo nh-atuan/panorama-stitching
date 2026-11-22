@@ -64,3 +64,11 @@ V5 pre-S4 quoted trong APOD: sequential 15,310 ms, dual 12,680 ms → ratio **1,
 Cell `v5-p10-results` kiểm đúng tập chín cấu hình và dùng giá trị ms để tính; hiển thị bảng tính lại, probe T01, các giá trị V5 quoted và độ giảm latency. `thanh-v5-tables` và mục 7 dùng benchmark mới do binary chạy cùng phiên; không tái sử dụng mean P9/P10 lịch sử để tạo speedup mới. `fn.best_version()` chọn geomean so V0 trên chín ca; đó là định nghĩa nhanh nhất theo bảng đo, tách khỏi quyết định production V4.
 
 Raw T01 có ở local nên đã đối chiếu lại mean/share. Notebook đọc summary baseline đã commit vì không buộc người chạy tải thêm ZIP probe; output mang nhãn report summary. Source/benchmark freeze scope và kiểm Run all/PDF cuối thuộc P11-T06, không lấy kết quả CPU này thay T4.
+
+## 6. Final Interpretation and Adoption
+
+Giữ quyết định đã công bố: **V4 production baseline, V5 concurrency case study**. Bảng mean cho phép nói chín ca chuẩn đều nhanh hơn theo số đã công bố, nhưng không chứng minh mức cải thiện ổn định hoặc kiểm chứng tiêu chí median các khối đo luân phiên. Geomean trên chín dòng vượt 1,05× còn mean-ratio ca chính thấp hơn; cả hai đều không phải median paired speedup. Vì thiếu raw, không khẳng định tiêu chí adoption định trước đã đạt hay thất bại. Sai khác báo cáo được công khai thay vì thay bảng hoặc chế metric để hợp thức hóa quyết định.
+
+V0 → V1 làm bottleneck chuyển từ công việc so khớp/pixel sang RANSAC; V2/V3 giảm S5, V4 gộp renderer S6 với lợi ích nhỏ đã đo. V5 tối ưu execution trước S4, không thay downstream hoặc mô hình hình học. Report NSYS gợi ý overlap copy/compute và contention; số SM/copy engines chỉ mô tả khả năng thiết bị, chưa đủ chứng minh hiệu quả thực tế khi thiếu trace. Phân tích giữ các nhận xét đó theo nguồn report, không nâng thành kết luận nhân quả đã được audit độc lập.
+
+Kết luận notebook đã bỏ placeholder V5, giữ giới hạn chất lượng panorama và phạm vi parity. Dữ liệu lịch sử đã đối soát về số học và nguồn đo; raw provenance còn thiếu được ghi như giới hạn bằng chứng, không là metric mới để chứng nhận V5. Hạ tầng chuẩn bị có thể review/merge, còn release acceptance phải có T4/output/PDF thật.

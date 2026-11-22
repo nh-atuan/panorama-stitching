@@ -53,6 +53,19 @@ def prepare_mermaid(notebook):
     return rendered, diagrams
 
 
+def configure_mathjax(html):
+    """Replace nbconvert's v2 Hub config with a v3 config that supports inline dollars."""
+    block = r'''<!-- Group16 MathJax 3 configuration -->
+<script>window.MathJax = {tex:{inlineMath:[['$','$'],['\\(','\\)']],
+displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},startup:{typeset:false}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"></script>'''
+    html, count = re.subn(r"<!-- Load mathjax -->.*?<!-- End of mathjax configuration -->",
+                         lambda match: block, html, flags=re.S)
+    if count != 1:
+        raise RuntimeError("Unsupported nbconvert MathJax template; review renderer rather than print raw TeX")
+    return html
+
+
 def dependencies():
     return dict(modules={m: importlib.util.find_spec(m) is not None
                          for m in ("nbformat", "nbconvert", "playwright", "pypdf")},
@@ -130,7 +143,9 @@ def browser_pdf(html, output, browser_path=None):
                 }""")
                 if page.locator(".group16-mermaid svg").count() != mermaid_count:
                     raise RuntimeError("Mermaid did not render every diagram; refuse raw Mermaid PDF")
-            has_math = page.locator(".math").count() > 0
+            has_math = page.locator(".math").count() > 0 or page.evaluate(r"""() =>
+                Array.from(document.querySelectorAll('.jp-RenderedHTMLCommon p, .jp-RenderedHTMLCommon li, .jp-RenderedHTMLCommon td'))
+                .some(e => /\$[^$\n]+\$/.test(e.textContent))""")
             if has_math:
                 page.wait_for_function("window.MathJax && window.MathJax.startup && window.MathJax.typesetPromise", timeout=60000)
                 page.evaluate("async () => { await MathJax.startup.promise; await MathJax.typesetPromise(); }")
@@ -169,6 +184,7 @@ def export(notebook_path, directory, smoke=False, browser_path=None):
         exporter = HTMLExporter(embed_images=True)
         exporter.mathjax_url = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"
         html, _ = exporter.from_notebook_node(rendered_notebook, resources={"metadata": {"path": str(Path(notebook_path).parent)}})
+        html = configure_mathjax(html)
         html_path = directory / "Group16_Final.html"
         html_path.write_text(html, encoding="utf-8")
         try:

@@ -43,6 +43,15 @@ class PDFTests(unittest.TestCase):
         self.assertIn('class="group16-mermaid"', rendered.cells[0].source)
         self.assertNotIn('```mermaid', rendered.cells[0].source)
 
+    def test_mathjax_v3_inline_config_replaces_legacy_hub(self):
+        html = '<head><!-- Load mathjax --><script>MathJax.Hub.Config({});</script><!-- End of mathjax configuration --></head>'
+        configured = pdf.configure_mathjax(html)
+        self.assertNotIn("MathJax.Hub", configured)
+        self.assertIn("inlineMath:[['$','$']", configured)
+        self.assertIn("startup:{typeset:false}", configured)
+        with self.assertRaisesRegex(RuntimeError, "template"):
+            pdf.configure_mathjax("<head>unknown template</head>")
+
     def test_mermaid_failure_cannot_fall_back_to_raw_latex_code(self):
         self.notebook.cells.insert(0, self.nbf.v4.new_markdown_cell('```mermaid\nflowchart LR\n A --> B\n```'))
         self.save()

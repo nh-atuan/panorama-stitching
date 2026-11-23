@@ -2,6 +2,8 @@
 
 # P11-T06 — Final Notebook Acceptance Audit
 
+> Cập nhật 23/11: nội dung dưới ghi trạng thái lịch sử trước báo cáo chính thức của Đế và lượt sửa parser mới. Trạng thái hiện hành, production pin và các giới hạn xem [bàn giao cuối](p11-t06-final-acceptance.md) và [phân tích V5 cập nhật](p10-t06-v5-analysis.md). Không dùng số cũ bên dưới làm kết quả bản notebook hiện tại.
+
 ## 1. Repository Baseline and Scope
 
 Audit ngày 20/11/2026 trên nhánh local `chuong/p11-t06-notebook-acceptance`, tạo từ `origin/main` sau fetch tại **`4a20d1a93607851a8fc48bccbbfe206a07c0a787`**. SHA này trùng mốc yêu cầu. Không push, tạo PR hoặc thay đổi remote. Hai mục có sẵn chưa được Git theo dõi là `docs/report/version-evolution-v0-v5.md` và `p3-t04/` được giữ nguyên.

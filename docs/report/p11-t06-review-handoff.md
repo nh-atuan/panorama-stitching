@@ -2,6 +2,8 @@
 
 # P10-T06 / P11-T06 — Review Handoff
 
+> Cập nhật 23/11: nội dung dưới ghi trạng thái lịch sử trước báo cáo chính thức của Đế và lượt sửa parser mới. Trạng thái hiện hành, production pin và các giới hạn xem [bàn giao cuối](p11-t06-final-acceptance.md) và [phân tích V5 cập nhật](p10-t06-v5-analysis.md). Không dùng số cũ bên dưới làm kết quả bản notebook hiện tại.
+
 ## Completed Scope
 
 Nhánh local `chuong/p11-t06-notebook-acceptance`, tiếp tục từ `f6a6eaf`, đã tích hợp main `26c8f24`. Nội dung V5 và kết luận trong [notebook](../../Group16_Final.ipynb) đã hoàn thiện; giữ 43 cell, 20 code cell và toàn bộ anchor. Không thêm kết quả GPU giả hoặc commit output notebook.

@@ -2,6 +2,8 @@
 
 # P11-T06 — Upstream Integration and Acceptance Tooling
 
+> Cập nhật 23/11: nội dung dưới ghi trạng thái lịch sử trước báo cáo chính thức của Đế và lượt sửa parser mới. Trạng thái hiện hành, production pin và các giới hạn xem [bàn giao cuối](p11-t06-final-acceptance.md) và [phân tích V5 cập nhật](p10-t06-v5-analysis.md). Không dùng số cũ bên dưới làm kết quả bản notebook hiện tại.
+
 ## 1. Integration Baseline
 
 Ngày kiểm tra: 22/11/2026, nhánh local `chuong/p11-t06-notebook-acceptance`.

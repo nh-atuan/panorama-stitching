@@ -8,13 +8,14 @@ from decimal import Decimal, localcontext
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from audit_final_notebook import section_structure
+from audit_final_notebook import section_structure, constants, PIN_FILES, compare_freeze
 from v5_report import read_table, BENCHMARK
 
 
@@ -85,6 +86,16 @@ class V5NotebookAnalysisTests(unittest.TestCase):
         self.assertEqual(section_structure(self.cells)[1], [])
         self.assertTrue(all(not c.get("outputs") and c.get("execution_count") is None
                             for c in self.cells if c["cell_type"] == "code"))
+
+    def test_public_pin_has_production_dependencies_and_records_new_verification(self):
+        pin = constants(self.sources["runtime-setup"])["SOURCE_REF"]
+        self.assertRegex(pin, r"^[0-9a-f]{40}$")
+        files = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", pin], cwd=ROOT, text=True).splitlines()
+        self.assertTrue(set(PIN_FILES).issubset(files))
+        comparison = compare_freeze(ROOT, pin)
+        self.assertFalse(comparison["src_build_equivalent"])
+        self.assertEqual(comparison["production_changes"], ["src/v5/v5_image_branch.cu"])
+        self.assertIn("candidate", self.sources["team"])
 
 
 if __name__ == "__main__":

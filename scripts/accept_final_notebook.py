@@ -46,6 +46,15 @@ def prepare_notebook(original, source, source_sha, run, tools, candidate=True):
             changed.append(dict(cell=i, change="stable missing cell ID"))
     notebook = nbf.from_dict(raw)
     source, run, tools = Path(source).resolve(), Path(run).resolve(), Path(tools).resolve()
+    # The production pin may predate report-only fixes. Load the exact bundled
+    # parser explicitly, without relying on sys.path precedence or mutating source.
+    report_helper = tools / "v5_report.py"
+    if not report_helper.is_file():
+        raise ValueError(f"Missing current report tooling: {report_helper}")
+    helper_hash = sha256(report_helper)
+    tooling_files = {name: sha256(tools / name) for name in
+                     ("v5_report.py", "accept_final_notebook.py", "export_notebook_pdf.py",
+                      "audit_final_notebook.py", "package_notebook_acceptance.py")}
     references = {}
     for cell in notebook.cells:
         if cell.cell_type != "markdown":
@@ -57,6 +66,7 @@ def prepare_notebook(original, source, source_sha, run, tools, candidate=True):
             references[relative] = sha256(target)
     # Runtime paths are literal, with source paths taking precedence over harness helpers.
     bootstrap = f'''import os, sys
+import hashlib, importlib.util
 from pathlib import Path
 SOURCE_REF = {source_sha!r}
 REPO_URL = "https://github.com/nh-atuan/panorama-stitching.git"
@@ -66,6 +76,14 @@ sys.path.insert(0, {str(tools)!r})
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from package_notebook_acceptance import verify_tree
 verify_tree(REPO_ROOT, SOURCE_REF)
+REPORT_HELPER = Path({str(report_helper)!r})
+if hashlib.sha256(REPORT_HELPER.read_bytes()).hexdigest() != {helper_hash!r}:
+    raise ValueError("Report parser changed after preparation")
+spec = importlib.util.spec_from_file_location("v5_report", REPORT_HELPER)
+report_module = importlib.util.module_from_spec(spec)
+sys.modules["v5_report"] = report_module
+spec.loader.exec_module(report_module)
+print("Report parser SHA-256:", {helper_hash!r})
 DATASET_DIR = Path(os.environ["GROUP16_DATASET_DIR"])
 BENCHMARK_DIR = WORK_DIR / "benchmark"
 BASELINE_VERSIONS = (0, 1, 2, 3, 4, 5)
@@ -97,7 +115,8 @@ print("Timed runs:", TIMED_RUNS)
     if not setup_found or not producer_found:
         raise ValueError("Missing runtime-setup/thanh-producer anchors; manual integration required")
     notebook.metadata["group16_acceptance"] = dict(source_sha=source_sha, candidate=candidate,
-        input_sha256=sha256(original), overlay=changed, local_reference_hashes=references)
+        input_sha256=sha256(original), overlay=changed, local_reference_hashes=references,
+        tooling_files=tooling_files)
     nbf.validate(notebook)
     return notebook
 

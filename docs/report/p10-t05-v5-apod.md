@@ -97,7 +97,9 @@ Thu tách biệt **9 trace NSYS** (`nsys profile --trace=cuda,nvtx --cuda-memory
 | `site3/large` | V5 Seq | 11,913 | 0,000 | 0,0% | 3 | 307,80 | 0 |
 | `site3/large` | **V5 Dual** | **8,858** | **2,046** | **24,5%** | 3 | 307,80 | 0 |
 
-![Timeline Nsight Systems Pre-S4 trên site2/large: V4 vs V5 Sequential vs V5 Dual](../../slides/generated/nsys-v5.png)
+![Ảnh chụp trực tiếp từ NVIDIA Nsight Systems 2026.6.1 trên site2/large (V5 Dual): Stream 13 (ảnh A) và Stream 14 (ảnh B) chạy chồng lấn, hội tụ về Stream 15 (S4–S6) và Peak VRAM 334 MiB](../../slides/generated/nsys-v5.png)
+
+Bản chụp toàn màn hình Nsight Systems đầy đủ được lưu tại [nsys-v5-dual-site2-large.png](../../slides/generated/screenshots/nsys-v5-dual-site2-large.png).
 
 **Nhận xét kỹ thuật từ SQLite NSYS:**
 1. **Xác nhận chồng lấn thực sự trên GPU:** V4 và V5 Sequential có mức chồng lấn đúng **0,0%**, trong khi V5 Dual đạt chồng lấn thực tế **2,046 – 2,894 ms (16,6% – 24,5%)**, giúp rút ngắn khoảng thời gian `H2D → S4 start` xuống còn 10,836 ms (`site1/large`), 17,661 ms (`site2/large`) và 8,858 ms (`site3/large`).

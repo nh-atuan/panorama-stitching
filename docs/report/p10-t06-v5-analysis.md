@@ -1,78 +1,62 @@
-<!-- Authors: Le Ha Thanh Chuong (23120195). External source: repository implementation and experiment reports cited below. -->
+<!-- Authors: Le Ha Thanh Chuong (23120195). External source: repository source and experiment reports linked below. -->
 
-# P10-T06 — V5 Interpretation and Measurement Reconciliation
+# P10-T06 — Phân tích V5 theo báo cáo chính thức ngày 23/11
 
-## 1. Scope and Evidence
+## Phạm vi và nguồn
 
-Chương chốt diễn giải cho notebook, không sửa bảng mean hoặc quyết định trong [APOD của Tuấn](p10-t05-v5-apod.md). Nguồn gồm [baseline probe T01](p10-t01-pres4-baseline.md), [contract](p10-v5-contract.md), [verification T04](p10-v5-verification.md), source V4/V5 và dữ liệu local. `results/` hiện có raw probe T01, không có raw CSV/paired blocks hoặc trace V5 để xác minh lại APOD. Số tính từ bảng là thống kê trên mean đã làm tròn, không phải số đo từng lượt.
+Bản cập nhật này thay phân tích trên báo cáo P10 cũ trước PR #57–58. [Notebook cuối kỳ](../../Group16_Final.ipynb), cell `v5-p10-results`, đọc các bảng trong [P10-T05](p10-t05-v5-apod.md) qua `scripts/v5_report.py`. Không sửa bảng của Đế hoặc sinh số đo GPU mới. Báo cáo P10-T05 định danh phiên `2026-11-23T06:47:04Z`, source `26c8f241e056a7cf5e0c5bb0d85f036d9eafd9e1`, Tesla T4, driver 580.82.07, nvcc 13.0.88 và NSYS 2025.3.1.0.
 
-## 2. Execution Order Verified Against Source
+Archive được báo cáo định danh là `results/Group16_P10_T05_Evidence.zip`, SHA-256 `e80a7e9ed2932139a13271264a631c9ba3e2171a36b6e6cf20528e614f41ade7`. Archive chưa có trong workspace khi rà soát. Vì vậy mọi phép tính dưới đây lấy từ **bảng báo cáo đã commit, mean làm tròn**, không được gọi là xác minh độc lập CSV, sidecar hoặc SQLite gốc. Kết quả nghiệm thu hình học/RGB/memcheck thuộc [P10-T04](p10-v5-verification.md), tách khỏi benchmark.
 
-V4: `H2D(A) → H2D(B) → S1(A,B) → S2(A,B) → S3(A,B) → S4 → S5(V3) → S6(V4) → D2H`. [Driver](../../src/main.cu) phát hai upload trước pipeline. [V4](../../src/v4/v4_pipeline.cu) gọi `run_gpu_stages` trong [V1](../../src/v1/v1_pipeline.cu); mỗi stage xử lý lần lượt hai ảnh. [S2](../../src/v1/s2/v1_detect.cu) copy candidate count về biến host rồi synchronize trước sort; copy vào vùng pageable có thể chặn host ngay trong API copy, theo trace T01. Không mô tả V4 là hoàn tất toàn S1–S3(A) rồi mới tới B.
+## Thứ tự thực thi và ý nghĩa timing
 
-[V5](../../src/v5/v5_pipeline.cu) có scratch/counts/features/pinned candidate slot riêng mỗi ảnh; khởi tạo BRIEF/weights trước phát nhánh. Dual enqueue cả hai prefix, query `count_ready`, phát suffix cho nhánh sẵn sàng và ghi done. Control chờ doneA/doneB rồi merge counts/status trước downstream. Sequential dùng cùng kernel/owner/API, thêm phụ thuộc doneA trước prefix B. Thời gian query/yield trên host vẫn tồn tại; query không đồng nghĩa host không tốn thời gian.
+V4 qua CLI: `H2D(A) → H2D(B) → S1(A,B) → S2(A,B) → S3(A,B) → S4 → S5(V3) → S6(V4) → D2H`. [main.cu](../../src/main.cu) phát hai upload trước [v4_run_stages](../../src/v4/v4_pipeline.cu), hàm này gọi [run_gpu_stages](../../src/v1/v1_pipeline.cu). Mỗi stage xử lý A rồi B; V4 không hoàn tất cả S1–S3(A) trước khi bắt đầu B. S2 chép candidate count về host và đồng bộ trước top-K; vùng pageable có thể khiến lời gọi copy chặn host.
 
-## 3. Measurement Definitions
+[V5](../../src/v5/v5_pipeline.cu) dùng scratch/counts/features/pinned slot riêng. Dual phát prefix hai ảnh, query `count_ready`, phát suffix nhánh sẵn sàng; control chờ `doneA/doneB`, merge rồi chạy S4–S6/D2H. Sequential dùng cùng API/kernel/workspace, thêm phụ thuộc B sau A. V4 production và V5 sequential khác cách nhóm stage/workspace, nên đối chứng dual/sequential giúp phân biệt tác động lịch chạy.
 
-| Metric | Basis | Interpretation |
-|---|---|---|
-| T01 PreS4 mean | CUDA event interval của binary probe, đầu H2D(A) đến sau S3(B), trước S4 | Có overhead event/readiness wait; không đổi nhãn thành production. |
-| T01 PreS4 share | Mean của từng `PreS4_i / Total_probe_i` | Không phải ratio of means; không trộn Total production hoặc phiên V5. |
-| T01 Host PreS4 / NSYS | Host-observed completion / profiler timeline | Phạm vi và instrumentation khác CUDA event probe. |
-| V5 PreS4 | Event common origin đến ready sau join trên control stream | Elapsed GPU interval trước S4, không cộng duration hai nhánh. |
-| V5 Host_PreS4 | Host steady-clock trong `v5_run_stages` tới lúc submit sau join | Không chứng minh GPU đã hoàn tất tại lúc host submit. |
-| Stage/H2D V5 | Sum CUDA-event duration A+B; S4–S6 đo trên control stream | Có thể lớn hơn elapsed Total do overlap. |
-| Total_Kernel_ms | Sum duration từng kernel | Có thể cộng các khoảng overlap; không dùng thay elapsed pipeline. |
-| Total_ms | Host elapsed tới khi D2H hoàn tất, đồng bộ; disk I/O ngoài khoảng đo | Bao gồm điều phối/chờ trong interval; không dùng CPU timer suy duration kernel async. |
+| Metric | Phạm vi và giới hạn |
+|---|---|
+| T01 pre-S4 share | Mean từng `PreS4_i / Total_probe_i` của binary instrumented, không phải tỷ trọng production. Site2/large là 21,439554%; production Total thuộc binary khác. |
+| V5 PreS4_ms | CUDA event từ common origin đến ready sau join/merge, không cộng duration hai nhánh. |
+| Host_PreS4 / CountWait | Host-observed intervals; không dùng thay duration kernel hoặc cộng với GPU elapsed. |
+| Stage/H2D và Total_Kernel_ms V5 | Sum các duration có thể overlap, không phải phân chia độc lập của elapsed Total. |
+| Total_ms | Host elapsed đã đồng bộ tới D2H xong, gồm điều phối; loại trừ disk I/O. |
+| NSYS đến S4 / overlap | Lượt có profiler riêng; không thay benchmark không profiler hoặc CUDA-event sidecar. |
+| NSYS remaining allocations | Bộ nhớ cấp phát còn tồn tại ở cuối trace; không phải VRAM vật lý còn trống và không thay Compute Sanitizer. |
 
-Tại site2/large, raw T01 cho PreS4 mean 15,287987 ms, Total probe mean 71,734220 ms và mean run-share 21,439554%. Ratio of means là 21,311986%, một thống kê khác. Production mean 69,684386 ms thuộc binary khác. Các giá trị này không phải mẫu số của bảng V4 61,655 ms trong phiên APOD V5.
+Nguồn baseline và denominator: [P10-T01](p10-t01-pres4-baseline.md); semantics đã chốt trước đo: [contract](p10-v5-contract.md).
 
-## 4. Recomputed Historical Metrics
+## Tính lại từ các bảng hiện hành
 
-Đặt `r_i = mean_Total_V4_i / mean_Total_V5dual_i`. Chỉ dùng các dòng mean đã làm tròn của cùng bảng APOD, không dùng cột speedup đã làm tròn và không lấy mẫu số từ P9.
+Với chín ca chuẩn, `r_i = mean(T4_i) / mean(T5dual_i)`. Trung bình nhân là `exp(mean(log(r_i)))`. Không dùng cột speedup đã làm tròn hoặc ghép mean từ P9. Challenge không nằm trong tập chín ca.
 
-| Case | V4 mean ms | V5 dual mean ms | Recomputed V5/V4 |
-|---|---:|---:|---:|
-| site1/small | 51.758 | 32.246 | 1.605098× |
-| site1/medium | 31.042 | 30.085 | 1.031810× |
-| site1/large | 105.309 | 102.925 | 1.023162× |
-| site2/small | 21.214 | 20.686 | 1.025525× |
-| site2/medium | 27.701 | 27.090 | 1.022554× |
-| site2/large | 61.655 | 59.941 | 1.028595× |
-| site3/small | 63.224 | 49.738 | 1.271141× |
-| site3/medium | 55.968 | 55.433 | 1.009651× |
-| site3/large | 100.810 | 99.205 | 1.016179× |
+| Thống kê | Tính lại từ bảng |
+|---|---:|
+| GM V5/V0 | 49.876178× |
+| GM V5/V4 | 1.068633× |
+| GM V5 dual/sequential | 1.036413× |
+| GM V5/V4, tập medium/large (kiểm độ nhạy) | 1.032431× |
+| Trung bình cộng V5/V4 | 1.080774× |
+| Tỉ số tổng các mean V4/V5 | 1.056082× |
+| V5/V4 tại site2/large | 1.056834× |
+| GM Pre-S4 sequential/dual | 1.256430× |
+| Median năm tỉ số khối ghép cặp | 1.066629× |
+| Số khối có lợi | 3/5 |
 
-| Statistic | Formula / selected cases | Value |
-|---|---|---:|
-| Geometric mean V5/V4 | `exp(mean(log(r_i)))`, 9 standard cases | **1.101330×** |
-| Medium/large geometric mean | Cùng công thức, 6 ca không gồm small | **1.021965×** |
-| Arithmetic mean V5/V4 | `mean(r_i)`, 9 ca | **1.114857×** |
-| Ratio of summed means | `sum(T4_i)/sum(T5_i)` | **1.086587×** |
-| Primary case | `61.655/59.941` | **1.028595×** |
-| Historical geomean V5/V0 | `exp(mean(log(T0_i/T5_i)))`, cùng 9 dòng P10 | **52.846197×** |
-| Paired-block median / number of same-direction blocks | Cần raw các khối ghép cặp | **Không dựng lại được** |
+Pre-S4 site2/large: `13.700 / 10.971 = 1.248747×`, giảm latency khoảng 19,920%. GM Pre-S4 suy từ mean làm tròn là 1,256430×; báo cáo ghi 1,2565×. Chưa có sidecar gốc để phân biệt tác động làm tròn với sai khác tổng hợp. Không thay số tính lại bằng số báo cáo chỉ để trùng chữ số cuối.
 
-Geomean P10 toàn bộ bị ảnh hưởng bởi hai ratio small lớn; phân tích medium/large là kiểm độ nhạy được ghi rõ, không tự loại ca để thay aggregate chính. Chưa có raw CSV nên không đánh giá variance, warm-up, thứ tự đo, clocks hoặc ý nghĩa thống kê. APOD ghi geomean 1,027× và primary 1,039×; không metric nào tính trên bảng mean ở trên xác nhận hai giá trị đó. Nguồn phiên/aggregation của chúng vẫn chưa giải thích được. Bảng gốc không bị sửa; notebook in các giá trị cũ dưới nhãn chưa đối soát và tính lại riêng.
+Bảng chính có 8/9 ca chuẩn nhanh hơn V4; site3/small là ca chậm hơn. Báo cáo có phép đo lại cho ca đó. Không thể quy nguyên nhân biến thiên cho clocks hoặc SM contention chỉ từ các bảng tóm tắt. Challenge/small có output nhưng được giữ ngoài aggregate; medium/large có NumericalFailure theo T04, không có speedup hợp lệ. Status/RGB parity không bảo đảm chất lượng căn chỉnh.
 
-Challenge small có `112.074/113.776 = 0.985041×`, giữ ngoài aggregate chuẩn; medium/large trả NumericalFailure theo verification, không có speedup hợp lệ. Status parity không bảo đảm panorama small có chất lượng tốt.
+NSYS có chín cấu hình, ba mode trên ba ca large. V5 dual có overlap 16,6–24,5%, còn V4 và V5 sequential được báo 0%. Chênh peak VRAM dual trừ V4 là 64,30 MiB ở cả ba ca. Đây là bằng chứng concurrency được báo cáo; không suy occupancy hoặc saturation từ overlap riêng lẻ.
 
-V5 pre-S4 quoted trong APOD: sequential 15,310 ms, dual 12,680 ms → ratio **1,207413×**, latency reduction **17,178315%**, chênh **2,630 ms**. Đây là phép tính từ hai số được trích, không phải kiểm độc lập sidecar V5. Khoảng timing không cho phép khẳng định Total giảm cùng 2,630 ms, hoặc so nó trực tiếp với probe T01 của phiên/binary khác. Khả năng concurrent kernels/async copy của thiết bị không tự chứng minh overlap thực; báo cáo NSYS chưa có trace V5 local để audit lại.
+## Quyết định và độ ổn định
 
-## 5. Notebook Result Provenance
+Ngưỡng chốt trước đo là median ít nhất 1,05× và ít nhất 4/5 khối có lợi tại ca chính. Tính lại từ năm cặp mean cho median 1,066629× (đạt), nhưng chỉ 3/5 khối có lợi (không đạt). Đây là median của **năm tỉ số từng khối**, không phải GM của chín ca hoặc tỉ số tổng các mean.
 
-Cell `v5-p10-results` kiểm đúng tập chín cấu hình và dùng giá trị ms để tính; hiển thị bảng tính lại, probe T01, các giá trị V5 quoted và độ giảm latency. `thanh-v5-tables` và mục 7 dùng benchmark mới do binary chạy cùng phiên; không tái sử dụng mean P9/P10 lịch sử để tạo speedup mới. `fn.best_version()` chọn geomean so V0 trên chín ca; đó là định nghĩa nhanh nhất theo bảng đo, tách khỏi quyết định production V4.
+Giữ **V4 production baseline, V5 concurrency case study** theo quyết định nhóm. Hai stream giảm Pre-S4, nhưng lợi ích end-to-end nhỏ hơn và chưa nhất quán qua các khối. Notebook trình bày kết quả thuận lợi lẫn giới hạn; không gọi V5 chậm toàn diện hoặc phủ nhận overlap.
 
-Raw T01 có ở local nên đã đối chiếu lại mean/share. Notebook đọc summary baseline đã commit vì không buộc người chạy tải thêm ZIP probe; output mang nhãn report summary. Source/benchmark freeze scope và kiểm Run all/PDF cuối thuộc P11-T06, không lấy kết quả CPU này thay T4.
+## Kiểm chứng cục bộ và phần còn lại
 
-## 6. Final Interpretation and Adoption
+Parser kiểm header, row width, đủ chín ca chuẩn, năm khối luân phiên, chín cấu hình NSYS, số hữu hạn/đơn vị và provenance. Notebook, audit và test dùng chung parser; thiếu dữ liệu phải báo lỗi có tên bảng/field, không fallback về số cũ. Integration test thực thi cell thật với report thật và đối chiếu GM bằng Decimal độc lập.
 
-Giữ quyết định đã công bố: **V4 production baseline, V5 concurrency case study**. Bảng mean cho phép nói chín ca chuẩn đều nhanh hơn theo số đã công bố, nhưng không chứng minh mức cải thiện ổn định hoặc kiểm chứng tiêu chí median các khối đo luân phiên. Geomean trên chín dòng vượt 1,05× còn mean-ratio ca chính thấp hơn; cả hai đều không phải median paired speedup. Vì thiếu raw, không khẳng định tiêu chí adoption định trước đã đạt hay thất bại. Sai khác báo cáo được công khai thay vì thay bảng hoặc chế metric để hợp thức hóa quyết định.
-
-V0 → V1 làm bottleneck chuyển từ công việc so khớp/pixel sang RANSAC; V2/V3 giảm S5, V4 gộp renderer S6 với lợi ích nhỏ đã đo. V5 tối ưu execution trước S4, không thay downstream hoặc mô hình hình học. Report NSYS gợi ý overlap copy/compute và contention; số SM/copy engines chỉ mô tả khả năng thiết bị, chưa đủ chứng minh hiệu quả thực tế khi thiếu trace. Phân tích giữ các nhận xét đó theo nguồn report, không nâng thành kết luận nhân quả đã được audit độc lập.
-
-Kết luận notebook đã bỏ placeholder V5, giữ giới hạn chất lượng panorama và phạm vi parity. Dữ liệu lịch sử đã đối soát về số học và nguồn đo; raw provenance còn thiếu được ghi như giới hạn bằng chứng, không là metric mới để chứng nhận V5. Hạ tầng chuẩn bị có thể review/merge, còn release acceptance phải có T4/output/PDF thật.
-
-## 7. Local Verification
-
-Đã chạy các cell evidence theo thứ tự trên CPU, kiểm per-case/geomean bằng Decimal độc lập, thử bỏ một ca chuẩn và thay toàn bộ cột speedup rounded/challenge timing để bắt nhầm input. Notebook giữ 43 cell/20 code và anchors; không lưu output vào bản Git. Regression toàn repo sau chỉnh sửa đạt 242 test (2 skip), `test_final_notebook.py` đạt 20 test. Raw probe T01 kiểm 84/84 hash. Giữ nguyên pin, APOD gốc và production code. [Bàn giao review](p11-t06-review-handoff.md) ghi giới hạn và thủ tục công bố do người dùng thực hiện.
+Mục 6/7/9 đã đồng bộ cách diễn giải. P11-T06 còn chạy notebook trên T4 mới với source được định danh, lưu output, đối chiếu gallery/số liệu và kiểm từng trang PDF. Local CPU/PDF smoke không thay nghiệm thu GPU hoặc bản PDF cuối.

@@ -2,7 +2,13 @@
 
 # P10-T03 — V5 Dispatcher Integration Handoff
 
-## Trạng thái và source
+## Cập nhật 22/11 — Phần triển khai đã hoàn tất
+
+Dispatcher/CLI/timing của Chương đã merge qua PR #48 (`d42000c`); API một ảnh hiện có trên main. [Verification V5](p10-v5-verification.md) và [freeze T02](p11-t02-freeze-verification.md) ghi kết quả nghiệm thu tích hợp. Không còn chờ implementation T02. Pin notebook `696fc82` có src/build khớp freeze `f2837a8`; source main mới sửa thêm kiểm tra host trong `v5_image_branch.cu`, cần evidence đúng SHA cho lần nghiệm thu cuối. Không lấy log cũ để chứng nhận thay đổi mới.
+
+Các mục bên dưới giữ bản bàn giao tại checkpoint ban đầu để truy vết; trạng thái bị chặn ở đó không còn là trạng thái hiện tại.
+
+## Historical Handoff Checkpoint
 
 **BLOCKED — MISSING REQUIRED INTEGRATION.** Dispatcher được triển khai trên `chuong/p10-v5`, code checkpoint `828e075a19c4a89ee9fd94e113738ff8d3778801`. T01 giữ nguyên lịch sử và kết quả nghiệm thu T4. Khi fetch remote để triển khai T03, chưa có nhánh T02 của Thành và chưa có `src/v5/v5_image_branch.cu`. Do đó chưa có upstream T02 integration SHA và chưa có binary V5 đã chạy.
 

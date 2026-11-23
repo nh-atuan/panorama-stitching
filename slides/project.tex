@@ -1,4 +1,4 @@
-% Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232). External source: none.
+% Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232), Le Ha Thanh Chuong (23120195). External source: none.
 \documentclass[aspectratio=169]{beamer}
 \usepackage[T1]{fontenc}
 \usepackage{booktabs}
@@ -62,7 +62,7 @@
 \begin{itemize}
 \item \textbf{S4:} Match binary descriptors by brute-force Hamming distance and reject ambiguous matches via Lowe ratio test.
 \item \textbf{S5:} Sample four matches per MSAC RANSAC hypothesis, score the candidate homography, and refit using all inliers (DLT + Jacobi SVD).
-\item \textbf{S6:} Compute canvas bounds, map output pixels back to sources, bilinear-sample B, and feather-blend the overlap.
+\item \textbf{S6:} Compute canvas bounds, map output pixels back to sources, bilinear-sample B, and blend the overlap with 50/50 averaging.
 \end{itemize}
 \medskip
 \small Homography models a common plane or largely rotational camera motion. Parallax and repetitive textures can cause alignment failure.

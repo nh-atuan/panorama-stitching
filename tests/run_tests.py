@@ -254,6 +254,7 @@ PYTHON_SUITES = [
     "test_notebook_pdf.py",
     "test_notebook_acceptance.py",
     "test_v5_notebook_analysis.py",
+    "test_v5_report.py",
     "test_pres4_baseline.py",
     "test_v5_dispatcher_contract.py",
     "test_verify_v5_cli.py",

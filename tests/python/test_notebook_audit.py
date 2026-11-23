@@ -100,17 +100,20 @@ class NotebookAuditTests(unittest.TestCase):
             audit.audit(self.path, self.root)
 
     def test_apod_requires_nine_unique_cases_and_excludes_challenge(self):
-        table = []
-        for site in ("site1", "site2", "site3"):
-            for size in ("small", "medium", "large"):
-                table.append(f"| {site} | {size} | 100,0 | 20,0 | 10,0 | 10 | 2 |")
-        table.append("| challenge | small | 100,0 | 1,0 | 999,0 | 0 | 0 |")
-        self.path.write_text("\n".join(table), encoding="utf-8")
+        report = Path(__file__).resolve().parents[2] / "docs/report/p10-t05-v5-apod.md"
+        text = report.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        for i, line in enumerate(lines):
+            if line.startswith("| site") and len(line.split("|")) == 11:
+                fields = line.split("|")
+                fields[3:7] = [" 100,0 ", " 20,0 ", " 10,0 ", " 10,0 "]
+                lines[i] = "|".join(fields)
+        self.path.write_text("\n".join(lines), encoding="utf-8")
         result = audit.reconcile_apod(self.path)
         self.assertEqual(result["arithmetic_mean"], 2)
         self.assertAlmostEqual(result["geometric_mean"], 2)
-        self.assertIsNone(result["median_paired_run_speedup"])
-        self.path.write_text("\n".join(table[:-2]), encoding="utf-8")
+        self.assertAlmostEqual(result["median_paired_run_speedup"], 66.819 / 62.645)
+        self.path.write_text("\n".join(l for l in lines if not l.startswith("| site1 | small |")), encoding="utf-8")
         with self.assertRaises(ValueError):
             audit.reconcile_apod(self.path)
 

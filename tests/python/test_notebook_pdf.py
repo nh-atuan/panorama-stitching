@@ -52,6 +52,24 @@ class PDFTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "template"):
             pdf.configure_mathjax("<head>unknown template</head>")
 
+    def test_vietnamese_pdf_glyph_spacing_is_not_a_missing_heading(self):
+        # Reproduces the text extracted by pypdf from the returned Colab PDF.
+        pages = ["1. Thông tin nhóm\n2. Gi ớ i thi ệ u", "9. K ế t lu ậ n"]
+        found = pdf.heading_pages(pages, ("Thông tin nhóm", "Giới thiệu", "Kết luận"))
+        self.assertEqual(found, {"Thông tin nhóm": [1], "Giới thiệu": [1], "Kết luận": [2]})
+        self.assertEqual(pdf.heading_pages(["Gioi thieu"], ("Giới thiệu",)), {"Giới thiệu": []})
+        self.assertEqual(pdf.heading_pages(["Giới thiệu"], ("Kết luận",)), {"Kết luận": []})
+
+    def test_pdf_inspection_still_rejects_an_actually_missing_heading(self):
+        from types import SimpleNamespace
+        path = self.root / "mock.pdf"
+        path.write_bytes(b"%PDF-1.7\n" + b"x" * 120)
+        reader = SimpleNamespace(pages=[SimpleNamespace(extract_text=lambda: "2. Gi ớ i thi ệ u", images=[])])
+        with patch("pypdf.PdfReader", return_value=reader):
+            result = pdf.inspect_pdf(path, ("Giới thiệu", "Kết luận"))
+        self.assertEqual(result["missing_headings"], ["Kết luận"])
+        self.assertTrue(result["problems"])
+
     def test_mermaid_failure_cannot_fall_back_to_raw_latex_code(self):
         self.notebook.cells.insert(0, self.nbf.v4.new_markdown_cell('```mermaid\nflowchart LR\n A --> B\n```'))
         self.save()

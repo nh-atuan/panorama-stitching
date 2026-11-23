@@ -31,20 +31,25 @@ def clean(value):
                     .replace("`", "").replace("\u00a0", " ").split())
 
 
-def read_table(path, first_headers, required=()):
+def read_table(path, first_headers, required=(), context=None):
     """Select a unique Markdown table by leading headers and validate every row."""
     path = Path(path)
     prefix = tuple(map(clean, first_headers))
     matches = []
     lines = path.read_text(encoding="utf-8").splitlines()
     split = lambda line: [part.strip() for part in line.strip().strip("|").split("|")]
+    heading = ""
     for i, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            heading = clean(line)
         if not line.lstrip().startswith("|"):
             continue
         header = split(line)
         normalized = list(map(clean, header))
         if tuple(normalized[:len(prefix)]) != prefix:
             continue
+        if context and context not in heading:
+            raise ValueError(f"{path}: table {prefix} must identify {context} in its section heading")
         if len(set(normalized)) != len(header):
             raise ValueError(f"{path}: duplicated headers in table {prefix}")
         missing = set(map(clean, required)) - set(normalized)
@@ -88,7 +93,8 @@ def number(value, field, unit="", positive=True, integer=False):
 
 def table(path, schema):
     prefix = schema[:3] if schema in (BENCHMARK, PRES4) else schema[:2]
-    rows = read_table(path, prefix, required=schema)
+    rows = read_table(path, prefix, required=schema,
+                      context="site2/large" if schema == PAIRED else None)
     # Header emphasis/whitespace is presentation, not part of the machine schema.
     return [{clean(k): v for k, v in row.items()} for row in rows]
 
@@ -142,6 +148,27 @@ def provenance(path, root=None):
                 archive_reported_sha256=digest[0], raw_archive_present=present,
                 raw_independently_verified=False,
                 basis="Committed report tables, rounded milliseconds; raw CSV/SQLite not independently verified")
+
+
+def adoption(text):
+    """Read explicit decision labels, without deriving the group's choice from timing."""
+    selected = {}
+    in_decision = False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            in_decision = "APOD" in line and "quyết định" in line.lower()
+        if not in_decision:
+            continue
+        value = clean(line)
+        for field, label in (("production", "production baseline"), ("case_study", "concurrency case study")):
+            if label in value.lower():
+                versions = set(re.findall(r"\bV[0-5]\b", value))
+                if len(versions) != 1 or field in selected:
+                    raise ValueError(f"APOD decision: ambiguous {label} version")
+                selected[field] = versions.pop()
+    if set(selected) != {"production", "case_study"}:
+        raise ValueError("APOD decision: missing explicit production/case-study labels")
+    return selected
 
 
 def analyze(path, root=None):
@@ -202,13 +229,11 @@ def analyze(path, root=None):
                    vram_increases_mib=[profile[(f"site{i}/large", "V5 Dual")][PROFILE[6]] -
                                        profile[(f"site{i}/large", "V4 Prod")][PROFILE[6]] for i in (1, 2, 3)])
     # Record the published decision; the two paired gates are computed independently.
-    decision = clean(path.read_text(encoding="utf-8")).lower()
-    if "production baseline" not in decision or "concurrency case study" not in decision:
-        raise ValueError(f"{path}: missing explicit production/case-study decision")
+    decision = adoption(path.read_text(encoding="utf-8"))
     return dict(benchmark_rows=benchmark_rows, benchmark=benchmark, challenge=challenge,
                 pres4_rows=pres4_rows, pres4=pres4, paired_rows=paired_rows, paired=paired,
                 profile_rows=profile_rows, metrics=metrics, provenance=provenance(path, root),
-                decision=dict(production="V4", case_study="V5",
+                decision=dict(**decision,
                               median_gate=metrics["paired_median"] >= MIN_PAIRED_MEDIAN,
                               consistency_gate=metrics["beneficial_blocks"] >= MIN_BENEFICIAL_BLOCKS,
                               thresholds=dict(median=MIN_PAIRED_MEDIAN, beneficial_blocks=MIN_BENEFICIAL_BLOCKS)))

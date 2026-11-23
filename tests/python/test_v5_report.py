@@ -112,6 +112,15 @@ class V5ReportTests(unittest.TestCase):
             self.analyze(self.text.replace("| 2 | `v5_dual → v4` |", "| 2 | `v4 → v5_dual` |"))
         with self.assertRaisesRegex(ValueError, "NSYS.*nine"):
             self.analyze("\n".join(l for l in self.text.splitlines() if not l.startswith("| `site1/large` | V4 Prod |")))
+        with self.assertRaisesRegex(ValueError, "must identify site2/large"):
+            self.analyze(self.text.replace("5 khối đo ghép cặp luân phiên trên ca chính `site2/large`",
+                                           "5 khối đo ghép cặp luân phiên trên ca chính `site1/large`"))
+
+    def test_decision_must_come_from_the_explicit_apod_section(self):
+        with self.assertRaisesRegex(ValueError, "missing explicit"):
+            self.analyze(self.text.replace("**phiên bản sản phẩm (Production Baseline)**", "**phiên bản sản phẩm**"))
+        changed = self.text.replace("Nhóm giữ **V4 (Single-pass Canvas Fusion)**", "Nhóm giữ **V3 (Single-pass Canvas Fusion)**")
+        self.assertEqual(self.analyze(changed)["decision"]["production"], "V3")
 
     def test_missing_raw_archive_never_fabricates_verification(self):
         result = self.analyze()

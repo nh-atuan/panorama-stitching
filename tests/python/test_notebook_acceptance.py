@@ -115,13 +115,14 @@ class AcceptanceTests(unittest.TestCase):
                 with patch.dict(os.environ, {"GROUP16_DATASET_DIR": str(folder / "dataset")}), contextlib.redirect_stdout(io.StringIO()):
                     exec(compile(n.cells[2].source, "runtime-setup", "exec"), scope)
                     for role in ("method-settings", "v0-evidence", "v1-evidence", "v2-evidence", "v3-evidence",
-                                 "v4-p9-results", "v4-p9-verification", "v5-p10-results"):
+                                 "v4-p9-results", "v4-p9-profiling", "v4-p9-verification", "v5-p10-results"):
                         cell = next(c for c in n.cells if c.get("id") == role)
                         exec(compile(cell.source, role, "exec"), scope)
                 self.assertEqual(scope["SOURCE_REF"], pin)
                 self.assertEqual(n.metadata.group16_acceptance.source_sha, pin)
                 self.assertEqual(scope["p10_metrics"]["beneficial_blocks"], 3)
                 self.assertEqual(Path(sys.modules["v5_report"].__file__), root / "scripts/v5_report.py")
+                self.assertTrue(all((source / p).is_file() for p in source_tools.NOTEBOOK_ASSETS))
         finally:
             sys.path[:] = old_path
             if old_module is not None:

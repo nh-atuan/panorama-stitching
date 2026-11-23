@@ -58,12 +58,14 @@ def section_structure(cells):
     if positions != sorted(positions):
         problems.append("Essential code roles are out of dependency order: setup -> producer -> methods/results -> comparison -> charts -> gallery")
     return found, problems
+NOTEBOOK_ASSETS = ("slides/generated/nsys-v4.png", "slides/generated/ncu-v4.png")
 PIN_FILES = (
     *(f"src/v{v}/v{v}_pipeline.{ 'cpp' if v == 0 else 'cu'}" for v in range(6)),
     "src/v5/v5_image_branch.h", "src/v5/v5_image_branch.cu", "src/main.cu",
     "src/versions.h", "scripts/build.py", "scripts/notebook/final_notebook.py",
     "scripts/notebook/midterm_notebook.py", "scripts/dataset/prepare_dataset.py",
     "scripts/run_benchmark.py", "scripts/fetch_and_prepare_dataset.py",
+    *NOTEBOOK_ASSETS,
 )
 FREEZE_SHA = "f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7"
 

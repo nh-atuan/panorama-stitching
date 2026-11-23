@@ -13,7 +13,7 @@ import re
 import subprocess
 import zipfile
 
-from audit_final_notebook import PIN_FILES, compare_freeze
+from audit_final_notebook import PIN_FILES, NOTEBOOK_ASSETS, compare_freeze
 from notebook.midterm_notebook import safe_extract, sha256
 from notebook.package_s6_verification import EXTENSIONS, PREFIXES
 
@@ -46,7 +46,8 @@ def package(root, ref, output):
         raise FileExistsError(f"Refuse to overwrite source archive: {output}")
     revision = full_sha(command(root, "rev-parse", f"{ref}^{{commit}}"))
     names = command(root, "ls-tree", "-r", "--name-only", revision).splitlines()
-    names = [n for n in names if n.split("/", 1)[0] in {*PREFIXES, "docs", "experiments"} or n in ROOT_FILES]
+    names = [n for n in names if n.split("/", 1)[0] in {*PREFIXES, "docs", "experiments"}
+             or n in ROOT_FILES or n in NOTEBOOK_ASSETS]
     # Git archive uses committed blobs, never untracked or modified working-tree files.
     payload_zip = command(root, "archive", "--format=zip", revision, "--", *names, binary=True)
     with zipfile.ZipFile(io.BytesIO(payload_zip)) as bundle:

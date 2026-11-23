@@ -521,13 +521,72 @@ Giai đoạn P11 tập trung chốt toàn bộ các tài liệu tĩnh của dự
 
 ## P12 - Quay video thuyết trình
 
-Kế hoạch chi tiết được lập sau khi hoàn thành P11. Giai đoạn P12 tập trung quay và thu thập đầy đủ tư liệu thô của 4 phần video theo đúng yêu cầu đề bài (tổng thời lượng 20–30 phút, chuẩn 1080p, thu âm rõ ràng, video phải có mặt người nói):
-- **Tuấn (4–6 phút)** — *Problem overview and approach*
-- **Thành (6–9 phút)** — *Live demonstration of running code*
-- **Đế (6–9 phút)** — *Performance results and analysis*
-- **Chương (4–6 phút)** — *Key optimizations and lessons learned*
+Hạn của giai đoạn: **26/11 (Thứ 5)**.
 
-Đầu ra cần bàn giao: Thư mục chứa link video/source sẽ cập nhật sau.
+Giai đoạn P12 tập trung quay và thu thập đầy đủ tư liệu thô của 4 phần video thuyết trình theo đúng yêu cầu đề cuối kỳ (tổng thời lượng 20–30 phút, chuẩn 1080p, 30 fps, thu âm rõ không nhạc nền, có hình người trình bày đặt ở góc không che chữ hoặc số liệu, chừa 2–3 giây im lặng ở đầu/cuối đoạn và có câu chuyển giao giữa các phần). Phần 1, 3, 4 trình chiếu bằng bản PDF slide dùng chung do Đế biên dịch lại và upload lên Drive P12, bám theo [kịch bản phân cảnh](../slides/video-outline.md); riêng Phần 2 của Thành quay trực tiếp phiên chạy live trên Colab Tesla T4 bằng `scripts/live_demo.py`.
+
+Mỗi thành viên tự chủ động chia số lượng clip source khi quay (không bắt buộc gộp thành 1 file), chỉ cần đánh số thứ tự rõ ràng (ví dụ `01_...`, `02_...`) và upload toàn bộ vào thư mục mang tên mình trong [thư mục Drive nộp source video P12](https://drive.google.com/drive/folders/1jXTXTSCKMdpBjCKTTZO1RJ3P3UOb7wCx?usp=sharing) để Tuấn biên tập ở P13.
+
+<table>
+  <thead>
+    <tr>
+      <th>Thành viên</th>
+      <th>Mã</th>
+      <th>Công việc</th>
+      <th>Phụ thuộc</th>
+      <th>Đầu ra / tiêu chí xong</th>
+      <th>Trạng thái</th>
+      <th>Ghi chú / PR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cả nhóm</td>
+      <td>P12-T01</td>
+      <td>Đế biên dịch lại bản PDF slide và upload lên Drive P12; cả nhóm thống nhất bản slide PDF dùng chung và quy chuẩn quay video thô</td>
+      <td>P11-T05</td>
+      <td>Bản slide PDF mới nhất đã được Đế biên dịch lại và upload lên Drive P12 để cả 4 thành viên dùng chung cho Phần 1, 3, 4; thống nhất chuẩn quay 1080p/30 fps, thu âm, bố cục webcam không che nội dung, câu chuyển giao và quy ước đánh số clip trong thư mục tên mình trên Drive P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Tuấn</td>
+      <td>P12-T02</td>
+      <td>Quay Phần 1 — <em>Problem overview and approach</em> (4–6 phút, mục tiêu ~5 phút) theo slide 1–6</td>
+      <td>P12-T01</td>
+      <td>Bộ clip source đạt chuẩn 1080p, rõ tiếng, có hình người trình bày, đủ nội dung tổng quan bài toán, pipeline 6 stage và lộ trình V0–V5 theo <code>slides/video-outline.md</code>; đã tự kiểm tra âm thanh/hình ảnh, đánh số theo thứ tự và upload vào thư mục <code>Tuấn</code> trên Drive P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Thành</td>
+      <td>P12-T03</td>
+      <td>Quay Phần 2 — <em>Live demonstration of running code</em> (6–9 phút, mục tiêu ~7 phút) trực tiếp trên Colab Tesla T4</td>
+      <td>P12-T01</td>
+      <td>Bộ clip source đạt chuẩn 1080p, rõ chữ terminal và âm thanh, có hình người trình bày; demo đủ <code>nvidia-smi -L</code>, build <code>sm_75</code>, chạy <code>scripts/live_demo.py</code> (V0/V4/V5 trên <code>site2/small</code>), đối chiếu ảnh panorama và ca lỗi <code>challenge/medium</code>; đã tự kiểm tra, đánh số theo thứ tự và upload vào thư mục <code>Thành</code> trên Drive P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Đế</td>
+      <td>P12-T04</td>
+      <td>Quay Phần 3 — <em>Performance results and analysis</em> (6–9 phút, mục tiêu ~7 phút 30 giây) theo slide hiệu năng và <code>slides/video-performance-notes.md</code></td>
+      <td>P12-T01</td>
+      <td>Bộ clip source đạt chuẩn 1080p, rõ tiếng, có hình người trình bày, đủ nội dung benchmark V0–V5, dịch chuyển điểm nghẽn, profiling NSYS/NCU và quyết định APOD; đã tự kiểm tra, đánh số theo thứ tự và upload vào thư mục <code>Đế</code> trên Drive P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Chương</td>
+      <td>P12-T05</td>
+      <td>Quay Phần 4 — <em>Key optimizations and lessons learned</em> (4–6 phút, mục tiêu ~5 phút) theo slide tối ưu và tổng kết</td>
+      <td>P12-T01</td>
+      <td>Bộ clip source đạt chuẩn 1080p, rõ tiếng, có hình người trình bày, đủ nội dung hai trục tối ưu, S6 V4, V5 dual-stream và bài học rút ra theo <code>slides/video-outline.md</code>; đã tự kiểm tra, đánh số theo thứ tự và upload vào thư mục <code>Chương</code> trên Drive P12</td>
+      <td>Chưa làm</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
 ## P13 - Biên tập video và cập nhật bài nộp
 
@@ -576,3 +635,4 @@ Ghi lại các quyết định cả Nhóm đã thống nhất trong quá trình 
 | 20/11 | Chốt bảy task P10 đến 23:59 thứ Ba 24/11. Chương điều phối, chốt baseline với Đế và triển khai dispatcher V5. Thành tách S1–S3, Tuấn nghiệm thu trên T4, Đế đo benchmark và profiling. Thành và Chương tích hợp kết quả vào notebook, Tuấn và Đế chốt slide và kịch bản. |
 | 20/11 | Chốt lộ trình 4 giai đoạn cuối hoàn thiện bài nộp: P11 (hạn 23/11), P12, P13, P14 (họp thử thuyết trình 10 phút + 5 phút vấn đáp), mốc nộp bài 04/12 |
 | 20/11 | Chốt phân công P11 (6 task) và phân vai P12: P11 gồm Tuấn (codebase, README & regression), Thành (scripts/demo & văn phong notebook), Đế (slide Beamer & số liệu APOD), Chương (nghiệm thu Colab T4 & PDF notebook); P12 quay video: Tuấn (Overview), Thành (Live demo), Đế (Performance), Chương (Optimizations & lessons); Tuấn edit chính ở P13 |
+| 23/11 | Chốt kế hoạch chi tiết P12 (hạn 26/11, Thứ 5): Đế biên dịch lại bản PDF slide và upload lên [Drive nộp source video P12](https://drive.google.com/drive/folders/1jXTXTSCKMdpBjCKTTZO1RJ3P3UOb7wCx?usp=sharing) để cả nhóm dùng chung cho Phần 1, 3, 4; riêng Phần 2 của Thành quay live trên Colab T4 bằng `scripts/live_demo.py`; mỗi thành viên tự chia số clip source, đánh số theo thứ tự và upload vào thư mục mang tên mình trên Drive P12 |

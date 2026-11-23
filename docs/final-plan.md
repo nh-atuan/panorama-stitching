@@ -74,8 +74,8 @@ flowchart LR
 | P8 | Tối ưu và profiling V3 | Đã lập, kết thúc 15/11 (Chủ nhật) |
 | P9 | Tối ưu S6 V4 và khung bài nộp | Đã lập, kết thúc 19/11 (Thứ 5) |
 | P10 | Thử nghiệm V5 hai stream và tích hợp kết quả vào bài nộp | Đã lập, hoàn thành 20/11 (Thứ 6). Xem [kết quả](task-board.md#p10---v5-hai-cuda-stream-và-tích-hợp-kết-quả-vào-bài-nộp). |
-| P11 | Chốt tài liệu tĩnh, tái cấu trúc codebase và chuẩn bị demo | Đang mở, kết thúc 23/11 (Thứ 2). Xem [sáu task chi tiết](task-board.md#p11---chốt-tài-liệu-tĩnh-tái-cấu-trúc-codebase-và-chuẩn-bị-demo). |
-| P12 | Quay video thuyết trình | Lập sau P11, kết thúc 26/11 (Thứ 5) |
+| P11 | Chốt tài liệu tĩnh, tái cấu trúc codebase và chuẩn bị demo | Đã lập, kết thúc 23/11 (Thứ 2). Xem [sáu task chi tiết](task-board.md#p11---chốt-tài-liệu-tĩnh-tái-cấu-trúc-codebase-và-chuẩn-bị-demo). |
+| P12 | Quay video thuyết trình | Đang mở, kết thúc 26/11 (Thứ 5). Xem [năm task chi tiết](task-board.md#p12---quay-video-thuyết-trình). |
 | P13 | Biên tập video và cập nhật bài nộp | Lập sau P12, kết thúc 29/11 (Chủ nhật) |
 | P14 | Họp tổng duyệt thử thuyết trình | Lập sau P13, kết thúc 03/12 (Thứ 5) |
 
@@ -128,6 +128,12 @@ Kết quả cần có khi kết thúc `P11`:
 - slide Beamer `slides/project.tex` biên dịch PDF 16:9 sắc nét, khớp 100% số liệu với notebook và báo cáo APOD;
 - kịch bản phân cảnh video chi tiết (cue sheet) từng phút cho 4 phần và 4 thành viên theo đề bài;
 - notebook bài nộp `Group16_Final.ipynb` đủ 10 mục được trau chuốt văn phong tiếng Việt khoa học, chạy `Run all` thành công trên Colab T4 mới, lưu đầy đủ output và xuất bản in PDF `Group16_Final.pdf`.
+
+Kết quả cần có khi kết thúc `P12`:
+
+- Đế biên dịch lại bản PDF slide mới nhất và upload lên Drive P12 để cả nhóm dùng chung cho Phần 1, 3, 4, đồng thời thống nhất quy chuẩn kỹ thuật quay (1080p, 30 fps, thu âm rõ, có hình người trình bày);
+- đủ 4 phần video thô đáp ứng khung thời lượng 20–30 phút của đề bài: Tuấn (4–6 phút, tổng quan), Thành (6–9 phút, live demo trên Colab T4 bằng `scripts/live_demo.py`), Đế (6–9 phút, kết quả và phân tích hiệu năng), Chương (4–6 phút, các tối ưu chính và bài học rút ra);
+- toàn bộ các clip source của mỗi thành viên được đánh số theo thứ tự và upload đầy đủ vào thư mục mang tên mình trên [thư mục Drive nộp source video P12](https://drive.google.com/drive/folders/1jXTXTSCKMdpBjCKTTZO1RJ3P3UOb7wCx?usp=sharing), sẵn sàng cho Tuấn biên tập ở P13.
 
 ## 4. Đóng băng V0 và hướng xử lý dataset cuối kỳ
 

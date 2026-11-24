@@ -2,6 +2,19 @@
 
 # P11-T06 — Final Colab T4 Acceptance Runbook
 
+## Lượt T4 đã trả về
+
+Đã có run `20261123T144350Z-25b763c7`: 20/20 cell code hoàn tất trên T4, đủ V0–V5 và PDF 59 trang. Controller gốc failed chỉ ở QA heading tiếng Việt; đã sửa kiểm whitespace và review lại PDF, giữ nguyên evidence. Xem [bàn giao hiện hành](p11-t06-final-acceptance.md). Không cần chạy lại GPU chỉ để sửa validator PDF; nếu sửa cell thực thi thì phải tạo lượt evidence mới.
+
+Lệnh rà artifact đã tải về (đọc-only đối với run gốc):
+
+```powershell
+$env:MPLBACKEND='Agg'
+python scripts/review_notebook_evidence.py results/20261123T144350Z-25b763c7 --tooling-ref 497b08ced5ffb26f69afbe5f8e0ed83971df7ffa --pdf-copy build/Group16_P11_T06_Submission/Group16_Final.pdf --output build/p11-t06-returned-review/recheck.json
+```
+
+Các mục bên dưới giữ quy trình tạo lượt chạy mới, không thay kết quả đã thu. Bản có output nằm trong gói submission; source notebook trên Git tiếp tục output-free theo quy ước nhóm.
+
 ## 1. Trạng thái và phạm vi
 
 Cập nhật ngày 23/11/2026 trên nhánh `chuong/p11-t06-final-acceptance`, base public `cd5ee9d4bb6724b6a816d4d185f0531c47d43d17`. PR #56–58 đã merge; notebook có 43 cell, 20 code, 10 mục và giữ nguyên ID/anchor. Cell V5 đã bỏ regex theo câu văn cũ, đọc bảng benchmark, Pre-S4, năm khối luân phiên và NSYS bằng parser dùng chung. Nội dung mục 6/7/9 theo [phân tích cập nhật](p10-t06-v5-analysis.md).

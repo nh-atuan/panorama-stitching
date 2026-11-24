@@ -1,75 +1,134 @@
-<!-- Authors: Le Ha Thanh Chuong (23120195). External source: repository code, reports and locally generated checks cited below. -->
+<!-- Authors: Le Ha Thanh Chuong (23120195). External source: returned Colab artifacts and repository reports cited below. -->
 
-# P10-T06 / P11-T06 — Final Acceptance Preparation
+# P11-T06 — Colab T4 Notebook and PDF Handoff
 
-## Branch và ranh giới công việc
+## 1. Kết luận nghiệm thu
 
-Nhánh local: `chuong/p11-t06-final-acceptance`. Base: `cd5ee9d4bb6724b6a816d4d185f0531c47d43d17`, khớp origin/main lúc bắt đầu. PR #56–58 đã merge; không tiếp tục nhánh P11-T06 cũ. Không push, tạo PR hoặc merge trong lượt này. Giữ nguyên hai mục untracked có sẵn: `docs/report/version-evolution-v0-v5.md` và `p3-t04/`.
+**P11-T06 READY FOR REVIEW.** Phiên Colab thật `20261123T144350Z-25b763c7` đã chạy xong 20/20 cell code, đủ 10 mục, V0–V5, bảng/biểu đồ và gallery. Controller gốc kết thúc `failed` vì PDF QA không nhận ra khoảng trắng do text extraction chèn trong từ tiếng Việt; không phải lỗi CUDA hoặc cell notebook. Đã sửa validator, kiểm lại và xem đủ 59 trang PDF. Giữ nguyên summary, failure.log, PDF và notebook gốc; không sửa lịch sử để đổi failed thành passed.
 
-Không thay `src/`, thuật toán, Config, ngưỡng nghiệm thu hoặc `scripts/build.py`. P10-T06 đã xong phần triển khai nội dung/chuẩn bị; tiêu chí nghiệm thu trọn vẹn còn mở. P11-T06 vẫn Đang làm đến khi có Run all T4, output đầy đủ và PDF được duyệt.
+P10-T06 đã hoàn thành phần kỹ thuật và đối soát nội dung, chuyển Chờ review. P11-T06 chuyển Chờ review, chưa đánh Xong trước khi review/merge. Lượt này không tái chứng nhận source freeze, toàn bộ đồ án, cặp mẫu môn học hoặc video. Chi tiết máy đọc được: [p11-t06-t4-evidence.json](p11-t06-t4-evidence.json).
 
-## Lỗi và sửa ở nguyên nhân gốc
+## 2. Source và danh tính artifact
 
-Cell thật `v5-p10-results` đã được tái hiện qua test CPU: regex tìm câu kết luận APOD cũ trả None rồi `.group()` gây AttributeError. Các regex tìm Pre-S4 phía sau cũng lỗi thời. Report mới có schema bảng khác và thêm sequential, paired blocks, NSYS; không giải quyết bằng guard hoặc số fallback.
+| Hạng mục | Giá trị |
+|---|---|
+| Nhánh review | chuong/p11-t06-final-acceptance, base cd5ee9d |
+| Production SHA thực chạy | cd5ee9d4bb6724b6a816d4d185f0531c47d43d17 |
+| Notebook/tooling revision chuẩn bị | 497b08ced5ffb26f69afbe5f8e0ed83971df7ffa |
+| Notebook input SHA-256 | 41e28530dc5bb24fd0d60d41352373c3d5ebce47bbc6c113cce3446a06d2427d |
+| Notebook output SHA-256 | 530f39f57001b0033a442fb1c937fae3a274ed65633a9f0fb2b86cb7010c2a39 |
+| PDF SHA-256 | f80a610673578e19c447522b0f5876bc2f2bd3f397c70493e892cb11c3020fa3 |
+| Binary stitch SHA-256, manifest Colab | 839d725705479e2e467733b6aeb0bc39eac5963112360647e70b06be4a6ab84a |
+| Dataset manifest SHA-256 | 99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d |
 
-`scripts/v5_report.py` đọc bảng theo header, kiểm row width/field, số hữu hạn và đơn vị, đúng chín ca chuẩn, năm khối luân phiên tại site2/large, chín cấu hình profiler. Parser dùng chung cho notebook và numerical audit. Decision đọc từ các nhãn production/case-study trong mục APOD; không tự suy lựa chọn nhóm từ speedup. Thiếu bảng/field/provenance phải lỗi rõ tên nguồn. Số liệu speedup được tính từ ms, không đọc cột ratio đã làm tròn. Hàm table reader cũng được dùng lại bởi các cell lịch sử.
+Input notebook và năm hash helper được đối chiếu với blob Git ở tooling revision trên. Source references ghi trong metadata được đối chiếu với Git tree production. Chỉ hai cell bootstrap/producer có runtime overlay đúng dự kiến; cell phương pháp, Markdown và kết quả không bị thay. Không fallback về checkout chỉ có V4.
 
-## Kết quả và cách diễn giải
+So với freeze P11-T02 tại `f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7`, production có thêm host validation trong `src/v5/v5_image_branch.cu`. Lượt benchmark/Run all này kiểm hành vi thực tế trên source mới, nhưng không có full regression, synthetic hoặc Compute Sanitizer mới. Không gán log memcheck lịch sử cho source vừa chạy. [Freeze cũ](p11-t02-freeze-verification.md)
 
-Từ bảng báo cáo chính thức [P10-T05](p10-t05-v5-apod.md), không phải raw CSV/SQLite đã kiểm độc lập:
+## 3. Môi trường và giao thức
 
-| Metric | Tính lại |
+- Tesla T4, compute capability 7.5; driver 580.82.07, VRAM tổng 15.360 MiB và còn 14.913 MiB tại preflight.
+- Linux 6.6.159+, Intel Xeon @ 2.00 GHz, Python 3.13.16, nvcc 13.0.88.
+- Build thật ghi `-arch=sm_75 -std=c++11 -O2 --fmad=false`, tắt vectorization/FMA CPU, bật `PANORAMA_V5_IMAGE_API_AVAILABLE`.
+- Dataset preflight báo đủ 24 ảnh, manifest/sizes/hashes khớp ba site và challenge ở ba độ phân giải. Ảnh đầu vào không nằm trong ZIP evidence; đây là xác nhận manifest/log của lượt Colab, không phải đọc lại 24 file ảnh gốc trên máy local.
+- Phiên benchmark bắt đầu ghi lúc `2026-11-23T14:45:56+00:00`. Mỗi cấu hình thành công có một warm-up và năm timed runs; V5 dùng mode dual mặc định. Không có phép đo sequential hoặc sidecar Pre-S4 mới trong phiên này.
+- CUDA events đo GPU; Total có D2H đã đồng bộ, loại trừ disk I/O theo implementation. Sum duration stage/kernel của V5 có thể overlap, không dùng thay elapsed Total.
+
+## 4. Run all và kiểm chứng đầu ra
+
+Đã xác minh 268/268 checksum, không file thiếu hoặc bị sửa. Notebook có 43 cell, 20 execution counts liên tục 1–20, `cell_errors.json=[]`; log có START/END cho toàn bộ code. Có đủ 10 section/anchor, bảng lịch sử, bảng cùng phiên, cell V5 mới, charts và ảnh gallery embedded. PDF có 12 image objects; exporter ghi 10 biểu thức MathJax và một sơ đồ Mermaid.
+
+Ma trận thực tế là 72 lượt CLI (12 cấu hình × 6 phiên bản):
+
+| Nhóm | Số lượt | Kết quả |
+|---|---:|---|
+| 9 cấu hình chuẩn × V0–V5 | 54 | Success, panorama và timing đầy đủ |
+| challenge/small × V0–V5 | 6 | Success; ảnh vẫn méo, không coi là đạt cảm quan |
+| challenge/medium và large × V0–V5 | 12 | NumericalFailure, exit 1; không suy timing hợp lệ |
+
+Mỗi CSV thành công được kiểm lại bằng parser production: đúng 5 runs, Average/Minimum, schema V0 8 cột và GPU 11 cột theo từng version. Summary khớp raw CSV trong dung sai làm tròn. Trên 10 cấu hình có panorama: Config giống nhau giữa phiên bản, H B→A từ log có reprojection drift 0 px trên lưới kiểm 20×20, canvas/offset khớp; file JPEG giống hệt giữa cả sáu phiên bản. Vì vậy decoded JPEG Max RGB = 0. Đây là parity của artifact sau ghi JPEG và H đã in ra log, không thay kiểm uint8_t S6 trước nén hoặc synthetic ground truth.
+
+## 5. Timing cùng phiên mới
+
+Mean Total_ms, tính lại từ năm raw runs, không ghép với APOD lịch sử:
+
+| Cấu hình | V0 | V1 | V2 | V3 | V4 | V5 dual | V4/V5 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| site1/small | 1239.426 | 583.414 | 71.699 | 32.507 | 32.481 | 31.954 | 1.0165 |
+| site1/medium | 1636.825 | 523.211 | 54.310 | 31.174 | 30.814 | 29.713 | 1.0371 |
+| site1/large | 4719.238 | 412.580 | 257.760 | 107.154 | 105.761 | 103.193 | 1.0249 |
+| site2/small | 1138.894 | 933.227 | 21.472 | 21.248 | 21.047 | 20.882 | 1.0079 |
+| site2/medium | 1820.403 | 865.180 | 27.655 | 27.835 | 27.491 | 30.566 | 0.8994 |
+| site2/large | 5822.029 | 503.047 | 80.580 | 62.521 | 62.232 | 58.518 | 1.0635 |
+| site3/small | 794.914 | 364.269 | 111.668 | 53.079 | 45.150 | 61.142 | 0.7384 |
+| site3/medium | 1360.225 | 388.150 | 141.052 | 55.768 | 55.800 | 54.886 | 1.0166 |
+| site3/large | 3910.964 | 407.933 | 251.991 | 100.627 | 100.163 | 97.402 | 1.0283 |
+
+| Version | GM speedup vs V0, 9 ca chuẩn | GM vs phiên bản trước |
+|---|---:|---:|
+| V1 | 3.801076× | 3.801076× |
+| V2 | 23.920055× | 6.292970× |
+| V3 | 42.022061× | 1.756771× |
+| V4 | 43.052128× | 1.024513× |
+| V5 | 42.021313× | 0.976057× |
+
+V4 có GM cao nhất trong phiên mới, nên notebook chọn V4 cho stage breakdown/gallery đúng output. V5 nhanh hơn V4 ở 7/9 cấu hình, nhưng chậm ở site2/medium và site3/small; GM V5/V4 = 0,976057×. Ca chính site2/large vẫn cải thiện: 62,232 → 58,518 ms, khoảng 1,0635×. Không suy nguyên nhân hai ca chậm chỉ từ một batch; thứ tự chạy version cố định, không phải các khối luân phiên hoặc đối chứng sequential/dual mới.
+
+### Tách khỏi P10-T05 lịch sử
+
+Cell V5 đọc bảng report ngày 23/11 ở source `26c8f24`, không dùng timing đó thay phiên mới:
+
+| Metric lịch sử | Tính lại từ bảng report |
 |---|---:|
-| GM V5/V0, chín ca chuẩn | 49.876178× |
-| GM V5/V4, chín ca chuẩn | 1.068633× |
-| GM V5 dual/sequential | 1.036413× |
-| GM Pre-S4 sequential/dual | 1.256430× |
-| site2/large Pre-S4 | 13.700 → 10.971 ms |
-| Median năm paired-block ratios | 1.066629× |
-| Khối có lợi cho V5 | 3/5 |
-| NSYS overlap V5 dual | 16.6–24.5% |
-| Peak VRAM dual trừ V4, ba ca large | 64.30 MiB |
+| GM V5/V0 | 49.876178× |
+| GM V5/V4 | 1.068633× |
+| GM Dual/Sequential | 1.036413× |
+| GM Pre-S4 Seq/Dual | 1.256430× |
+| Pre-S4 ca chính | 13.700 → 10.971 ms |
+| Median 5 paired blocks | 1.066629× |
+| Khối có lợi | 3/5 |
+| NSYS overlap | 16.6–24.5% |
+| Peak VRAM tăng | 64.30 MiB |
 
-Pre-S4 GM 1,256430× từ mean làm tròn khác chữ số cuối so với 1,2565× trong report. Cần sidecar gốc để đối soát; không sửa số cho khớp bằng tay. Archive Đế chưa có local; checksum/provenance trong report được in, raw_independently_verified luôn False. Bảng chính có 8/9 ca nhanh hơn V4, không gọi mọi ca đều nhanh hơn dựa trên lượt đo lại.
+Các số này có trong saved output của cell V5 và được đối chiếu lại với report. Pre-S4 GM từ mean làm tròn hơi khác 1,2565× được công bố; raw P10-T05 archive chưa có để kiểm chữ số cuối. T01 share 21,44% vẫn thuộc probe instrumented, không đổi nhãn thành production share. Lượt mới không tái đo paired blocks/NSYS, nên không thay 3/5 bằng việc đếm cấu hình nhanh hơn. Quyết định giữ **V4 production, V5 concurrency case study** vẫn được giữ và có căn cứ về độ ổn định. [Phân tích V5](p10-t06-v5-analysis.md)
 
-Notebook giữ **43 cell, 20 code cell và toàn bộ ID/anchor**. Mục 6 hiển thị đủ bảng timing, Pre-S4, stability, profiling và provenance; mục 7 tách so sánh cùng phiên khỏi lịch sử; mục 9 giải thích lợi ích có thật nhưng chưa nhất quán và giữ V4 production/V5 case study. T01 share dùng Total_probe instrumented. V4 đúng thứ tự stage-by-stage từ source, không xử lý trọn A trước B. [Phân tích chi tiết](p10-t06-v5-analysis.md)
+## 6. Gallery, Mermaid và PDF
 
-## Source pin và freeze coverage
+Đã xem gallery nguyên ảnh: site1/medium cảnh ngoài trời, site2/medium bãi xe, site3/medium trong nhà; nhãn A/B/V4 phù hợp ảnh. Các vùng đen ngoài biên projective là canvas không được phủ; vẫn có giới hạn seam/thị sai cục bộ. Challenge/small có biến dạng và lan can lặp; medium hiển thị rõ panel NumericalFailure thay panorama. Không coi file tồn tại hoặc parity là bằng chứng căn chỉnh hoàn hảo.
 
-Production pin public: `cd5ee9d4bb6724b6a816d4d185f0531c47d43d17`. Mọi file V0–V5, API một ảnh, helper benchmark/dataset và hai ảnh profiling V4 cần cho cell đều có tại pin. Reachability được đối chiếu origin/main; đây không phải branch name thay đổi theo thời gian.
+Không tìm thấy cặp mẫu do môn học cung cấp trong checkout hoặc gallery; lead cần xác nhận có asset áp dụng hay bổ sung trước đóng gói bài nộp. Mermaid còn nguyên source trong notebook; PDF page 5 hiển thị sơ đồ thật. Không có ảnh chụp Colab UI để xác nhận renderer Mermaid của giao diện đó, nên mục này chờ nhóm xác nhận.
 
-So với freeze `f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7`, source pin có thêm host validation trong `src/v5/v5_image_branch.cu`; cần nghiệm thu mới. So với source benchmark Đế `26c8f24`, src/build khớp. Mọi commit nhánh này chỉ đổi tooling/test/notebook/docs/assets metadata, không thay production scope.
+PDF đã được exporter hiện có tạo từ chính notebook output có hash trên. Lỗi QA do pypdf trích thành `Gi ớ i thi ệ u`, `K ế t lu ậ n`; validator cũ so chuỗi có khoảng trắng nên báo thiếu 9 tiêu đề. Bản sửa chỉ bỏ whitespace khi tìm heading và vẫn giữ dấu/ký tự, có test bắt tiêu đề thực sự thiếu. Không bỏ kiểm heading, không xóa diagram và không thay nội dung PDF.
 
-Parser mới không nằm trong production pin. Gói công cụ exact local commit mang notebook và parser; controller nạp parser từ đường dẫn tuyệt đối, kiểm hash và lưu tooling_files trong metadata. Không sửa checkout production hoặc dùng notebook cũ từ pin. Test integration giải nén production pin, nạp parser hiện hành và chạy đường phân tích thật, gồm cell profiling đọc ảnh.
+Đã render và xem **59/59 trang**: có đủ 10 mục, tiếng Việt, công thức, Mermaid, bảng, plots, gallery và references; không thấy chữ/hình bị cắt hoặc glyph hỏng. Một số bảng kéo qua trang và trang cuối chỉ có khai báo AI, nhưng không có trang trắng. PDF và notebook bàn giao là bản byte-identical từ Colab, không chỉnh output hoặc chạy kernel lại local.
 
-Mặc định `SOURCE_MODE="published"`, PUBLIC_SOURCE_SHA là pin trên, FREEZE_CONFIRMED=False. Mode archive vẫn có, dùng SHA của ZIP làm source thực; overlay/runtime/manifest phải cùng SHA. [Runbook](p11-t06-colab-runbook.md)
+## 7. Artifact và cách tái kiểm
 
-## Local preflight và giới hạn
+| Artifact local | Vai trò |
+|---|---|
+| `results/20261123T144350Z-25b763c7/` | Evidence gốc, gồm failed summary/log, giữ nguyên |
+| `build/Group16_P11_T06_Submission/Group16_Final.ipynb` | Bản nộp có toàn bộ output thật |
+| `build/Group16_P11_T06_Submission/Group16_Final.pdf` | PDF 59 trang, cùng hash bản Colab |
+| `build/Group16_P11_T06_Submission/verification.json` | Kiểm tự động mới, tách verdict gốc |
+| `build/Group16_P11_T06_Submission/manual_review.json` | Các trang/hình đã xem và giới hạn |
+| `build/Group16_P11_T06_T4_20261123_cd5ee9d_Evidence.zip` | Gói original + submission, 275 file |
 
-Lệnh chuẩn:
+ZIP SHA-256: `1767ee60145df7ad5e38d47cd5b5cb924b5339ca70be372d408928ed150d4d8b` (158.108.634 byte). ZIP/JSON/PDF/output không commit Git theo quy ước nhóm; upload gói lên kho evidence chung khi bàn giao. Notebook source ở gốc repo giữ output-free; bản nộp có output nằm trong gói trên. Snapshot có runtime paths của phiên Colab; dùng [workflow nghiệm thu](p11-t06-colab-runbook.md) để tái tạo các path trong phiên mới, không clear output snapshot.
 
 ```powershell
-$env:PYTHONIOENCODING='utf-8'
 $env:MPLBACKEND='Agg'
+python scripts/review_notebook_evidence.py results/20261123T144350Z-25b763c7 --tooling-ref 497b08ced5ffb26f69afbe5f8e0ed83971df7ffa --pdf-copy build/Group16_P11_T06_Submission/Group16_Final.pdf --output build/p11-t06-returned-review/recheck.json
 python tests/run_tests.py --group python
-python scripts/audit_final_notebook.py --notebook Group16_Final.ipynb --frozen-source f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7 --apod docs/report/p10-t05-v5-apod.md --output build/p11-t06-final-audit.json
-git diff --check
 ```
 
-Đã chạy bằng `build/p11-venv/Scripts/python.exe`: 23 suite, 260 tests, không failure/error; hai skip có điều kiện (snapshot giữa kỳ có output không commit và phép thử stub T02 khi implementation thật đã có). Có integration thực thi cell V5 thật, Decimal độc lập, thiếu/sai bảng/field/số, challenge exclusion, pin/freeze, archive verification và parser provenance. Nbformat, AST, 10 mục, anchor, Markdown local links và output-free đều đạt.
+Lệnh audit không sửa evidence gốc. Kết quả mới là `automatic_review_passed_manual_review_required`; original execution_summary vẫn failed vì QA cũ. Không gọi validate_artifacts cũ để sửa hoặc che failure. Các test parser/recovery/checksum không cần GPU; local không thực thi CUDA mới.
 
-Static audit còn 22 findings có chủ đích: 20 cell chưa có output, một UNEXECUTED_CELLS và một FREEZE_MISMATCH. Đây là các gate còn chờ T4/freeze, không bị xóa để tạo báo cáo xanh. Không có lỗi syntax/section/pin-file/link hoặc placeholder mới.
+## 8. Bàn giao và việc còn lại
 
-PDF smoke CPU ở `build/p11-t06-final-smoke/`: chạy kernel thật hai cell smoke, trong đó chuẩn bị và thực thi đường phân tích lịch sử; dùng nội dung V5/kết luận hiện hành. Chromium xuất 12 trang, Mermaid 1 sơ đồ, MathJax 3 công thức; QA không có clipping candidate hoặc lỗi text. Đã render đủ 12 trang và kiểm trực quan. Đây không phải `Group16_Final.pdf` đầy đủ; còn phải kiểm Mermaid trên Colab và từng trang PDF cuối sau Run all. Pandoc không có nên không kiểm fallback XeLaTeX.
+- Chờ review/merge PR của Chương; chỉ chuyển Xong theo quy ước sau khi được chấp nhận.
+- Tuấn xác nhận source freeze sau host-validation change; full regression/memcheck mới không có trong gói này.
+- Nhóm xác nhận Mermaid trên Colab UI và tình trạng cặp mẫu môn học; không ghi đã có nếu thiếu asset.
+- P12-T05 của Chương: quay khoảng 5 phút về S6 V4, dispatcher V5 và bài học; dùng script/slide đã thống nhất, hạn 26/11.
+- P13: Thành/Chương đưa video YouTube Unlisted vào notebook/README và cập nhật PDF; tổng hợp khai báo AI của các thành viên trước nộp.
 
-Local không có nvcc/T4 và chưa có dataset/manifest.csv chính thức. Không chạy build CUDA, GPU suites, memcheck, tải dataset Drive hoặc benchmark mới trong lượt này. Dataset validator và đường lỗi được unit test; 24 ảnh thực vẫn phải kiểm hash trên Colab.
-
-## Gói bàn giao và bước tiếp theo
-
-Gói mới tại `build/p11-t06-final-acceptance/Group16_P11_T06_Source.zip` cùng `.json`. Exact tooling commit và ZIP SHA-256 ở sidecar; không commit ZIP/build/output. Gói chỉ lấy blob đã commit, loại untracked và giữ manifest/checksums. Đã bổ sung allowlist hai ảnh profiling `slides/generated/nsys-v4.png` và `ncu-v4.png`, tránh lỗi cell khi chạy mode archive. Không đóng toàn bộ slide hoặc thêm cây source trùng lặp trong ZIP.
-
-Mở `Group16_P11_T06_Acceptance.ipynb` mới nhất, chọn T4, giữ published/default pin và FREEZE_CONFIRMED=False, Run all, upload ZIP + JSON mới. Dataset tự tải từ Drive. Tải evidence sau chạy, kể cả partial nếu lỗi. Theo runbook chạy regression/memcheck đúng checkout khi bổ sung freeze evidence.
-
-Chương còn: nhận output T4, đối chiếu mỗi claim theo đúng session, kiểm gallery/cặp mẫu môn học, kiểm PDF đầy đủ, đóng P10-T06/P11-T06 khi đạt. Quy trình không tự đánh Xong từ CPU smoke và không tự xuất bản lên GitHub.
-
-**READY FOR COLAB T4 RUN** — sẵn sàng chạy workflow nghiệm thu candidate, chưa chứng nhận kết quả GPU hoặc PDF cuối.
+**P11-T06 READY FOR REVIEW**

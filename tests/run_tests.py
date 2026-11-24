@@ -253,6 +253,7 @@ PYTHON_SUITES = [
     "test_notebook_source.py",
     "test_notebook_pdf.py",
     "test_notebook_acceptance.py",
+    "test_notebook_returned_evidence.py",
     "test_v5_notebook_analysis.py",
     "test_v5_report.py",
     "test_pres4_baseline.py",

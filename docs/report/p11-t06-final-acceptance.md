@@ -2,6 +2,8 @@
 
 # P11-T06 — Colab T4 Notebook and PDF Handoff
 
+PR bàn giao: [#59](https://github.com/nh-atuan/panorama-stitching/pull/59), base `main`, chưa merge.
+
 ## 1. Kết luận nghiệm thu
 
 **P11-T06 READY FOR REVIEW.** Phiên Colab thật `20261123T144350Z-25b763c7` đã chạy xong 20/20 cell code, đủ 10 mục, V0–V5, bảng/biểu đồ và gallery. Controller gốc kết thúc `failed` vì PDF QA không nhận ra khoảng trắng do text extraction chèn trong từ tiếng Việt; không phải lỗi CUDA hoặc cell notebook. Đã sửa validator, kiểm lại và xem đủ 59 trang PDF. Giữ nguyên summary, failure.log, PDF và notebook gốc; không sửa lịch sử để đổi failed thành passed.

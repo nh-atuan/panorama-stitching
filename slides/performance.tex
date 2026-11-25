@@ -105,25 +105,16 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 27,49 \\
 \input{generated/v5-table.tex}
 \end{frame}
 
-\begin{frame}{Nsight Systems V5: xác nhận chồng lấp stream và VRAM}
+\begin{frame}{Nsight Systems V5: xác nhận chồng lấp stream và đánh đổi}
 \begin{figure}
 \centering
-\includegraphics[width=.90\linewidth]{generated/nsys-v5.png}
+\includegraphics[width=.88\linewidth]{generated/nsys-v5.png}
 \caption{Timeline Nsight Systems của V5 hai stream trên \texttt{site2/large} cho thấy vùng chồng lấp GPU.}
 \end{figure}
 \scriptsize
 \begin{itemize}
-\item Xác nhận chồng lấp GPU thực sự trên \texttt{large}: 16,6--24,5\% (2,05--2,89 ms) so với 0,0\% ở V4 và V5 nối tiếp.
-\item Thời gian \texttt{H2D $\rightarrow$ bắt đầu S4} trong trace trên \texttt{site2/large} giảm từ 23,19 ms (V4) và 22,22 ms (V5 seq) xuống 17,66 ms (V5 dual).
-\item Peak VRAM tăng thêm +64,3 MiB (269,8 $\rightarrow$ 334,1 MiB trên \texttt{site2/large}; 0 byte rò rỉ).
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Đánh giá độ ổn định và đánh đổi của V5}
-\begin{itemize}
-\item Tăng tốc tiền S4: GM 9 ca đạt 1,28$\times$; trên \texttt{site2/large}, đoạn tiền S4 giảm từ 11,75 xuống 9,45 ms (1,24$\times$, $-$2,30 ms).
-\item Ổn định sau khi warm-up đủ: với 4 lượt warm-up trước 5 lượt bấm giờ, V5 hai stream nhanh hơn V4 ở cả 9/9 cấu hình chuẩn (GM 1,03$\times$, Dual/Seq đạt 1,01$\times$ ở 8/9 ca) và loại bỏ hoàn toàn nhiễu tăng xung nhịp GPU.
-\item Hiệu năng toàn pipeline: V5 đạt trung bình nhân 46,52$\times$ so với V0 (\texttt{site2/large}: 59,99 ms, 98,3$\times$).
-\item Chọn làm bản chính thức: V5 giữ nguyên độ chính xác (Max RGB = 0, 0 byte rò rỉ) với đánh đổi +64,3 MiB VRAM nằm gọn trong 16 GB của Tesla T4.
+\item Xác nhận chồng lấp GPU thực sự trên \texttt{large}: 16,6--24,5\% (2,05--2,89 ms) so với 0,0\% ở V4 và V5 nối tiếp; thời gian \texttt{H2D $\rightarrow$ bắt đầu S4} trong trace trên \texttt{site2/large} giảm từ 23,19 xuống 17,66 ms.
+\item Đánh đổi bộ nhớ: Peak VRAM tăng +64,3 MiB (269,8 $\rightarrow$ 334,1 MiB trên \texttt{site2/large}, nằm gọn trong 16 GB của Tesla T4; 0 byte rò rỉ).
+\item Khi warm-up đủ (4 lượt), V5 nhanh hơn V4 ở cả 9/9 cấu hình chuẩn (GM 46,52$\times$ so với V0, Pre-S4 1,28$\times$) và giữ nguyên độ chính xác (Max RGB = 0).
 \end{itemize}
 \end{frame}

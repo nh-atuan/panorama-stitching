@@ -1,4 +1,4 @@
-// Authors: Le Ha Thanh Chuong (23120195)
+// Authors: Le Ha Thanh Chuong (23120195), Nguyen Ho Anh Tuan (23120185)
 // External source: none
 #include "v5/v5_pipeline.h"
 
@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <chrono>
 #include <limits>
-#include <thread>
 
 namespace panorama {
 void V5DeviceOwner::drain() noexcept {
@@ -169,7 +168,6 @@ void schedule_dual(const Image& a, const Image& b, const Config& config, V5Devic
                 complete[i] = true;
             }
         }
-        if (!complete[0] || !complete[1]) std::this_thread::yield();
     }
 }
 
@@ -246,6 +244,14 @@ ErrorCode v5_run_stages(const Image& a, const Image& b, const Config& config,
                 const DeviceCounts counts = v1_read_counts(owner.view, control);
                 if (counts.status != ErrorCode::Success) {
                     failure.on_device = true;
+                    if (owner.events[0].status != ErrorCode::Success ||
+                        owner.events[1].status != ErrorCode::Success) {
+                        const bool use_b = owner.events[0].status == ErrorCode::Success ||
+                            (owner.events[1].status != ErrorCode::Success &&
+                             static_cast<unsigned>(owner.events[1].failure) <
+                                 static_cast<unsigned>(owner.events[0].failure));
+                        failure.stage = use_b ? owner.events[1].failure : owner.events[0].failure;
+                    }
                     return counts.status;
                 }
                 return code;

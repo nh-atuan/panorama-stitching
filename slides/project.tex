@@ -11,6 +11,7 @@
 \setbeamertemplate{itemize item}{-}
 \setbeamertemplate{itemize subitem}{-}
 \setbeamertemplate{itemize subsubitem}{-}
+\setbeamertemplate{bibliography item}{\insertbiblabel}
 \setbeamertemplate{caption}[numbered]
 \setbeamerfont{caption}{size=\scriptsize}
 \addto\captionsvietnamese{%
@@ -236,15 +237,15 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 
 \begin{frame}{Tài liệu tham khảo}
 \scriptsize
-\begin{itemize}
-\item ITU-R Recommendation BT.601-7 (2011). Studio encoding parameters of digital television (hệ số chuyển ảnh xám S1).
-\item Rosten, E. \& Drummond, T. (2006). Machine learning for high-speed corner detection, ECCV (thuật toán góc FAST-9 ở S2).
-\item Calonder, M., Lepetit, V., Strecha, C., \& Fua, P. (2010). BRIEF: Binary Robust Independent Elementary Features, ECCV (descriptor nhị phân 256-bit ở S3).
-\item Lowe, D. G. (2004). Distinctive Image Features from Scale-Invariant Keypoints, IJCV 60(2), 91--110 (Lowe's ratio test ở S4).
-\item Brown, M. \& Lowe, D. G. (2007). Automatic Panoramic Image Stitching using Invariant Features, IJCV 74, 59--73 (RANSAC, DLT và hòa trộn ảnh).
-\item Drmač, Z. \& Veselić, K. (2008). New Fast and Accurate Jacobi SVD Algorithm: II, LAPACK Working Note 170 (Jacobi SVD cho DLT ở S5).
-\item Szeliski, R. (2006). Image Alignment and Stitching: A Tutorial, Foundations and Trends in Computer Graphics and Vision 2(1) (hệ quy chiếu, nội suy và kết xuất canvas ở S6).
-\item NVIDIA (2025). CUDA C++ Best Practices Guide 13.0, Nsight Systems User Guide, Nsight Compute CLI và NVTX v3.
-\end{itemize}
+\begin{thebibliography}{9}
+\bibitem{bt601} ITU-R Recommendation BT.601-7 (2011). \emph{Studio encoding parameters of digital television} (hệ số chuyển ảnh xám S1).
+\bibitem{fast9} Rosten, E. \& Drummond, T. (2006). \emph{Machine learning for high-speed corner detection}, ECCV (thuật toán góc FAST-9 ở S2).
+\bibitem{brief} Calonder, M., Lepetit, V., Strecha, C., \& Fua, P. (2010). \emph{BRIEF: Binary Robust Independent Elementary Features}, ECCV (descriptor nhị phân 256-bit ở S3).
+\bibitem{lowe} Lowe, D. G. (2004). \emph{Distinctive Image Features from Scale-Invariant Keypoints}, IJCV 60(2), 91--110 (Lowe's ratio test ở S4).
+\bibitem{brown} Brown, M. \& Lowe, D. G. (2007). \emph{Automatic Panoramic Image Stitching using Invariant Features}, IJCV 74, 59--73 (RANSAC, DLT và hòa trộn ảnh).
+\bibitem{jacobi} Drmač, Z. \& Veselić, K. (2008). \emph{New Fast and Accurate Jacobi SVD Algorithm: II}, LAPACK Working Note 170 (Jacobi SVD cho DLT ở S5).
+\bibitem{szeliski} Szeliski, R. (2006). \emph{Image Alignment and Stitching: A Tutorial}, Foundations and Trends in Computer Graphics and Vision 2(1) (hệ quy chiếu, nội suy và kết xuất canvas ở S6).
+\bibitem{nvidia} NVIDIA (2025). \emph{CUDA C++ Best Practices Guide 13.0}, Nsight Systems User Guide, Nsight Compute CLI và NVTX v3.
+\end{thebibliography}
 \end{frame}
 \end{document}

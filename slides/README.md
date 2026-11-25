@@ -2,14 +2,14 @@
 
 # Bộ slide thuyết trình và kịch bản video — Nhóm 16
 
-`project.tex` là file Beamer chính (tỷ lệ 16:9) cho toàn bộ đồ án cuối kỳ CSC14120. Deck đi qua đủ bốn phần theo đề bài: tổng quan bài toán và phương pháp, live demo, kết quả và phân tích hiệu năng (V0–V5), cùng các tối ưu chính và bài học rút ra. Slide trình bày bằng tiếng Anh kỹ thuật kèm kịch bản thuyết trình tiếng Việt dài 20–30 phút.
+`project.tex` là file Beamer chính (tỷ lệ 16:9) cho toàn bộ đồ án cuối kỳ CSC14120. Deck trình bày bằng tiếng Việt (giữ nguyên thuật ngữ chuyên ngành tiếng Anh), tổ chức theo ba phần tuyến tính: tổng quan bài toán và hướng tiếp cận, kiểm chứng và phân tích hiệu năng (V0–V5), cùng các tối ưu chính và bài học rút ra (phần live demo chạy trực tiếp trên Colab T4 bằng `scripts/live_demo.py`).
 
 | File | Vai trò |
 |---|---|
-| [project.tex](project.tex) | Deck Beamer 16:9 chính (24 slide tuyến tính): tổng quan S1–S6, lộ trình V0–V5, live demo (`scripts/live_demo.py`), kiểm chứng, tối ưu S5/V4/V5 và bài học rút ra. |
+| [project.tex](project.tex) | Deck Beamer 16:9 chính (30 slide tuyến tính, gồm 3 slide chuyển mục): tổng quan S1–S6, lộ trình V0–V5, kiểm chứng, ảnh kết quả chuẩn & ca thất bại (`de-challenge1`), hiệu năng/profiling V0–V5, tối ưu S5 (V2/V3)/V4/V5, bài học rút ra và tài liệu tham khảo. |
 | [performance.tex](performance.tex) | Module kết quả hiệu năng và Nsight V0–V5 (được chèn vào `project.tex` bằng `\input{performance.tex}`). |
-| [generated/v4-table.tex](generated/v4-table.tex) | Bảng benchmark cùng phiên Session A (V3 vs V4 trên 9 ca chuẩn, Tesla T4). |
-| [generated/v5-table.tex](generated/v5-table.tex) | Bảng benchmark Session B (V0, V4 Production, V5 DualStream trên 9 ca chuẩn + challenge/small, Tesla T4). |
+| [generated/v4-table.tex](generated/v4-table.tex) | Bảng benchmark cùng phiên (V3 vs V4 trên 9 ca chuẩn, Tesla T4). |
+| [generated/v5-table.tex](generated/v5-table.tex) | Bảng benchmark đối chứng V5 hai stream cùng V0 và V4 (9 ca chuẩn + challenge/small, Tesla T4). |
 | [video-outline.md](video-outline.md) | Kịch bản phân cảnh chi tiết (cue sheet) 24 phút 30 giây cho 4 thành viên (Tuấn, Thành, Đế, Chương) theo đúng khung 20–30 phút của đề bài. |
 | [video-performance-notes.md](video-performance-notes.md) | Lời dẫn chi tiết 7 phút 30 giây cho Phần 3 (Hiệu năng & Nsight V0–V5) của Đế. |
 | [performance-preview.tex](performance-preview.tex) | Bản biên dịch độc lập riêng module hiệu năng để rà soát nhanh. |

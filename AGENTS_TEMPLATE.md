@@ -143,3 +143,8 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
     - không dùng các hộp box (`block`, `alertblock`, `exampleblock`);
     - không dùng dấu chấm tròn bullet mặc định; thay bằng dấu gạch đầu dòng `-` (`\setbeamertemplate{itemize item}{-}`, `itemize subitem`, `itemize subsubitem`).
 6. **Caption cho bảng và hình:** Mọi bảng và hình (kể cả sơ đồ TikZ và biểu đồ) đều phải có caption đánh số tự động (`Bảng`, `Hình`). Caption của bảng đặt bên trên bảng; caption của hình đặt bên dưới hình.
+7. **Mật độ chữ và tách slide:** Khi một slide quá nhiều chữ hoặc gộp nhiều ý lớn, ưu tiên tách thành các slide nhỏ hơn (mỗi slide tập trung một nội dung chính) thay vì nén chữ dày đặc hoặc tự ý vẽ thêm quá nhiều sơ đồ/biểu đồ ngoài yêu cầu. Sau khi đổi số lượng slide, luôn đồng bộ lại số thứ tự slide trong `slides/README.md`, `slides/video-outline.md` và các file lời dẫn liên quan.
+8. **Hình ảnh minh họa thực tế và hình profiling:**
+    - không lặp lại cùng một ảnh kết quả ở nhiều slide; phần kết quả đạt chuẩn và phân tích ca thất bại cần kèm ảnh minh họa thực tế tương ứng (gồm cả ảnh matches/inliers và ảnh ghép lỗi nếu có);
+    - không dùng biểu đồ dựng lại từ dữ liệu rời làm ảnh minh họa mang tên giao diện công cụ profiling (như Nsight Systems) nếu dễ gây hiểu nhầm là ảnh chụp UI thật; ưu tiên ảnh chụp UI thật rõ nét hoặc bảng đối chiếu số liệu ngắn gọn.
+9. **Diễn đạt phiên đo trên slide:** Không dùng nhãn nội bộ khó hiểu với người nghe (như `Session A`, `Session B`) trong tiêu đề, bảng hoặc nội dung slide. Vẫn giữ nguyên tắc chỉ tính speedup trong cùng một phiên đo; khi có phiên bản đo đối chứng riêng, tách khỏi bảng tổng hợp chính và chú thích ngắn gọn bằng tiếng Việt tự nhiên.

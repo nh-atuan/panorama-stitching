@@ -115,21 +115,52 @@ V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3 (case study)
 \item Đối chiếu từng stage: Mọi stage GPU đều được kiểm tra khớp với V0 trước khi tích hợp toàn pipeline.
 \item Ảnh synthetic (6 cặp): RMSE $\le 0{,}10$ px và Max $\le 0{,}21$ px (ngưỡng: 0,5 / 1,0 px), độ lệch giữa các phiên bản bằng 0 px.
 \item Bộ ảnh thật (12 cấu hình): Cả 10 ca hợp lệ khớp khung canvas V0 với Max RGB error = 0; \texttt{challenge/medium} và \texttt{large} giữ nguyên lỗi \texttt{NumericalFailure} ở S6.
-\item An toàn bộ nhớ: \texttt{compute-sanitizer --tool memcheck --leak-check full} xác nhận 0 lỗi và 0 byte rò rỉ trên cả test suite GPU lẫn CLI.
+\item An toàn bộ nhớ: \texttt{compute-sanitizer -\/-tool memcheck -\/-leak-check full} xác nhận 0 lỗi và 0 byte rò rỉ trên cả test suite GPU lẫn CLI.
 \end{itemize}
 \medskip
 \small Nghiệm thu toàn bộ trên Tesla T4: 14 suite V0 (45.284 checks), 16 suite GPU cho V1--V5 (69.336 checks) và toàn bộ suite Python.
 \end{frame}
 
-\begin{frame}{Kết quả ảnh ghép và phân tích ca thất bại}
+\begin{frame}{Kết quả ảnh ghép trên bộ ảnh chuẩn}
+\begin{columns}[T]
+\column{.49\textwidth}
 \begin{figure}
 \centering
-\includegraphics[width=.45\linewidth]{site2-large-panorama.jpg}
-\caption{Cảnh ngoài trời hợp lệ \texttt{site2/large} (7676$\times$4348, kết quả V4).}
+\includegraphics[width=\linewidth]{site1-panorama.jpg}
+\caption{Cảnh ngoài trời \texttt{site1} (nhà thờ, kết quả GPU khớp V0).}
 \end{figure}
+\column{.49\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{site3-panorama.jpg}
+\caption{Cảnh trong nhà \texttt{site3} (quán cà phê, kết quả GPU khớp V0).}
+\end{figure}
+\end{columns}
+\smallskip
 \begin{itemize}
-\item Ca thất bại (\texttt{challenge/medium}): Trả về \texttt{[NumericalFailure] S6 warp\_blend failed} nhất quán từ V0 đến V5.
-\item Nguyên nhân gốc: Hoa văn lặp của lan can và trần nhà tạo ra nhiều cặp khớp BRIEF 256-bit mơ hồ, dẫn đến ma trận homography suy biến.
+\item Cả 9 cấu hình chuẩn (3 địa điểm $\times$ 3 độ phân giải) đều ghép nhất quán từ V0 đến V5 với Max RGB error = 0.
+\item Vùng chồng lấn khớp hình học rõ nét ở cả cảnh ngoài trời lẫn không gian trong nhà.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Phân tích ca thất bại trên cặp khó}
+\begin{columns}[T]
+\column{.49\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{challenge-medium-matches.jpg}
+\caption{Kết quả khớp S5 trên \texttt{challenge/medium}: phần lớn là outlier (đỏ), chỉ còn 8 inlier (xanh).}
+\end{figure}
+\column{.46\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{challenge-small-misaligned.jpg}
+\caption{Ảnh ghép \texttt{challenge/small} (17 inlier): trần gỗ và lan can bị ghép lệch rõ rệt.}
+\end{figure}
+\end{columns}
+\begin{itemize}
+\item Hoa văn lặp ở lan can và trần gỗ tạo nhiều cặp khớp BRIEF 256-bit mơ hồ, kéo số inlier xuống thấp.
+\item Ở \texttt{challenge/medium} và \texttt{large}, ma trận $H$ suy biến khiến mẫu số phép chiếu đổi dấu trong miền ảnh; S6 bắt lỗi \texttt{NumericalFailure} nhất quán từ V0 đến V5.
 \end{itemize}
 \end{frame}
 
@@ -147,16 +178,21 @@ V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3 (case study)
 Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến khi định luật Amdahl giới hạn mức tăng tốc toàn pipeline.
 \end{frame}
 
-\begin{frame}{Tối ưu S5 (V2 \& V3): giải quyết điểm nghẽn 90\%+}
+\begin{frame}{Tối ưu S5 (V2): song song hóa RANSAC trên GPU}
 \begin{itemize}
 \item Vì sao chọn S5 trước? Ở V1, RANSAC tuần tự trên GPU chiếm 90--99\% tổng thời gian trên cả 9 ca chuẩn.
-\item V2 (RANSAC song song): Đánh giá song song các giả thuyết, song song hóa rút gọn inlier và đưa bước refit cuối lên GPU $\rightarrow$ nhanh hơn V1 6,16$\times$ (23,4$\times$ so với V0).
-\item V3 (Tối ưu vi kiến trúc):
-  \begin{itemize}
-  \item Chấm điểm MSAC bằng warp-shuffle giúp giảm chi phí shared memory và đồng bộ.
-  \item DLT 4 điểm / Jacobi SVD trên shared memory kèm chia batch để tăng độ khai thác SM.
-  \end{itemize}
-\item Hiệu quả: Tăng thêm 1,83$\times$ toàn pipeline (42,7$\times$ so với V0), kéo S5 trên \texttt{site2/large} xuống 12,2 ms và làm S6 trở thành điểm nghẽn mới.
+\item Đánh giá song song các giả thuyết RANSAC thay vì chấm điểm tuần tự từng giả thuyết.
+\item Song song hóa bước rút gọn inlier và đưa bước refit DLT/SVD cuối cùng lên thực thi trực tiếp trên GPU.
+\item Hiệu quả: nhanh hơn V1 trung bình nhân 6,16$\times$ trên 9 ca chuẩn (đạt 23,4$\times$ so với V0).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Tối ưu S5 (V3): tối ưu vi kiến trúc trên GPU}
+\begin{itemize}
+\item Chấm điểm MSAC bằng warp-shuffle giúp giảm truy cập shared memory và chi phí đồng bộ trong block.
+\item Giải DLT 4 điểm và Jacobi SVD trực tiếp trên shared memory tốc độ cao.
+\item Chia batch các giả thuyết để tăng mức khai thác SM và giảm chi phí launch kernel.
+\item Hiệu quả: tăng thêm 1,83$\times$ toàn pipeline (42,7$\times$ so với V0), kéo S5 trên \texttt{site2/large} xuống 12,2 ms và làm S6 (45,7\%) trở thành điểm nghẽn mới.
 \end{itemize}
 \end{frame}
 
@@ -165,30 +201,37 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 \item Bộ kết xuất V3 (3 lượt): Xóa canvas (\texttt{cudaMemset}) $\rightarrow$ sao chép ảnh A $\rightarrow$ lấy mẫu và hòa trộn ảnh B.
 \item Bộ kết xuất V4 (1 lượt gộp): Mỗi thread xử lý một pixel đầu ra: kiểm tra biên A/B, lấy mẫu ảnh gốc, hòa trộn 50/50 và ghi RGB một lần.
 \item Giữ nguyên khung canvas, phép chiếu ngược, nội suy bilinear và quy tắc làm tròn (Max RGB error = 0); tái sử dụng S1--S4 (V1) và S5 (V3).
-\item Nhanh hơn ở 8/9 ca chuẩn (S6 GM 1,04$\times$, tổng GM 1,01$\times$; 4/5 khối ghép cặp trên \texttt{site2/large} nghiêng về V4, trung vị 1,03$\times$).
-\item Đánh đổi: Bỏ được hai lượt ghi canvas nhưng Nsight Compute cho thấy lưu lượng DRAM tăng, giới hạn speedup tổng quanh $\sim$1\%.
+\item Nhanh hơn ở 8/9 ca chuẩn (S6 GM 1,04$\times$, tổng GM 1,01$\times$); Nsight Compute chỉ ra lưu lượng DRAM tăng +26\%, giới hạn speedup tổng quanh $\sim$1\%.
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Tối ưu V5: xử lý song song bằng hai CUDA stream}
 \begin{itemize}
-\item Động lực: Sau V4, phần tiền S4 (H2D + S1--S3 của hai ảnh) chiếm 11,2\% (\texttt{site3/large}), 12,2\% (\texttt{site1/large}) và 21,4\% (\texttt{site2/large}, 15,3 ms) tổng thời gian.
+\item Động lực: Sau V4, phần tiền S4 (H2D + S1--S3 của hai ảnh) chiếm 11,2--21,4\% tổng thời gian trên các ca \texttt{large} (\texttt{site2/large}: 15,3 ms).
 \item Chạy ảnh A và B trên hai CUDA stream không chặn (\texttt{streamA}, \texttt{streamB}) với scratch buffer tách biệt và pinned memory cho bộ đếm ứng viên.
 \item Lập lịch prefix/suffix: Đẩy H2D + S1 + ứng viên S2 trên cả hai nhánh, thăm dò \texttt{cudaEventQuery} kèm \texttt{yield()}, rồi chạy S2 top-K + S3 cho nhánh xong trước.
-\item Stream điều phối chờ \texttt{doneA}/\texttt{doneB} bằng \texttt{cudaStreamWaitEvent}, gộp bộ đếm rồi chạy S4--S6.
-\item Tích hợp cờ đối chứng (\texttt{--v5-schedule sequential}) để tách riêng tác dụng đồng thời của stream khỏi thay đổi bố cục bộ nhớ.
+\item Stream điều phối chờ \texttt{doneA}/\texttt{doneB} bằng \texttt{cudaStreamWaitEvent}, gộp bộ đếm rồi chạy S4--S6; hỗ trợ cờ đối chứng \texttt{-{}-v5-schedule sequential}.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Bài học rút ra và giới hạn hiện tại}
+\begin{frame}{Bài học tối ưu hiệu năng trên GPU}
 \begin{itemize}
 \item Bám sát số đo và định luật Amdahl: Xử lý S5 mang lại phần lớn mức tăng tốc (42,7$\times$); các tối ưu sau ở S6 (45,7\%) và tiền S4 (21,4\%) bị giới hạn trần chặt hơn nhiều.
-\item Chỉ số phần cứng chính xác hơn trực giác: Gộp ba lượt S6 tưởng như tiết kiệm băng thông, nhưng Nsight Compute chỉ ra lưu lượng DRAM tăng +26\% và L2 hit rate giảm trên \texttt{site2/large}.
-\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, nhưng bão hòa SM trên Tesla T4 cùng +64,3 MiB VRAM khiến V4 ổn định hơn cho bản production.
-\item Kiểm chứng trước khi đo đạc: So khớp chặt (Max RGB = 0), xử lý lỗi rõ ràng và memcheck bảo đảm mọi con số speedup đều đến từ pipeline đúng và không rò rỉ bộ nhớ.
-\end{itemize}
 \medskip
-\small Toàn bộ kết quả có thể tái lập từ \texttt{Group16\_Final.ipynb}, file CSV gốc và trace Nsight trên Google Colab Tesla T4.
+\item Chỉ số phần cứng chính xác hơn trực giác: Gộp ba lượt S6 tưởng như tiết kiệm băng thông, nhưng Nsight Compute chỉ ra lưu lượng DRAM tăng +26\% và L2 hit rate giảm trên \texttt{site2/large}.
+\medskip
+\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, nhưng bão hòa SM trên Tesla T4 cùng +64,3 MiB VRAM khiến V4 ổn định hơn cho bản production.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Kiểm chứng, giới hạn hiện tại và khả năng tái lập}
+\begin{itemize}
+\item Kiểm chứng trước khi đo đạc: So khớp chặt (Max RGB = 0), giữ nguyên mã lỗi \texttt{NumericalFailure} và chạy \texttt{compute-sanitizer} bảo đảm mọi con số speedup đều đến từ pipeline đúng và không rò rỉ bộ nhớ.
+\medskip
+\item Giới hạn của mô hình tham chiếu: Homography 2D và descriptor BRIEF 256-bit vẫn nhạy với hoa văn lặp dày đặc (\texttt{challenge/medium, large}) và hiệu ứng parallax khi có vật thể sát máy ảnh.
+\medskip
+\item Khả năng tái lập: Toàn bộ kết quả có thể chạy lại từ \texttt{Group16\_Final.ipynb}, file CSV gốc và trace Nsight trên Google Colab Tesla T4.
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Tài liệu tham khảo}

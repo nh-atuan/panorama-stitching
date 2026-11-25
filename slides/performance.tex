@@ -6,31 +6,29 @@
 \item Bộ dữ liệu: 3 địa điểm chuẩn $\times$ 3 độ phân giải (9 cấu hình) cùng các cặp \texttt{challenge}.
 \item Quy trình đo: 1 lượt warm-up + 5 lượt bấm giờ cho mỗi cấu hình (\texttt{nvcc -O2 --fmad=false}); loại trừ I/O đĩa.
 \item Phân tách thời gian: Ghi nhận riêng S1--S6, H2D, D2H, \texttt{Total\_Kernel\_ms} và \texttt{Total\_ms}.
-\item Cô lập phiên đo: Chỉ so sánh speedup trong cùng một phiên Colab T4: Session A (V0--V4) và Session B (đối chứng V0, V4, V5).
+\item Cô lập phiên đo: Chỉ tính speedup trong cùng một phiên Colab T4; bản V5 (case study) được đo lại cùng V0 và V4 trong phiên đối chứng riêng.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Tổng hợp thời gian V0--V5 (Tesla T4)}
+\begin{frame}{Tổng hợp thời gian V0--V4 (Tesla T4)}
 \begin{table}
 \centering
-\caption{Thời gian chạy trên \texttt{site2/large} và speedup trung bình nhân (GM) qua các phiên bản V0--V5.}
+\caption{Thời gian chạy trên \texttt{site2/large} và speedup trung bình nhân (GM) qua các phiên bản V0--V4.}
 \footnotesize
-\begin{tabular}{llrrr}
+\begin{tabular}{lrrr}
 \toprule
-Phiên đo & Phiên bản & \texttt{site2/large} (ms) & So với V0 (GM) & So với bản trước (GM) \\
+Phiên bản & \texttt{site2/large} (ms) & So với V0 (GM) & So với bản trước (GM) \\
 \midrule
-Session A & V0 (CPU) & 5746,1 & 1,00$\times$ & -- \\
-Session A & V1 (CUDA cơ bản) & 504,1 & 3,80$\times$ & 3,80$\times$ \\
-Session A & V2 (S5 song song) & 81,1 & 23,37$\times$ & 6,16$\times$ \\
-Session A & V3 (S5 vi kiến trúc) & 62,9 & 42,65$\times$ & 1,83$\times$ \\
-Session A & V4 (S6 Fusion, Prod) & 62,2 & 43,02$\times$ & 1,01$\times$ \\
-\midrule
-Session B & V5 (Hai stream) & 58,9 & 49,88$\times$ & 1,04$\times$ (Dual/Seq) \\
+V0 (CPU tham chiếu) & 5746,1 & 1,00$\times$ & -- \\
+V1 (CUDA cơ bản) & 504,1 & 3,80$\times$ & 3,80$\times$ \\
+V2 (S5 song song) & 81,1 & 23,37$\times$ & 6,16$\times$ \\
+V3 (S5 vi kiến trúc) & 62,9 & 42,65$\times$ & 1,83$\times$ \\
+V4 (S6 Fusion, Production) & 62,2 & 43,02$\times$ & 1,01$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\scriptsize Trung bình nhân (GM) tính trên cả 9 ca chuẩn (1 warm-up + 5 lượt đo). Session B đo V0, V4 (62,3 ms trên \texttt{site2/large}), V5 seq (61,4 ms) và V5 dual (58,9 ms, 110,3$\times$ so với V0 Session B) trong cùng một phiên T4. Không trộn tỷ số giữa hai phiên.
+\scriptsize Trung bình nhân (GM) tính trên 9 ca chuẩn (1 warm-up + 5 lượt đo, cùng phiên Tesla T4). Bản thử nghiệm hai stream V5 được đo lại cùng V0 và V4 trong phiên đối chứng riêng ở phần sau.
 \end{frame}
 
 \begin{frame}{Sự dịch chuyển điểm nghẽn qua các phiên bản}
@@ -61,24 +59,32 @@ Tổng pipeline (ms) & 81,83 & 62,35 \\
 \item Sau khi V3 giảm S5 đi 2,5$\times$, S6 trở thành stage lớn nhất với 45,7\% tổng thời gian.
 \item Theo định luật Amdahl, ngay cả khi S6 nhanh gấp 2$\times$, mức tăng tốc toàn pipeline cũng bị chặn quanh $\sim$1,30$\times$ nếu các stage khác giữ nguyên.
 \end{itemize}
-\tiny Số liệu profiling V2/V3 cùng phiên trên Tesla T4; bảng so sánh đầy đủ V0--V4 được đo lại ở Session A.
+\tiny Số liệu profiling V2/V3 cùng phiên trên Tesla T4; bảng so sánh đầy đủ V0--V4 được đo lại cùng phiên ở đợt đo chính.
 \end{frame}
 
-\begin{frame}{Benchmark V4: gộp một lượt so với V3 (Session A)}
+\begin{frame}{Benchmark V4: gộp một lượt so với V3}
 \input{generated/v4-table.tex}
 \end{frame}
 
-\begin{frame}{Nsight Systems: gộp ba lượt canvas thành một lượt}
-\begin{figure}
+\begin{frame}{Nsight Systems V4: gộp ba lượt canvas thành một lượt}
+\begin{table}
 \centering
-\includegraphics[width=.88\linewidth]{generated/nsys-v4.png}
-\caption{Timeline Nsight Systems so sánh V3 (3 lượt canvas) và V4 (1 lượt gộp) trên \texttt{site2/large}.}
-\end{figure}
+\caption{Đối chiếu chuỗi thao tác kết xuất S6 trên \texttt{site2/large} từ trace Nsight Systems và benchmark chuẩn.}
 \footnotesize
+\begin{tabular}{llrr}
+\toprule
+Phiên bản & Chuỗi thao tác S6 (NSYS) & Trace NSYS (ms) & Benchmark 5 lượt (ms) \\
+\midrule
+V3 & \texttt{cudaMemset} + \texttt{copy\_a} + \texttt{gather\_b} (3 lượt) & 29,80 & 28,71 \\
+V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\smallskip
 \begin{itemize}
-\item Tesla T4, \texttt{site2/large} (lượt chạy thứ hai của mỗi trace).
-\item Trong trace có profiler, ba bước clear + copy A + gather B của V3 tốn 29,80 ms, còn kernel gộp V4 tốn 32,54 ms do overhead của profiler.
-\item Ở benchmark 5 lượt không gắn profiler, S6 cải thiện từ 28,71 ms (V3) xuống 28,19 ms (V4), khẳng định cần quyết định hiệu năng dựa trên lượt đo chuẩn.
+\item Trace Nsight Systems xác nhận V4 loại bỏ hoàn toàn lượt \texttt{cudaMemset} (100,1 MB) và \texttt{copy\_a\_kernel} riêng lẻ.
+\item Trong trace có gắn profiler, kernel gộp V4 tốn 32,54 ms (nhỉnh hơn 29,80 ms của V3) do overhead của profiler.
+\item Khi tắt profiler ở benchmark 5 lượt, S6 cải thiện từ 28,71 ms (V3) xuống 28,19 ms (V4), khẳng định cần đánh giá hiệu năng trên lượt đo chuẩn.
 \end{itemize}
 \end{frame}
 
@@ -95,7 +101,7 @@ Tổng pipeline (ms) & 81,83 & 62,35 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Benchmark V5: hai CUDA stream so với V4 (Session B)}
+\begin{frame}{Benchmark V5: hai CUDA stream so với V0 và V4}
 \input{generated/v5-table.tex}
 \end{frame}
 

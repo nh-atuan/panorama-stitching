@@ -131,3 +131,15 @@ Nếu các nguồn mâu thuẫn nhau, agent phải dừng phần việc bị ả
 10. Không đưa quy định về việc sử dụng công cụ AI vào tài liệu quản lý dự án của Nhóm.
 11. Mọi con số trong lời văn của notebook phải xuất hiện trong output của notebook. Notebook build từ chính `src/`, không chép code vào cell bằng `%%writefile`.
 12. Khi dùng agent để viết báo cáo, file markdown hoặc cell markdown trong notebook, agent phải đọc trước trang [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) và tránh các dấu hiệu được liệt kê ở đó, để câu chữ tự nhiên như người viết. Sau khi viết xong, agent rà lại văn bản theo trang này và sửa các chỗ còn dấu hiệu.
+
+### 7.1 Quy ước cho slide thuyết trình (Beamer)
+
+1. **Ngôn ngữ:** Trình bày bằng tiếng Việt tự nhiên, giữ nguyên thuật ngữ chuyên ngành tiếng Anh (keypoint, descriptor, homography, kernel, thread, warp, block, speedup, baseline, case study...) và tên cấu hình, lệnh kỹ thuật (`site2/large`, `NumericalFailure`...). Họ tên thành viên trên trang bìa viết đầy đủ có dấu.
+2. **Biên dịch bằng `pdflatex`:** Dùng `pdflatex` với `\usepackage[utf8]{inputenc}`, `\usepackage[T5]{fontenc}` và `\usepackage[vietnamese]{babel}`; đặt tên ngắn cho `\institute[...]` (hoặc `\author[...]`, `\title[...]`) để tránh tràn footer (`Overfull \hbox`).
+3. **Cấu trúc nội dung:** Không ghi tên thành viên phụ trách vào tiêu đề mục hoặc nội dung slide (chỉ ghi danh sách thành viên ở trang bìa). Không đưa phần demo chạy lệnh terminal vào deck; giữ lại phần kiểm chứng, ảnh kết quả và phân tích ca thất bại trong mục tương ứng. Luôn có slide `Tài liệu tham khảo` ở cuối deck.
+4. **Slide chuyển mục:** Trước khi vào mỗi phần (`\section`), tự động hiển thị lại slide mục lục bằng `\AtBeginSection[]` kèm `\tableofcontents[currentsection,hideallsubsections]`, chỉ làm rõ phần sắp trình bày và làm mờ các phần còn lại.
+5. **Định dạng văn bản và bố cục:**
+    - không dùng in đậm (`\textbf{...}`) ở đầu gạch đầu dòng, giữa dòng văn bản hoặc trong bảng nội dung;
+    - không dùng các hộp box (`block`, `alertblock`, `exampleblock`);
+    - không dùng dấu chấm tròn bullet mặc định; thay bằng dấu gạch đầu dòng `-` (`\setbeamertemplate{itemize item}{-}`, `itemize subitem`, `itemize subsubitem`).
+6. **Caption cho bảng và hình:** Mọi bảng và hình (kể cả sơ đồ TikZ và biểu đồ) đều phải có caption đánh số tự động (`Bảng`, `Hình`). Caption của bảng đặt bên trên bảng; caption của hình đặt bên dưới hình.

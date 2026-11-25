@@ -1,27 +1,27 @@
 % Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185). External source: none.
-% Generated from official Tesla T4 benchmark CSV (Session B, 23 Nov 2026).
+% Generated from unified single-session Tesla T4 benchmark (25 Nov 2026, SHA f6dc3ee).
 \begin{table}
 \centering
-\caption{Kết quả benchmark đối chứng V5 hai CUDA stream cùng V0 và V4 (Tesla T4).}
+\caption{Kết quả benchmark V5 hai CUDA stream so với V0 và V4 (cùng phiên Tesla T4).}
 \scriptsize
 \begin{tabular}{llrrrrrrr}
 \toprule
 Site & Size & V0 (ms) & V4 (ms) & V5 Seq & V5 Dual & V5/V0 & Dual/Seq & Pre-S4$\times$ \\
 \midrule
-site1 & small & 1372,2 & 51,31 & 32,71 & 32,42 & 42,3$\times$ & 1,01$\times$ & 1,17$\times$ \\
-site1 & medium & 2030,9 & 31,24 & 30,85 & 29,93 & 67,9$\times$ & 1,03$\times$ & 1,26$\times$ \\
-site1 & large & 5438,7 & 106,21 & 105,91 & 103,08 & 52,8$\times$ & 1,03$\times$ & 1,32$\times$ \\
-site2 & small & 1329,7 & 21,16 & 21,36 & 20,93 & 63,5$\times$ & 1,02$\times$ & 1,24$\times$ \\
-site2 & medium & 2174,4 & 27,84 & 30,87 & 26,78 & 81,2$\times$ & 1,15$\times$ & 1,34$\times$ \\
-site2 & large & 6498,8 & 62,28 & 61,44 & 58,93 & 110,3$\times$ & 1,04$\times$ & 1,25$\times$ \\
-site3 & small & 1042,4 & 50,54 & 54,54 & 53,88 & 19,4$\times$ & 1,01$\times$ & 1,20$\times$ \\
-site3 & medium & 1491,6 & 55,85 & 55,82 & 55,60 & 26,8$\times$ & 1,00$\times$ & 1,19$\times$ \\
-site3 & large & 4183,1 & 100,02 & 101,53 & 97,99 & 42,7$\times$ & 1,04$\times$ & 1,35$\times$ \\
+site1 & small & 1107,8 & 32,70 & 31,82 & 31,32 & 35,4$\times$ & 1,02$\times$ & 1,32$\times$ \\
+site1 & medium & 1825,4 & 30,95 & 29,58 & 29,05 & 62,8$\times$ & 1,02$\times$ & 1,28$\times$ \\
+site1 & large & 4877,6 & 107,66 & 107,29 & 107,17 & 45,5$\times$ & 1,00$\times$ & 1,26$\times$ \\
+site2 & small & 1334,8 & 20,95 & 20,33 & 19,85 & 67,2$\times$ & 1,02$\times$ & 1,31$\times$ \\
+site2 & medium & 1949,3 & 27,43 & 26,68 & 25,90 & 75,3$\times$ & 1,03$\times$ & 1,30$\times$ \\
+site2 & large & 5897,7 & 61,65 & 60,66 & 59,99 & 98,3$\times$ & 1,01$\times$ & 1,24$\times$ \\
+site3 & small & 763,9 & 44,80 & 44,38 & 44,65 & 17,1$\times$ & 0,99$\times$ & 1,25$\times$ \\
+site3 & medium & 1600,2 & 56,44 & 55,97 & 55,58 & 28,8$\times$ & 1,01$\times$ & 1,29$\times$ \\
+site3 & large & 4158,3 & 102,79 & 103,63 & 101,04 & 41,2$\times$ & 1,03$\times$ & 1,27$\times$ \\
 \midrule
-challenge & small & 1151,1 & 112,92 & 112,99 & 111,98 & 10,3$\times$ & 1,01$\times$ & 1,22$\times$ \\
+challenge & small & 991,1 & 113,31 & 113,67 & 115,06 & 8,6$\times$ & 0,99$\times$ & 1,34$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 \centering
-\scriptsize GM 9 ca chuẩn: V5/V0 = 49,9$\times$, V5/V4 = 1,07$\times$, Dual/Seq = 1,04$\times$, Pre-S4 = 1,26$\times$.
-\par\tiny Tesla T4 (đo đối chứng riêng V0, V4 và V5 cùng phiên ngày 23/11/2026; 1 warm-up + 5 lượt đo).
+\scriptsize GM 9 ca chuẩn: V5/V0 = 46,52$\times$, V5/V4 = 1,03$\times$ (nhanh hơn 9/9 ca), Dual/Seq = 1,01$\times$, Pre-S4 = 1,28$\times$.
+\par\tiny Tesla T4 (cùng phiên đo hợp nhất V0--V5, 25/11/2026; V0: 1 warm-up + 5 lượt đo, GPU V1--V5: 4 warm-up + 5 lượt đo).

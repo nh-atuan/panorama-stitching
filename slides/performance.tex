@@ -4,62 +4,62 @@
 \begin{itemize}
 \item Phần cứng: Google Colab NVIDIA Tesla T4 (16 GB VRAM, kiến trúc Turing \texttt{sm\_75}).
 \item Bộ dữ liệu: 3 địa điểm chuẩn $\times$ 3 độ phân giải (9 cấu hình) cùng các cặp \texttt{challenge}.
-\item Quy trình đo: 1 lượt warm-up + 5 lượt bấm giờ cho mỗi cấu hình (\texttt{nvcc -O2 --fmad=false}); loại trừ I/O đĩa.
+\item Quy trình đo: 1 lượt warm-up (V0) và 4 lượt warm-up (GPU V1--V5) để ổn định xung nhịp trước 5 lượt bấm giờ (\texttt{nvcc -O2 --fmad=false}); loại trừ I/O đĩa.
 \item Phân tách thời gian: Ghi nhận riêng S1--S6, H2D, D2H, \texttt{Total\_Kernel\_ms} và \texttt{Total\_ms}.
-\item Cô lập phiên đo: Chỉ tính speedup trong cùng một phiên Colab T4; bản V5 được đo lại cùng V0 và V4 trong phiên đối chứng riêng.
+\item Cô lập phiên đo: Toàn bộ sáu phiên bản V0--V5 (gồm cả V5 nối tiếp và hai stream) được đo trong cùng một phiên Colab Tesla T4 duy nhất.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Tổng hợp thời gian V0--V4 (Tesla T4)}
+\begin{frame}{Tổng hợp thời gian V0--V5 (Tesla T4)}
 \begin{table}
 \centering
-\caption{Thời gian chạy trên \texttt{site2/large} và speedup trung bình nhân (GM) qua các phiên bản V0--V4.}
+\caption{Thời gian chạy trên \texttt{site2/large} và speedup trung bình nhân (GM) qua sáu phiên bản V0--V5.}
 \footnotesize
 \begin{tabular}{lrrr}
 \toprule
 Phiên bản & \texttt{site2/large} (ms) & So với V0 (GM) & So với bản trước (GM) \\
 \midrule
-V0 (CPU tham chiếu) & 5746,1 & 1,00$\times$ & -- \\
-V1 (CUDA cơ bản) & 504,1 & 3,80$\times$ & 3,80$\times$ \\
-V2 (S5 song song) & 81,1 & 23,37$\times$ & 6,16$\times$ \\
-V3 (S5 vi kiến trúc) & 62,9 & 42,65$\times$ & 1,83$\times$ \\
-V4 (S6 Fusion) & 62,2 & 43,02$\times$ & 1,01$\times$ \\
+V0 (CPU tham chiếu) & 5897,7 & 1,00$\times$ & -- \\
+V1 (CUDA cơ bản) & 504,2 & 3,99$\times$ & 3,99$\times$ \\
+V2 (S5 song song) & 81,1 & 25,06$\times$ & 6,28$\times$ \\
+V3 (S5 vi kiến trúc) & 63,5 & 43,67$\times$ & 1,74$\times$ \\
+V4 (S6 Fusion) & 61,7 & 45,07$\times$ & 1,03$\times$ \\
+V5 (Hai CUDA stream) & 60,0 & 46,52$\times$ & 1,03$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\scriptsize Trung bình nhân (GM) tính trên 9 ca chuẩn (1 warm-up + 5 lượt đo, cùng phiên Tesla T4). Phiên bản hai stream V5 được đo lại cùng V0 và V4 trong phiên đối chứng riêng ở phần sau.
+\scriptsize Trung bình nhân (GM) tính trên 9 cấu hình chuẩn trong cùng một phiên Tesla T4 (V0: 1 warm-up + 5 lượt đo; GPU V1--V5: 4 warm-up + 5 lượt đo).
 \end{frame}
 
 \begin{frame}{Sự dịch chuyển điểm nghẽn qua các phiên bản}
 \begin{itemize}
 \item V1: S5 chiếm 90--99\% tổng thời gian trên cả 9 cấu hình chuẩn.
-\item V2: Song song hóa chấm điểm RANSAC và rút gọn inlier giảm S5 từ 1,7--65,7$\times$ (GM toàn pipeline 6,16$\times$ so với V1).
-\item V3: MSAC warp-shuffle, DLT/SVD trên shared memory và chia batch tăng thêm 1,83$\times$ toàn pipeline.
-\item V4: Sau khi S5 giảm mạnh, S6 chiếm tới 45,7\% trên \texttt{site2/large}; gộp một lượt tăng tốc S6 1,04$\times$ (tổng 1,01$\times$).
-\item V5: Tiền S4 (H2D + S1--S3) chiếm 21,4\% trên \texttt{site2/large}; hai stream tăng tốc tiền S4 1,26$\times$ GM (Dual/Seq tổng 1,04$\times$).
+\item V2: Song song hóa chấm điểm RANSAC và rút gọn inlier giảm S5 từ 1,7--66,4$\times$ (GM toàn pipeline 6,28$\times$ so với V1).
+\item V3: MSAC warp-shuffle, DLT/SVD trên shared memory và chia batch tăng thêm 1,74$\times$ toàn pipeline.
+\item V4: Sau khi S5 giảm mạnh, S6 chiếm tới 45,9\% trên \texttt{site2/large}; gộp một lượt tăng tốc S6 1,06$\times$ (tổng 1,03$\times$).
+\item V5: Tiền S4 (H2D + S1--S3) chiếm 22,0\% trên \texttt{site2/large}; hai stream kết hợp tối ưu sắp xếp S2 tăng tốc tiền S4 1,28$\times$ GM và nhanh hơn V4 ở 9/9 ca chuẩn (tổng 1,03$\times$).
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Vì sao tối ưu S6 sau V3?}
 \begin{table}
 \centering
-\caption{Phân rã thời gian S5 và S6 trên \texttt{site2/large} giữa V2 và V3 (Tesla T4).}
+\caption{Phân rã thời gian S5 và S6 trên \texttt{site2/large} giữa V2 và V3 (cùng phiên Tesla T4).}
 \begin{tabular}{lrr}
 \toprule
 Thành phần trên \texttt{site2/large} & V2 & V3 \\
 \midrule
-S5 (ms) & 30,54 & 12,20 \\
-S6 (ms) & 29,58 & 28,47 \\
-Tổng pipeline (ms) & 81,83 & 62,35 \\
+S5 (ms) & 30,57 & 12,52 \\
+S6 (ms) & 28,69 & 29,15 \\
+Tổng pipeline (ms) & 81,05 & 63,51 \\
 \bottomrule
 \end{tabular}
 \end{table}
 \begin{itemize}
-\item Sau khi V3 giảm S5 đi 2,5$\times$, S6 trở thành stage lớn nhất với 45,7\% tổng thời gian.
+\item Sau khi V3 giảm S5 đi 2,44$\times$, S6 trở thành stage lớn nhất với 45,9\% tổng thời gian.
 \item Theo định luật Amdahl, ngay cả khi S6 nhanh gấp 2$\times$, mức tăng tốc toàn pipeline cũng bị chặn quanh $\sim$1,30$\times$ nếu các stage khác giữ nguyên.
 \end{itemize}
-\tiny Số liệu profiling V2/V3 cùng phiên trên Tesla T4; bảng so sánh đầy đủ V0--V4 được đo lại cùng phiên ở đợt đo chính.
 \end{frame}
 
 \begin{frame}{Benchmark V4: gộp một lượt so với V3}
@@ -75,8 +75,8 @@ Tổng pipeline (ms) & 81,83 & 62,35 \\
 \toprule
 Phiên bản & Chuỗi thao tác S6 (NSYS) & Trace NSYS (ms) & Benchmark 5 lượt (ms) \\
 \midrule
-V3 & \texttt{cudaMemset} + \texttt{copy\_a} + \texttt{gather\_b} (3 lượt) & 29,80 & 28,71 \\
-V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
+V3 & \texttt{cudaMemset} + \texttt{copy\_a} + \texttt{gather\_b} (3 lượt) & 29,80 & 29,15 \\
+V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 27,49 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -84,7 +84,7 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
 \begin{itemize}
 \item Trace Nsight Systems xác nhận V4 loại bỏ hoàn toàn lượt \texttt{cudaMemset} (100,1 MB) và \texttt{copy\_a\_kernel} riêng lẻ.
 \item Trong trace có gắn profiler, kernel gộp V4 tốn 32,54 ms (nhỉnh hơn 29,80 ms của V3) do overhead của profiler.
-\item Khi tắt profiler ở benchmark 5 lượt, S6 cải thiện từ 28,71 ms (V3) xuống 28,19 ms (V4), khẳng định cần đánh giá hiệu năng trên lượt đo chuẩn.
+\item Khi tắt profiler ở benchmark 5 lượt, S6 cải thiện từ 29,15 ms (V3) xuống 27,49 ms (V4), khẳng định cần đánh giá hiệu năng trên lượt đo chuẩn.
 \end{itemize}
 \end{frame}
 
@@ -114,16 +114,16 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
 \scriptsize
 \begin{itemize}
 \item Xác nhận chồng lấp GPU thực sự trên \texttt{large}: 16,6--24,5\% (2,05--2,89 ms) so với 0,0\% ở V4 và V5 nối tiếp.
-\item Thời gian \texttt{H2D $\rightarrow$ bắt đầu S4} trên \texttt{site2/large} giảm từ 23,19 ms (V4) và 22,22 ms (V5 seq) xuống 17,66 ms (V5 dual).
+\item Thời gian \texttt{H2D $\rightarrow$ bắt đầu S4} trong trace trên \texttt{site2/large} giảm từ 23,19 ms (V4) và 22,22 ms (V5 seq) xuống 17,66 ms (V5 dual).
 \item Peak VRAM tăng thêm +64,3 MiB (269,8 $\rightarrow$ 334,1 MiB trên \texttt{site2/large}; 0 byte rò rỉ).
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Đánh giá độ ổn định và đánh đổi của V5}
 \begin{itemize}
-\item Tăng tốc tiền S4: GM 9 ca đạt 1,26$\times$; \texttt{site2/large} giảm từ 13,70 xuống 10,97 ms (1,25$\times$, $-$2,73 ms).
-\item Độ ổn định 5 khối ghép cặp (\texttt{site2/large}): trung vị V5/V4 = 1,07$\times$ (dao động 0,93--1,18$\times$); khi chỉ chạy 1 lượt warm-up, 3/5 khối nhanh hơn do nhiễu tăng xung nhịp GPU giữa các lượt.
-\item Kiểm tra nhiễu (\texttt{site3/small}): Độ trễ $\sim$6\% ban đầu biến mất khi đo lại (V5/V4 = 1,15$\times$), cho thấy nhiễu giữa các lượt chạy thay vì hồi quy thật.
-\item Chọn làm bản chính thức: V5 giữ nguyên độ chính xác (Max RGB = 0, 0 byte rò rỉ), đạt 49,9$\times$ GM so với V0 và cải thiện thực tế đoạn tiền S4, với đánh đổi +64,3 MiB VRAM nằm gọn trong 16 GB của Tesla T4.
+\item Tăng tốc tiền S4: GM 9 ca đạt 1,28$\times$; trên \texttt{site2/large}, đoạn tiền S4 giảm từ 11,75 xuống 9,45 ms (1,24$\times$, $-$2,30 ms).
+\item Ổn định sau khi warm-up đủ: với 4 lượt warm-up trước 5 lượt bấm giờ, V5 hai stream nhanh hơn V4 ở cả 9/9 cấu hình chuẩn (GM 1,03$\times$, Dual/Seq đạt 1,01$\times$ ở 8/9 ca) và loại bỏ hoàn toàn nhiễu tăng xung nhịp GPU.
+\item Hiệu năng toàn pipeline: V5 đạt trung bình nhân 46,52$\times$ so với V0 (\texttt{site2/large}: 59,99 ms, 98,3$\times$).
+\item Chọn làm bản chính thức: V5 giữ nguyên độ chính xác (Max RGB = 0, 0 byte rò rỉ) với đánh đổi +64,3 MiB VRAM nằm gọn trong 16 GB của Tesla T4.
 \end{itemize}
 \end{frame}

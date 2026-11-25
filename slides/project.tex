@@ -183,7 +183,7 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 \item Vì sao chọn S5 trước? Ở V1, RANSAC tuần tự trên GPU chiếm 90--99\% tổng thời gian trên cả 9 ca chuẩn.
 \item Đánh giá song song các giả thuyết RANSAC thay vì chấm điểm tuần tự từng giả thuyết.
 \item Song song hóa bước rút gọn inlier và đưa bước refit DLT/SVD cuối cùng lên thực thi trực tiếp trên GPU.
-\item Hiệu quả: nhanh hơn V1 trung bình nhân 6,16$\times$ trên 9 ca chuẩn (đạt 23,4$\times$ so với V0).
+\item Hiệu quả: nhanh hơn V1 trung bình nhân 6,28$\times$ trên 9 ca chuẩn (đạt 25,06$\times$ so với V0).
 \end{itemize}
 \end{frame}
 
@@ -192,7 +192,7 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 \item Chấm điểm MSAC bằng warp-shuffle giúp giảm truy cập shared memory và chi phí đồng bộ trong block.
 \item Giải DLT 4 điểm và Jacobi SVD trực tiếp trên shared memory tốc độ cao.
 \item Chia batch các giả thuyết để tăng mức khai thác SM và giảm chi phí launch kernel.
-\item Hiệu quả: tăng thêm 1,83$\times$ toàn pipeline (42,7$\times$ so với V0), kéo S5 trên \texttt{site2/large} xuống 12,2 ms và làm S6 (45,7\%) trở thành điểm nghẽn mới.
+\item Hiệu quả: tăng thêm 1,74$\times$ toàn pipeline (43,67$\times$ so với V0), kéo S5 trên \texttt{site2/large} xuống 12,5 ms và làm S6 (45,9\%) trở thành điểm nghẽn mới.
 \end{itemize}
 \end{frame}
 
@@ -201,26 +201,26 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 \item Bộ kết xuất V3 (3 lượt): Xóa canvas (\texttt{cudaMemset}) $\rightarrow$ sao chép ảnh A $\rightarrow$ lấy mẫu và hòa trộn ảnh B.
 \item Bộ kết xuất V4 (1 lượt gộp): Mỗi thread xử lý một pixel đầu ra: kiểm tra biên A/B, lấy mẫu ảnh gốc, hòa trộn 50/50 và ghi RGB một lần.
 \item Giữ nguyên khung canvas, phép chiếu ngược, nội suy bilinear và quy tắc làm tròn (Max RGB error = 0); tái sử dụng S1--S4 (V1) và S5 (V3).
-\item Nhanh hơn ở 8/9 ca chuẩn (S6 GM 1,04$\times$, tổng GM 1,01$\times$); Nsight Compute chỉ ra lưu lượng DRAM tăng +26\%, giới hạn speedup tổng quanh $\sim$1\%.
+\item Tăng tốc S6 GM 1,06$\times$ (tổng GM 1,03$\times$, nhanh hơn ở 6/9 ca chuẩn); Nsight Compute chỉ ra lưu lượng DRAM tăng +26\%, giới hạn mức tăng tốc toàn pipeline.
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Tối ưu V5: xử lý song song bằng hai CUDA stream}
 \begin{itemize}
-\item Động lực: Sau V4, phần tiền S4 (H2D + S1--S3 của hai ảnh) chiếm 11,2--21,4\% tổng thời gian trên các ca \texttt{large} (\texttt{site2/large}: 15,3 ms).
+\item Động lực: Sau V4, phần tiền S4 (H2D + S1--S3 của hai ảnh) chiếm 10,6--22,0\% tổng thời gian trên các ca \texttt{large} (\texttt{site2/large}: 13,6 ms).
 \item Chạy ảnh A và B trên hai CUDA stream không chặn (\texttt{streamA}, \texttt{streamB}) với scratch buffer tách biệt và pinned memory cho bộ đếm ứng viên.
-\item Lập lịch prefix/suffix: Đẩy H2D + S1 + ứng viên S2 trên cả hai nhánh, thăm dò \texttt{cudaEventQuery} kèm \texttt{yield()}, rồi chạy S2 top-K + S3 cho nhánh xong trước.
+\item Lập lịch prefix/suffix kết hợp tối ưu S2: đẩy H2D + S1 + ứng viên S2 trên cả hai nhánh, hoàn tất S2 top-K (bitonic sort trên shared memory) + S3 cho nhánh xong trước.
 \item Stream điều phối chờ \texttt{doneA}/\texttt{doneB} bằng \texttt{cudaStreamWaitEvent}, gộp bộ đếm rồi chạy S4--S6; hỗ trợ cờ đối chứng \texttt{-{}-v5-schedule sequential}.
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Bài học tối ưu hiệu năng trên GPU}
 \begin{itemize}
-\item Bám sát số đo và định luật Amdahl: Xử lý S5 mang lại phần lớn mức tăng tốc (42,7$\times$); các tối ưu sau ở S6 (45,7\%) và tiền S4 (21,4\%) bị giới hạn trần chặt hơn nhiều.
+\item Bám sát số đo và định luật Amdahl: Xử lý S5 mang lại phần lớn mức tăng tốc (43,67$\times$); các tối ưu sau ở S6 (45,9\%) và tiền S4 (22,0\%) bị giới hạn trần chặt hơn nhiều.
 \medskip
 \item Chỉ số phần cứng chính xác hơn trực giác: Gộp ba lượt S6 tưởng như tiết kiệm băng thông, nhưng Nsight Compute chỉ ra lưu lượng DRAM tăng +26\% và L2 hit rate giảm trên \texttt{site2/large}.
 \medskip
-\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, đổi lại cần thêm +64,3 MiB VRAM và chịu ảnh hưởng bão hòa SM cùng dao động xung nhịp khi đo ít lượt warm-up trên Tesla T4.
+\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,28$\times$, nhanh hơn V4 ở cả 9/9 ca chuẩn khi warm-up đủ, đổi lại cần thêm +64,3 MiB VRAM.
 \end{itemize}
 \end{frame}
 

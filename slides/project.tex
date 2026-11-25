@@ -102,7 +102,7 @@ V0 & Bản tuần tự CPU tham chiếu (đóng băng làm chuẩn). \\
 V1 & CUDA cơ bản cho S1--S6 với bộ đệm trung gian device-resident. \\
 V2 & Song song hóa chấm điểm RANSAC, rút gọn inlier và refit ở S5. \\
 V3 & MSAC dùng warp-shuffle, DLT/SVD trên shared memory và chia batch ở S5. \\
-V4 & Gộp kết xuất canvas một lượt ở S6 (bản production chính). \\
+V4 & Gộp kết xuất canvas một lượt ở S6 (bản chính thức). \\
 V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3 (case study). \\
 \bottomrule
 \end{tabular}
@@ -220,7 +220,7 @@ Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến
 \medskip
 \item Chỉ số phần cứng chính xác hơn trực giác: Gộp ba lượt S6 tưởng như tiết kiệm băng thông, nhưng Nsight Compute chỉ ra lưu lượng DRAM tăng +26\% và L2 hit rate giảm trên \texttt{site2/large}.
 \medskip
-\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, nhưng bão hòa SM trên Tesla T4 cùng +64,3 MiB VRAM khiến V4 ổn định hơn cho bản production.
+\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, nhưng bão hòa SM trên Tesla T4 cùng +64,3 MiB VRAM khiến V4 ổn định hơn để chọn làm bản chính thức.
 \end{itemize}
 \end{frame}
 

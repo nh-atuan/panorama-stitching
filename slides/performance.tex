@@ -23,7 +23,7 @@ V0 (CPU tham chiếu) & 5746,1 & 1,00$\times$ & -- \\
 V1 (CUDA cơ bản) & 504,1 & 3,80$\times$ & 3,80$\times$ \\
 V2 (S5 song song) & 81,1 & 23,37$\times$ & 6,16$\times$ \\
 V3 (S5 vi kiến trúc) & 62,9 & 42,65$\times$ & 1,83$\times$ \\
-V4 (S6 Fusion, Production) & 62,2 & 43,02$\times$ & 1,01$\times$ \\
+V4 (S6 Fusion, bản chính thức) & 62,2 & 43,02$\times$ & 1,01$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -119,11 +119,11 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Kiểm tra độ ổn định V5 và quyết định production}
+\begin{frame}{Kiểm tra độ ổn định V5 và lựa chọn bản chính thức}
 \begin{itemize}
 \item Tăng tốc tiền S4: GM 9 ca đạt 1,26$\times$; \texttt{site2/large} giảm từ 13,70 xuống 10,97 ms (1,25$\times$, $-$2,73 ms).
 \item Độ ổn định 5 khối ghép cặp (\texttt{site2/large}): trung vị V5/V4 = 1,07$\times$ (dao động 0,93--1,18$\times$), nhưng chỉ 3/5 khối nhanh hơn (chưa đạt ngưỡng 4/5).
 \item Kiểm tra nhiễu (\texttt{site3/small}): Độ trễ $\sim$6\% ban đầu biến mất khi đo lại (V5/V4 = 1,15$\times$), cho thấy nhiễu giữa các lượt chạy thay vì hồi quy thật.
-\item Quyết định: Giữ V4 làm bản production chính (ổn định, tiết kiệm 64,3 MiB VRAM) và lưu V5 trong \texttt{src/} như một case study hai stream đã kiểm chứng.
+\item Quyết định: Giữ V4 làm bản chính thức (ổn định, tiết kiệm 64,3 MiB VRAM) và lưu V5 trong \texttt{src/} như một case study hai stream đã kiểm chứng.
 \end{itemize}
 \end{frame}

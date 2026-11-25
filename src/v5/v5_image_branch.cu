@@ -7,7 +7,9 @@
 //   per-image entry points of docs/report/p10-v5-contract.md section 3; S2 publishes the
 //   candidate count through pinned memory instead of synchronizing. P10-T02 review added the
 //   host checks of the contract (Config, scratch size and alignment, feature capacity, view
-//   sizes and upload strides) before any work is enqueued.
+//   sizes and upload strides) before any work is enqueued. V5 optimization replaces the
+//   small-stride global-memory bitonic sort passes with shared-memory tile sort/merge kernels
+//   and halves global-pass thread launches while keeping bit-for-bit identical ordering.
 
 #include "v5/v5_image_branch.h"
 #include "common/brief_pattern.h"
@@ -74,6 +76,8 @@ static __constant__ std::int32_t v5_fast_circle[kFastCircleSize][2] = {
 
 constexpr unsigned long long v5_kPaddingKey = ~0ULL;
 constexpr unsigned v5_kSortThreads = 256;
+constexpr std::uint32_t v5_kSharedSortSize = 1024;
+constexpr unsigned v5_kSharedSortThreads = v5_kSharedSortSize / 2;
 
 struct DetectLayout {
     std::size_t pixels = 0;
@@ -200,16 +204,74 @@ __global__ void v5_pad_keys_kernel(unsigned long long* keys, std::uint32_t count
     if (i < padded) keys[i] = v5_kPaddingKey;
 }
 
-__global__ void v5_bitonic_step_kernel(unsigned long long* keys, std::uint32_t n, std::uint32_t j, std::uint32_t k) {
-    const std::uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= n) return;
-    const std::uint32_t partner = i ^ j;
-    if (partner <= i) return;
-    const unsigned long long a = keys[i], b = keys[partner];
-    const bool ascending = (i & k) == 0;
+__global__ void v5_bitonic_shared_init_kernel(unsigned long long* keys, std::uint32_t tile) {
+    __shared__ unsigned long long s_keys[v5_kSharedSortSize];
+    const std::uint32_t half = tile >> 1;
+    const std::uint32_t base = blockIdx.x * tile;
+    const std::uint32_t tid = threadIdx.x;
+    s_keys[tid] = keys[base + tid];
+    s_keys[tid + half] = keys[base + tid + half];
+    __syncthreads();
+
+    for (std::uint32_t k = 2; k <= tile; k <<= 1) {
+        for (std::uint32_t j = k >> 1; j > 0; j >>= 1) {
+            const std::uint32_t low_mask = j - 1;
+            const std::uint32_t i0 = ((tid & ~low_mask) << 1) | (tid & low_mask);
+            const std::uint32_t i1 = i0 | j;
+            const unsigned long long a = s_keys[i0];
+            const unsigned long long b = s_keys[i1];
+            const bool ascending = ((base + i0) & k) == 0;
+            if ((a > b) == ascending) {
+                s_keys[i0] = b;
+                s_keys[i1] = a;
+            }
+            __syncthreads();
+        }
+    }
+
+    keys[base + tid] = s_keys[tid];
+    keys[base + tid + half] = s_keys[tid + half];
+}
+
+__global__ void v5_bitonic_shared_merge_kernel(unsigned long long* keys, std::uint32_t k) {
+    __shared__ unsigned long long s_keys[v5_kSharedSortSize];
+    const std::uint32_t half = v5_kSharedSortSize >> 1;
+    const std::uint32_t base = blockIdx.x * v5_kSharedSortSize;
+    const std::uint32_t tid = threadIdx.x;
+    const bool ascending = (base & k) == 0;
+    s_keys[tid] = keys[base + tid];
+    s_keys[tid + half] = keys[base + tid + half];
+    __syncthreads();
+
+    for (std::uint32_t j = half; j > 0; j >>= 1) {
+        const std::uint32_t low_mask = j - 1;
+        const std::uint32_t i0 = ((tid & ~low_mask) << 1) | (tid & low_mask);
+        const std::uint32_t i1 = i0 | j;
+        const unsigned long long a = s_keys[i0];
+        const unsigned long long b = s_keys[i1];
+        if ((a > b) == ascending) {
+            s_keys[i0] = b;
+            s_keys[i1] = a;
+        }
+        __syncthreads();
+    }
+
+    keys[base + tid] = s_keys[tid];
+    keys[base + tid + half] = s_keys[tid + half];
+}
+
+__global__ void v5_bitonic_step_kernel(unsigned long long* keys, std::uint32_t half_n,
+                                       std::uint32_t j, std::uint32_t k) {
+    const std::uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if (tid >= half_n) return;
+    const std::uint32_t low_mask = j - 1;
+    const std::uint32_t i0 = ((tid & ~low_mask) << 1) | (tid & low_mask);
+    const std::uint32_t i1 = i0 | j;
+    const unsigned long long a = keys[i0], b = keys[i1];
+    const bool ascending = (i0 & k) == 0;
     if ((a > b) == ascending) {
-        keys[i] = b;
-        keys[partner] = a;
+        keys[i0] = b;
+        keys[i1] = a;
     }
 }
 
@@ -233,9 +295,19 @@ inline cudaError_t v5_sort_keys(unsigned long long* keys, std::uint32_t count, c
     if (n > count) {
         PANORAMA_LAUNCH_KERNEL(stream, v5_pad_keys_kernel<<<v5_blocks_for(n - count), v5_kSortThreads, 0, stream>>>(keys, count, n));
     }
-    for (std::uint32_t k = 2; k <= n; k <<= 1) {
-        for (std::uint32_t j = k >> 1; j > 0; j >>= 1) {
-            PANORAMA_LAUNCH_KERNEL(stream, v5_bitonic_step_kernel<<<v5_blocks_for(n), v5_kSortThreads, 0, stream>>>(keys, n, j, k));
+    const std::uint32_t tile = n < v5_kSharedSortSize ? n : v5_kSharedSortSize;
+    PANORAMA_LAUNCH_KERNEL(stream, v5_bitonic_shared_init_kernel<<<n / tile, tile >> 1, 0, stream>>>(keys, tile));
+    if (n > v5_kSharedSortSize) {
+        const std::uint32_t half_n = n >> 1;
+        const unsigned global_blocks = v5_blocks_for(half_n);
+        const unsigned tile_blocks = n / v5_kSharedSortSize;
+        for (std::uint32_t k = v5_kSharedSortSize << 1; k <= n; k <<= 1) {
+            for (std::uint32_t j = k >> 1; j >= v5_kSharedSortSize; j >>= 1) {
+                PANORAMA_LAUNCH_KERNEL(stream, v5_bitonic_step_kernel<<<global_blocks, v5_kSortThreads, 0, stream>>>(
+                    keys, half_n, j, k));
+            }
+            PANORAMA_LAUNCH_KERNEL(stream, v5_bitonic_shared_merge_kernel<<<tile_blocks, v5_kSharedSortThreads, 0, stream>>>(
+                keys, k));
         }
     }
     return cudaPeekAtLastError();

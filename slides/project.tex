@@ -26,12 +26,12 @@
 \begin{itemize}
 \item Input: two overlapping RGB images, A and B.
 \item Output: a shared canvas in A's coordinate system.
-\item Goal: accelerate the pipeline while preserving the output and failure behavior of the CPU reference.
+\item Goal: accelerate the pipeline on GPU while preserving the output and failure behavior of the CPU reference.
 \end{itemize}
 \column{.59\textwidth}
 \centering
 \includegraphics[width=\linewidth]{site2-large-panorama.jpg}
-\scriptsize Group 16 dataset, \texttt{site2/large}. V4 output from P9.
+\scriptsize Group 16 dataset, \texttt{site2/large} (V4 output).
 \end{columns}
 \end{frame}
 
@@ -53,19 +53,19 @@
 
 \medskip
 \begin{itemize}
-\item S1--S3 process A and B independently. S4--S6 combine their data.
-\item S1 uses grayscale and Gaussian smoothing. S2 detects FAST-9 corners (+ NMS, top-K) and S3 builds 256-bit BRIEF descriptors.
+\item S1--S3 process A and B independently; S4--S6 combine data from both images.
+\item S1 converts to grayscale and applies Gaussian smoothing. S2 detects FAST-9 corners (with NMS and top-K selection), and S3 computes 256-bit BRIEF descriptors.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Matching, geometry and rendering}
+\begin{frame}{Matching, geometry, and rendering}
 \begin{itemize}
-\item \textbf{S4:} Match binary descriptors by brute-force Hamming distance and reject ambiguous matches via Lowe ratio test.
-\item \textbf{S5:} Sample four matches per MSAC RANSAC hypothesis, score the candidate homography, and refit using all inliers (DLT + Jacobi SVD).
-\item \textbf{S6:} Compute canvas bounds, map output pixels back to sources, bilinear-sample B, and blend the overlap with 50/50 averaging.
+\item \textbf{S4:} Match binary descriptors by brute-force Hamming distance and filter ambiguous pairs with Lowe's ratio test.
+\item \textbf{S5:} Sample four matches per MSAC RANSAC hypothesis, score the candidate homography, and refit on all inliers (DLT + Jacobi SVD).
+\item \textbf{S6:} Compute canvas bounds, inverse-map output pixels to sources, bilinear-sample B, and blend the overlap with 50/50 averaging.
 \end{itemize}
 \medskip
-\small Homography models a common plane or largely rotational camera motion. Parallax and repetitive textures can cause alignment failure.
+\small Homography assumes a shared plane or mostly rotational camera motion; strong parallax or repetitive textures can still cause alignment failure.
 \end{frame}
 
 \begin{frame}{One pipeline, six versions (V0--V5)}
@@ -77,7 +77,7 @@ Version & Main implementation change \\
 V0 & Sequential CPU reference (frozen baseline). \\
 V1 & Basic CUDA S1--S6 with device-resident intermediate buffers. \\
 V2 & Parallel RANSAC hypothesis scoring, inlier reduction, and refit in S5. \\
-V3 & Warp shuffle MSAC, shared-memory DLT/SVD, and batch scheduling in S5. \\
+V3 & Warp-shuffle MSAC, shared-memory DLT/SVD, and batch scheduling in S5. \\
 V4 & Single-pass fused canvas renderer in S6 (\textbf{Production baseline}). \\
 V5 & Dual-stream asynchronous execution for H2D + S1--S3 (\textbf{Case study}). \\
 \bottomrule
@@ -85,7 +85,7 @@ V5 & Dual-stream asynchronous execution for H2D + S1--S3 (\textbf{Case study}). 
 \end{frame}
 
 \section{Live demonstration}
-\begin{frame}[fragile]{Build and run on the same Tesla T4}
+\begin{frame}[fragile]{Build and run on Tesla T4}
 \begin{verbatim}
 nvidia-smi -L
 python3 scripts/build.py --compiler nvcc --require-t4 --target stitch
@@ -93,76 +93,95 @@ python3 scripts/live_demo.py --dataset dataset --site site2 --size small \
   --versions 0 4 5 --runs 1
 \end{verbatim}
 \begin{itemize}
-\item One-click demo (\texttt{scripts/live\_demo.py}) prints GPU/SHA, runs V0, V4, and V5 (\texttt{--v5-schedule dual}) on \texttt{site2/small}, saves all three panoramas, and prints stage timings.
-\item Automatically runs \texttt{challenge/medium} afterward to demonstrate the expected \texttt{NumericalFailure} error path.
+\item The automated demo runner (\texttt{scripts/live\_demo.py}) checks the GPU, runs V0, V4, and V5 (\texttt{--v5-schedule dual}) on \texttt{site2/small}, saves all three panoramas, and prints per-stage timings.
+\item It then runs \texttt{challenge/medium} to verify that the expected \texttt{NumericalFailure} error path is handled consistently.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{How we check correctness}
+\begin{frame}{Verification and memory safety}
 \begin{itemize}
-\item Check each stage independently against V0 before integrated pipeline tests.
-\item Compare homography against 6 known synthetic transforms (RMSE $\le 0.5$ px, Max $\le 1.0$ px).
-\item Compare status, canvas geometry, and Max RGB error against V0 on 12 real configurations.
-\item Run \texttt{compute-sanitizer --tool memcheck --leak-check full} on GPU suites and CLI.
+\item \textbf{Stage-by-stage parity:} Every GPU stage is verified against V0 before end-to-end pipeline testing.
+\item \textbf{Synthetic homography (6 pairs):} RMSE $\le 0.10$ px and Max $\le 0.21$ px (thresholds: 0.5 / 1.0 px), with 0 px drift across versions.
+\item \textbf{Real dataset (12 configs):} All 10 valid pairs match V0 canvas geometry with \textbf{Max RGB error = 0}; \texttt{challenge/medium} and \texttt{large} preserve the expected S6 \texttt{NumericalFailure}.
+\item \textbf{Memory safety:} \texttt{compute-sanitizer --tool memcheck --leak-check full} reports \textbf{0 errors and 0 bytes leaked} across GPU test suites and CLI runs.
 \end{itemize}
 \medskip
-\small Freeze verification (P11-T02, \texttt{f2837a8}): 14 V0 suites (45,284 checks), 16 GPU suites V1--V5 (69,336 checks), and 15+ Python suites passed. All 10 valid real cases achieved Max RGB = 0; 2 challenge cases returned expected \texttt{NumericalFailure}; memcheck reported 0 errors and 0 bytes leaked.
+\small Full test pass on Tesla T4: 14 V0 suites (45,284 checks), 16 GPU suites covering V1--V5 (69,336 checks), and all Python verification suites.
 \end{frame}
 
-\begin{frame}{Gallery and a reproducible failure}
+\begin{frame}{Output gallery and failure case}
 \centering
-\includegraphics[width=.52\linewidth]{site2-large-panorama.jpg}
+\includegraphics[width=.49\linewidth]{site2-large-panorama.jpg}
 
-\small Stable case: \texttt{site2/large} (7676$\times$4348), V4. Run \texttt{site2/small} live for a faster demo.
+\small Valid outdoor scene: \texttt{site2/large} (7676$\times$4348, V4). Live demo uses \texttt{site2/small} for quick turnaround.
 \begin{itemize}
-\item Show \texttt{challenge/medium} (\texttt{de-challenge1}) next and point to \texttt{[NumericalFailure] S6 warp\_blend failed}.
-\item Root cause: repetitive railing/ceiling patterns degrade 256-bit BRIEF descriptors, producing a degenerate homography.
+\item \textbf{Failure case (\texttt{challenge/medium}):} Returns \texttt{[NumericalFailure] S6 warp\_blend failed} consistently across V0--V5.
+\item \textbf{Root cause:} Repetitive railing and ceiling patterns produce ambiguous 256-bit BRIEF matches, leading to a degenerate homography.
 \end{itemize}
 \end{frame}
 
 \section{Performance results and analysis}
-\begin{frame}{V0--V5 timing summary (Tesla T4)}
-\centering
-\footnotesize
-\begin{tabular}{llrrr}
-\toprule
-Session & Version & \texttt{site2/large} (ms) & vs. V0 & vs. previous \\
-\midrule
-P9 & V0 (CPU) & 5746.068 & 1.00$\times$ (GM) & -- \\
-P9 & V1 (Basic CUDA) & 504.101 & 3.80$\times$ (GM) & 3.80$\times$ (GM) \\
-P9 & V2 (S5 Parallel) & 81.091 & 23.37$\times$ (GM) & 6.16$\times$ (GM) \\
-P9 & V3 (S5 Micro-arch) & 62.874 & 42.65$\times$ (GM) & 1.83$\times$ (GM) \\
-P9 & V4 (S6 Fusion, Prod) & 62.197 & 43.02$\times$ (GM) & 1.009$\times$ (GM) \\
-\midrule
-P10 & V5 (Dual-stream) & 58.926 & 49.88$\times$ (GM) & 1.036$\times$ (GM Dual/Seq) \\
-\bottomrule
-\end{tabular}
-
-\medskip
-\scriptsize P9 geometric means span 9 standard cases (1 warm-up + 5 runs). P10 (23 Nov 2026, SHA \texttt{26c8f24}) measured V0, V4 (62.275 ms on \texttt{site2/large}), V5 seq (61.442 ms), and V5 dual (58.926 ms, 110.29$\times$ vs. P10 V0) in one T4 session. Ratios are never mixed across sessions.
-\end{frame}
-
-\begin{frame}{The bottleneck shifts across APOD iterations}
-\begin{itemize}
-\item \textbf{V1 (P6):} S5 accounted for 90--99\% of pipeline time across all 9 standard cases.
-\item \textbf{V2 (P7):} Parallelized RANSAC scoring and inlier reduction, cutting S5 by 1.69--65.73$\times$.
-\item \textbf{V3 (P8):} Warp-shuffle MSAC, shared-memory DLT/SVD, and batch scheduling gained another 1.85$\times$ (P8) / 1.83$\times$ (P9).
-\item \textbf{V4 (P9):} With S5 reduced, S6 reached 45.7\% at \texttt{site2/large}; single-pass fusion sped up S6 by 1.036$\times$ (total 1.009$\times$).
-\item \textbf{V5 (P10):} Pre-S4 (H2D + S1--S3) reached 21.44\% at \texttt{site2/large}; dual streams sped up Pre-S4 by 1.257$\times$ GM (Dual/Seq total 1.036$\times$, 3/5 paired blocks).
-\end{itemize}
-\end{frame}
-
-\section{Key optimizations and lessons}
 \input{performance.tex}
 
-\begin{frame}{What the project demonstrates}
+\section{Key optimizations and lessons}
+\begin{frame}{APOD workflow: following the measured bottleneck}
+\begin{description}
+\item[Assess] Profile stage timings and inspect Nsight Systems / Compute traces.
+\item[Parallelize] V1 ports S1--S6 to CUDA with device-resident buffers to avoid intermediate H2D/D2H copies.
+\item[Optimize] V2/V3 accelerate S5; V4 fuses S6 canvas passes; V5 overlaps H2D + S1--S3 across two CUDA streams.
+\item[Deploy] Verify output parity and memory safety before accepting any optimization.
+\end{description}
+\medskip
+Each optimization exposes the next dominant stage, until Amdahl's law caps further end-to-end gains.
+\end{frame}
+
+\begin{frame}{S5 optimizations (V2 \& V3): breaking the 90\%+ bottleneck}
 \begin{itemize}
-\item Keep one frozen reference (V0) and one measurement protocol across all versions.
-\item Follow measured bottlenecks: CPU baseline $\rightarrow$ device-resident CUDA $\rightarrow$ S5 parallelism \& micro-arch $\rightarrow$ S6 fusion $\rightarrow$ dual-stream concurrency.
-\item Verify outputs, error paths, and memory safety before interpreting speedups.
-\item Evaluate stage gains against end-to-end stability: V4 (+0.9\% total) is our stable production baseline; V5 (Pre-S4 1.257$\times$, Dual/Seq 1.036$\times$, 3/5 paired blocks, +64.3 MiB VRAM) documents concurrency limits on Tesla T4.
+\item \textbf{Why S5 first?} In V1, sequential RANSAC on GPU accounted for 90--99\% of total runtime across all 9 standard cases.
+\item \textbf{V2 (Parallel RANSAC):} Evaluate candidate hypotheses in parallel, parallelize inlier reduction, and move the final inlier refit to GPU $\rightarrow$ \textbf{6.16$\times$} faster than V1 (\textbf{23.4$\times$} vs. V0).
+\item \textbf{V3 (Micro-architectural tuning):}
+  \begin{itemize}
+  \item Warp-shuffle MSAC scoring to cut shared-memory and synchronization overhead.
+  \item Shared-memory 4-point DLT / Jacobi SVD and batch scheduling to improve SM utilization.
+  \end{itemize}
+\item \textbf{Impact:} Another \textbf{1.83$\times$} end-to-end gain (\textbf{42.7$\times$} vs. V0), shrinking S5 on \texttt{site2/large} to 12.2 ms and exposing S6 as the new bottleneck.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{V4 optimization: single-pass canvas fusion}
+\begin{block}{V3 renderer (3 passes)}
+Clear canvas (\texttt{cudaMemset}) $\rightarrow$ copy image A $\rightarrow$ gather and blend image B.
+\end{block}
+\begin{block}{V4 renderer (1 fused pass)}
+One thread per output pixel: check A/B bounds, sample source pixels, feather-blend, write RGB once.
+\end{block}
+\begin{itemize}
+\item Preserves exact canvas bounds, inverse projection, bilinear interpolation, and rounding rules (Max RGB error = 0), while reusing S1--S4 (V1) and S5 (V3).
+\item Faster in 8/9 standard cases (S6 GM \textbf{1.04$\times$}, total GM \textbf{1.01$\times$}; 4/5 paired blocks on \texttt{site2/large} favor V4, median \textbf{1.03$\times$}).
+\item Trade-off: eliminates two canvas passes, though Nsight Compute shows higher DRAM traffic in the fused kernel, limiting total speedup to $\sim$1\%.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{V5 optimization: dual-stream concurrency}
+\begin{block}{Motivation}
+After V4, pre-S4 work (H2D + S1--S3 for both images) accounts for 11.2\% (\texttt{site3/large}), 12.2\% (\texttt{site1/large}), and 21.4\% (\texttt{site2/large}, 15.3 ms) of total time.
+\end{block}
+\begin{itemize}
+\item Run image A and image B on two non-blocking CUDA streams (\texttt{streamA}, \texttt{streamB}) with isolated scratch buffers and pinned candidate-count memory.
+\item Prefix/suffix scheduling: enqueue H2D + S1 + S2 candidates on both branches, poll \texttt{cudaEventQuery} with \texttt{yield()}, then launch S2 top-K + S3 for whichever branch finishes first.
+\item A control stream waits on \texttt{doneA}/\texttt{doneB} via \texttt{cudaStreamWaitEvent}, merges counts, and runs S4--S6.
+\item Includes an ablation switch (\texttt{--v5-schedule sequential}) to isolate stream concurrency from memory-layout changes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Key lessons and limitations}
+\begin{itemize}
+\item \textbf{Follow the data, respect Amdahl's law:} Fixing S5 gave the bulk of our speedup (42.7$\times$); later optimizations on S6 (45.7\% share) and pre-S4 (21.4\% share) faced much tighter ceilings.
+\item \textbf{Hardware counters beat intuition:} Fusing three S6 passes into one looked like a clear bandwidth win, yet Nsight Compute revealed +26\% DRAM traffic and lower L2 hit rate on \texttt{site2/large}.
+\item \textbf{Concurrency has hardware limits:} Dual streams achieved 17--25\% GPU overlap and 1.26$\times$ faster pre-S4, but SM saturation on Tesla T4 and +64.3 MiB VRAM kept V4 as the more practical production baseline.
+\item \textbf{Verify before benchmarking:} Strict parity checks (Max RGB = 0), explicit failure handling, and memcheck ensured every speedup number came from a correct, leak-free pipeline.
 \end{itemize}
 \medskip
-\small Reproducibility: pinned source (\texttt{f2837a8}), SHA-256 dataset manifest, raw CSVs, Nsight traces, and \texttt{Group16\_Final.ipynb}.
+\small All results are reproducible from \texttt{Group16\_Final.ipynb}, raw CSV logs, and Nsight traces on Google Colab Tesla T4.
 \end{frame}
 \end{document}

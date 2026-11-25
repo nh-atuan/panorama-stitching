@@ -1,146 +1,108 @@
 % Authors: Le Thuong De (23120232). External source: none.
-% P9-T06 / P10-T07 / P11-T05: performance and APOD module.
-% Insert with \input{performance.tex} from the shared Beamer document.
-\begin{frame}{How the experiment is controlled}
+% Performance results and profiling module (included by project.tex and performance-preview.tex).
+\begin{frame}{Experimental setup and measurement protocol}
 \begin{itemize}
-\item Official hardware: Google Colab NVIDIA Tesla T4 (16 GB, \texttt{sm\_75}).
-\item Official dataset: 3 standard sites $\times$ 3 resolutions (9 cases), plus \texttt{challenge} cases.
-\item One warm-up and 5 measured runs per successful configuration (\texttt{nvcc -O2 --fmad=false}).
-\item Report S1--S6, H2D, D2H, \texttt{Total\_Kernel\_ms}, and \texttt{Total\_ms} separately.
-\item Compare speedups only within the same session (P9 for V0--V4; P10 for V0/V4/V5 ablation).
+\item \textbf{Hardware:} Google Colab NVIDIA Tesla T4 (16 GB VRAM, Turing \texttt{sm\_75}).
+\item \textbf{Dataset:} 3 standard sites $\times$ 3 resolutions (9 cases), plus \texttt{challenge} pairs.
+\item \textbf{Protocol:} 1 warm-up + 5 timed runs per configuration (\texttt{nvcc -O2 --fmad=false}); disk I/O excluded.
+\item \textbf{Breakdown:} Report S1--S6, H2D, D2H, \texttt{Total\_Kernel\_ms}, and \texttt{Total\_ms} separately.
+\item \textbf{Session isolation:} Speedups are compared only within the same Colab T4 session: \textbf{Session A} (V0--V4) and \textbf{Session B} (V0, V4, V5 ablation).
 \end{itemize}
 \end{frame}
 
-\begin{frame}{APOD: follow the measured bottleneck}
-\begin{description}
-\item[Assess] Identify the dominant stage using timing and Nsight (\texttt{nsys}, \texttt{ncu}).
-\item[Parallelize] V1 moves the six-stage pipeline to CUDA (device-resident).
-\item[Optimize] V2/V3 target S5; V4 targets S6 canvas fusion; V5 targets pre-S4 concurrency (H2D + S1--S3) via two CUDA streams.
-\item[Deploy] Preserve correctness, check memory safety, retain reproducible evidence.
-\end{description}
+\begin{frame}{V0--V5 timing summary (Tesla T4)}
+\centering
+\footnotesize
+\begin{tabular}{llrrr}
+\toprule
+Session & Version & \texttt{site2/large} (ms) & vs. V0 (GM) & vs. previous (GM) \\
+\midrule
+Session A & V0 (CPU) & 5746.1 & 1.00$\times$ & -- \\
+Session A & V1 (Basic CUDA) & 504.1 & 3.80$\times$ & 3.80$\times$ \\
+Session A & V2 (S5 Parallel) & 81.1 & 23.37$\times$ & 6.16$\times$ \\
+Session A & V3 (S5 Micro-arch) & 62.9 & 42.65$\times$ & 1.83$\times$ \\
+Session A & V4 (S6 Fusion, Prod) & 62.2 & 43.02$\times$ & 1.01$\times$ \\
+\midrule
+Session B & V5 (Dual-stream) & 58.9 & 49.88$\times$ & 1.04$\times$ (Dual/Seq) \\
+\bottomrule
+\end{tabular}
+
 \medskip
-An improved stage exposes the next bottleneck---until Amdahl's law limits further gains.
+\scriptsize Geometric means (GM) span all 9 standard cases (1 warm-up + 5 runs). Session B measured V0, V4 (62.3 ms on \texttt{site2/large}), V5 seq (61.4 ms), and V5 dual (58.9 ms, 110.3$\times$ vs. Session B V0) in one T4 session. Ratios are never mixed across sessions.
+\end{frame}
+
+\begin{frame}{How the bottleneck shifts across versions}
+\begin{itemize}
+\item \textbf{V1:} S5 accounted for 90--99\% of pipeline time across all 9 standard cases.
+\item \textbf{V2:} Parallel RANSAC scoring and inlier reduction cut S5 by 1.7--65.7$\times$ (total GM 6.16$\times$ over V1).
+\item \textbf{V3:} Warp-shuffle MSAC, shared-memory DLT/SVD, and batch scheduling added another 1.83$\times$ end-to-end gain.
+\item \textbf{V4:} With S5 reduced, S6 reached 45.7\% on \texttt{site2/large}; single-pass fusion sped up S6 by 1.04$\times$ (total 1.01$\times$).
+\item \textbf{V5:} Pre-S4 (H2D + S1--S3) reached 21.4\% on \texttt{site2/large}; dual streams sped up pre-S4 by 1.26$\times$ GM (Dual/Seq total 1.04$\times$).
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Why investigate S6 after V3?}
 \centering
 \begin{tabular}{lrr}
 \toprule
-P8, site2/large & V2 & V3 \\
+\texttt{site2/large} breakdown & V2 & V3 \\
 \midrule
-S5 (ms) & 30.538 & 12.200 \\
-S6 (ms) & 29.580 & 28.468 \\
-Pipeline total (ms) & 81.826 & 62.353 \\
+S5 (ms) & 30.54 & 12.20 \\
+S6 (ms) & 29.58 & 28.47 \\
+Pipeline total (ms) & 81.83 & 62.35 \\
 \bottomrule
 \end{tabular}
 \medskip
 \begin{itemize}
-\item S6 accounts for 45.7\% of the V3 total in this historical run.
-\item Even a 2$\times$ S6 speedup would allow only about 1.30$\times$ total speedup if everything else stayed constant.
+\item After V3 cut S5 by 2.5$\times$, S6 became the single largest stage at \textbf{45.7\%} of total runtime.
+\item By Amdahl's law, even a 2$\times$ speedup in S6 caps the total pipeline gain at $\sim$1.30$\times$ if other stages stay fixed.
 \end{itemize}
-\tiny Source: P8 report, 16 Nov 2026, same-session V2/V3; source checkout \texttt{b3c79d7}. Historical context only; P9 remeasures V0--V4.
+\tiny Same-session V2/V3 profile on Tesla T4; full V0--V4 comparison is remeasured in Session A.
 \end{frame}
 
-\begin{frame}{V4: single-pass canvas fusion}
-\begin{block}{V3 renderer}
-Clear canvas $\rightarrow$ copy A $\rightarrow$ gather and blend B.
-\end{block}
-\begin{block}{V4 renderer}
-One thread per output pixel: test A/B validity, sample source pixels, blend, write RGB once.
-\end{block}
-\begin{itemize}
-\item Keep canvas geometry, inverse projection, interpolation and rounding rules.
-\item Reuse S1--S4 from V1 and S5 from V3.
-\item Fewer passes suggest less traffic; hardware counters must verify actual DRAM traffic.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Correctness before performance (V4 \& V5)}
-\begin{itemize}
-\item P9-T02 (V4) \& P10-T04 (V5): 6 synthetic pairs and 12 real configurations on Tesla T4.
-\item Synthetic homography: RMSE $\le 0.100$ px, Max $\le 0.209$ px (thresholds: 0.5 / 1.0 px); drift = 0 px.
-\item 10/10 successful real cases: matching geometry and Max RGB = 0 (V4 vs V0, V5 dual vs seq \& vs V4).
-\item \texttt{challenge/medium} and \texttt{large} preserve the expected S6 \texttt{NumericalFailure} status.
-\item P11-T02 freeze (\texttt{f2837a8}): 14 V0 suites, 16 GPU suites, 15 Python suites; memcheck 0 errors, 0 bytes leaked.
-\end{itemize}
-\medskip
-\tiny Sources: \texttt{docs/report/p9-v4-verification.md}, \texttt{p10-v5-verification.md}, \texttt{p11-t02-freeze-verification.md}.
-\end{frame}
-
-\begin{frame}{V4 benchmark: same-session comparison (P9)}
+\begin{frame}{V4 benchmark: single-pass fusion vs. V3 (Session A)}
 \input{generated/v4-table.tex}
 \end{frame}
 
-\begin{frame}{Nsight Systems shows three canvas operations become one}
+\begin{frame}{Nsight Systems: three canvas passes fused into one}
 \centering
 \includegraphics[width=.94\linewidth]{generated/nsys-v4.png}
 \begin{itemize}
-\item Tesla T4, \texttt{site2/large}, second pass of each trace.
-\item V3 clear, copy A and gather B total 29.804 ms. V4 render takes 32.541 ms in this trace.
-\item The five-run benchmark measures S6 at 28.712 ms for V3 and 28.190 ms for V4.
+\item Tesla T4, \texttt{site2/large} (second pass of each trace).
+\item In the profiled trace, V3's clear + copy A + gather B total 29.80 ms, while V4's fused kernel takes 32.54 ms due to profiler overhead.
+\item In the unprofiled 5-run benchmark, S6 improves from 28.71 ms (V3) to 28.19 ms (V4), confirming that timing decisions should use unprofiled runs.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Nsight Compute finds more DRAM traffic in sampled kernels}
+\begin{frame}{Nsight Compute: higher DRAM traffic in sampled kernels}
 \centering
 \includegraphics[width=.94\linewidth]{generated/ncu-v4.png}
 \begin{itemize}
-\item At \texttt{site2/large}, reads plus writes rise from 310.78 to 391.69 MB (+26.0\%); L2 hit rate drops 76.19\% $\rightarrow$ 70.75\%.
-\item V3 bars sum copy A + gather B; V4 uses one renderer sample. V3 canvas memset is outside the counter scope.
+\item On \texttt{site2/large}, sampled DRAM reads + writes increase from 310.8 to 391.7 MB (\textbf{+26.0\%}), and L2 hit rate drops from 76.2\% to 70.8\%.
+\item Note: V3 bars sum \texttt{copy\_a} + \texttt{gather\_b} (excluding \texttt{cudaMemset}); V4 samples the single fused kernel.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{What determines whether V4 is useful?}
-\begin{itemize}
-\item P9: V4 is faster in 8/9 standard cases; S6 geometric mean speedup is 1.0357$\times$, total is 1.0086$\times$.
-\item Primary case paired blocks: median 1.0270$\times$, range 0.9774--1.0409$\times$; 4/5 blocks favor V4.
-\item The primary case does not reach the 5\% threshold, but V4 cleanly fuses 3 canvas passes into 1 with 0 RGB error.
-\item Keep challenge failures explicit; an absent timing is not zero time.
-\item Separate profiler observations from unprofiled timing evidence.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{V5: dual-stream concurrency architecture}
-\begin{block}{Motivation from P10-T01 baseline}
-Pre-S4 (H2D + S1--S3 for both images) takes 11.20\% (\texttt{site3/large}), 12.23\% (\texttt{site1/large}), and 21.44\% (\texttt{site2/large}, 15.288 ms) of V4 total time.
-\end{block}
-\begin{itemize}
-\item Run image A and image B on two non-blocking CUDA streams (\texttt{streamA}, \texttt{streamB}) with isolated scratch, \texttt{DeviceCounts}, and pinned candidate-count buffers.
-\item Prefix/suffix scheduling: enqueue H2D + S1 + S2 candidates, poll \texttt{cudaEventQuery} with \texttt{yield()}, enqueue S2 top-K + S3 for whichever branch finishes first.
-\item Control stream joins \texttt{doneA}/\texttt{doneB} via \texttt{cudaStreamWaitEvent}, merges counts, and runs S4--S6.
-\item Ablation mode \texttt{--v5-schedule sequential} isolates concurrency from workspace changes.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{V5 benchmark: dual-stream vs. V4 (P10 T4 session)}
+\begin{frame}{V5 benchmark: dual-stream vs. V4 (Session B)}
 \input{generated/v5-table.tex}
 \end{frame}
 
-\begin{frame}{V5 Nsight Systems: confirmed stream overlap \& Peak VRAM}
+\begin{frame}{V5 Nsight Systems: confirmed stream overlap \& VRAM}
 \centering
 \includegraphics[width=.98\linewidth]{generated/nsys-v5.png}
 \scriptsize
 \begin{itemize}
 \item Confirmed GPU overlap on \texttt{large}: \textbf{16.6--24.5\%} (2.05--2.89 ms) vs. 0.0\% in V4 and V5 sequential.
-\item \texttt{H2D $\rightarrow$ S4 start} on \texttt{site2/large}: 23.19 ms (V4) / 22.22 ms (V5 seq) $\rightarrow$ \textbf{17.66 ms} (V5 dual).
-\item Peak VRAM increases by exactly \textbf{+64.30 MiB} (269.76 $\rightarrow$ 334.06 MiB on \texttt{site2/large}; 0 B leaked).
+\item \texttt{H2D $\rightarrow$ S4 start} on \texttt{site2/large} drops from 23.19 ms (V4) and 22.22 ms (V5 seq) down to \textbf{17.66 ms} (V5 dual).
+\item Peak VRAM rises by \textbf{+64.3 MiB} (269.8 $\rightarrow$ 334.1 MiB on \texttt{site2/large}; 0 bytes leaked).
 \end{itemize}
 \end{frame}
 
-\begin{frame}{V5 stability check \& APOD decision}
+\begin{frame}{V5 stability check and production decision}
 \begin{itemize}
-\item \textbf{Pre-S4 gain (sidecar CSV):} 9-case GM \textbf{1.257$\times$}; \texttt{site2/large} drops 13.700 $\rightarrow$ 10.971 ms (\textbf{1.249$\times$}, $-$2.73 ms).
-\item \textbf{5 paired blocks (\texttt{site2/large}):} median V5/V4 = \textbf{1.067$\times$} (range 0.929--1.184$\times$), but only \textbf{3/5 blocks} favor V5 (below the $\ge$4/5 stability threshold).
-\item \textbf{Recheck (\texttt{site3/small}):} V5/V4 = 1.151$\times$ on re-run; no true $>$5\% standard-case regression.
-\item \textbf{APOD decision:} Keep \textbf{V4} as the production baseline (stable, $-$64.3 MiB VRAM); retain \textbf{V5} in \texttt{src/} as a verified dual-stream concurrency case study.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Lessons and limits across V0--V5}
-\begin{itemize}
-\item \textbf{Shifting bottlenecks:} V2/V3 cut S5 drastically $\rightarrow$ S6 exposed (45.7\%) $\rightarrow$ pre-S4 exposed (21.4\%); Amdahl's law bounds each subsequent stage gain.
-\item \textbf{Measure hardware counters:} V4 removes canvas passes, yet NCU reveals higher DRAM traffic (+13.6--26.0\%) in sampled kernels.
-\item \textbf{Concurrency limits:} Dual streams overlap H2D/compute well, but cannot bypass SM saturation on 40-SM Tesla T4.
-\item \textbf{Discipline:} Verify parity and memcheck before claiming speedups; preserve hashes, raw runs, failures, and session boundaries.
+\item \textbf{Pre-S4 speedup:} 9-case GM \textbf{1.26$\times$}; \texttt{site2/large} drops from 13.70 to 10.97 ms (\textbf{1.25$\times$}, $-$2.73 ms).
+\item \textbf{Paired-block stability (\texttt{site2/large}):} median V5/V4 = \textbf{1.07$\times$} (range 0.93--1.18$\times$), but only \textbf{3/5 blocks} favor V5 (below our 4/5 stability bar).
+\item \textbf{Variance check (\texttt{site3/small}):} An initial $\sim$6\% gap disappeared on re-run (V5/V4 = 1.15$\times$), pointing to run-to-run noise rather than a real regression.
+\item \textbf{Decision:} Keep \textbf{V4} as the production baseline (stable, 64.3 MiB lower VRAM) and retain \textbf{V5} in \texttt{src/} as a verified dual-stream case study.
 \end{itemize}
 \end{frame}

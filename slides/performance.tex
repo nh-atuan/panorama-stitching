@@ -124,6 +124,6 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 28,19 \\
 \item Tăng tốc tiền S4: GM 9 ca đạt 1,26$\times$; \texttt{site2/large} giảm từ 13,70 xuống 10,97 ms (1,25$\times$, $-$2,73 ms).
 \item Độ ổn định 5 khối ghép cặp (\texttt{site2/large}): trung vị V5/V4 = 1,07$\times$ (dao động 0,93--1,18$\times$); khi chỉ chạy 1 lượt warm-up, 3/5 khối nhanh hơn do nhiễu tăng xung nhịp GPU giữa các lượt.
 \item Kiểm tra nhiễu (\texttt{site3/small}): Độ trễ $\sim$6\% ban đầu biến mất khi đo lại (V5/V4 = 1,15$\times$), cho thấy nhiễu giữa các lượt chạy thay vì hồi quy thật.
-\item Đánh đổi tài nguyên: V5 giữ nguyên độ chính xác (Max RGB = 0, 0 byte rò rỉ) và cải thiện thực tế đoạn tiền S4, đổi lại dùng thêm 64,3 MiB VRAM cho hai bộ đệm nhánh riêng.
+\item Chọn làm bản chính thức: V5 giữ nguyên độ chính xác (Max RGB = 0, 0 byte rò rỉ), đạt 49,9$\times$ GM so với V0 và cải thiện thực tế đoạn tiền S4, với đánh đổi +64,3 MiB VRAM nằm gọn trong 16 GB của Tesla T4.
 \end{itemize}
 \end{frame}

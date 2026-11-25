@@ -22,7 +22,7 @@ Kịch bản phân cảnh chi tiết (cue sheet) cho video thuyết trình chín
 | 00:00 – 00:45 | Slide 1–3 (Bìa, Mục lục, Chuyển mục 1) | Giới thiệu Nhóm 16 (4 thành viên), bài toán Parallel Panorama Stitching và bố cục 4 phần của video. |
 | 00:45 – 02:00 | Slide 4 (Từ hai ảnh chồng lấn đến một ảnh panorama) | Trình bày đầu vào (2 ảnh RGB chồng lấn A, B), đầu ra (canvas theo hệ tọa độ ảnh A), minh họa bằng `site2/large` (7676×4348) và mục tiêu giữ nguyên thuật toán + hành vi lỗi của V0. |
 | 02:00 – 03:45 | Slide 5–6 (Sáu giai đoạn, Khớp đặc trưng/Hình học/Kết xuất) | Giải thích pipeline 6 stage: S1–S3 độc lập cho từng ảnh (Grayscale + Gaussian, FAST-9 + NMS + Top-K, 256-bit BRIEF); S4–S6 kết hợp hai ảnh (Hamming + Lowe ratio, MSAC RANSAC + 4-pt DLT + SVD refit, Inverse warping + manual bilinear + 50/50 average blending). Nêu giả định homography và giới hạn thị sai/hoa văn lặp. |
-| 03:45 – 05:00 | Slide 7 (Một pipeline, sáu phiên bản V0–V5) | Tóm tắt kiến trúc `Device-resident` từ V1 và lộ trình 6 phiên bản V0–V5 chạy từ cùng CLI `build/stitch --version <0..5>`, giới thiệu tối ưu V4 (gộp S6 một lượt) và V5 (chạy bất đồng bộ hai CUDA stream), chuyển sang Thành demo. |
+| 03:45 – 05:00 | Slide 7 (Một pipeline, sáu phiên bản V0–V5) | Tóm tắt kiến trúc `Device-resident` từ V1 và lộ trình 6 phiên bản V0–V5 chạy từ cùng CLI `build/stitch --version <0..5>`, giới thiệu tối ưu V4 (gộp S6 một lượt) và bản chính thức V5 (chạy bất đồng bộ hai CUDA stream), chuyển sang Thành demo. |
 
 ### Phần 2: Live Demo chạy code trên Colab Tesla T4 (05:00 – 12:00 · Thành)
 
@@ -43,7 +43,7 @@ Kịch bản phân cảnh chi tiết (cue sheet) cho video thuyết trình chín
 | 13:15 – 14:45 | Slide 14–15 (Dịch chuyển điểm nghẽn, Vì sao tối ưu S6 sau V3?) | Phân tích dịch chuyển điểm nghẽn: S5 chiếm 90–99% ở V1, giảm mạnh ở V2–V3, làm lộ diện S6 chiếm 45,7% tại `site2/large` (28,47 / 62,35 ms). Giải thích giới hạn Amdahl cho S6 (~1,30×). |
 | 14:45 – 16:45 | Slide 16–18 (Bảng V4, NSYS V4, NCU V4) | Phân tích V4: 8/9 ca nhanh hơn, S6 GM 1,04×, total GM 1,01×. Đối chiếu bảng NSYS V4 (3 pass → 1 renderer; lưu ý overhead profiler) với NCU (DRAM đọc+ghi tăng +26,0% tại `site2/large`, L2 hit giảm 76,2% → 70,8%, lưu ý `cudaMemset` V3 nằm ngoài counter). |
 | 16:45 – 18:45 | Slide 19–20 (Bảng V5, NSYS V5) | Phân tích V5 (đo đối chứng riêng cùng V0 và V4): Pre-S4 tăng tốc GM **1,26×** (`site2/large` giảm 13,70 → 10,97 ms), toàn pipeline đạt **49,9×** GM vs V0 (`site2/large` 58,9 ms, **110,3×**), đối chứng Dual/Seq đạt **1,04×** GM. Hình `nsys-v5.png` xác nhận overlap **16,6–24,5%** (2,05–2,89 ms) vs 0,0% ở V4/V5 seq và Peak VRAM tăng **+64,3 MiB**. |
-| 18:45 – 19:30 | Slide 21 (Đánh giá độ ổn định & đánh đổi của V5) | Nêu kết quả 5 khối ghép cặp `site2/large` (median 1,07×, 3/5 khối nhanh hơn với 1 warm-up do nhiễu xung nhịp), kiểm tra lại nhiễu ở `site3/small` và đánh đổi +64,3 MiB VRAM của V5; chuyển sang Chương. |
+| 18:45 – 19:30 | Slide 21 (Đánh giá độ ổn định & đánh đổi của V5) | Nêu kết quả 5 khối ghép cặp `site2/large` (median 1,07×, 3/5 khối nhanh hơn với 1 warm-up do nhiễu xung nhịp), kiểm tra lại nhiễu ở `site3/small` và chốt chọn V5 làm bản chính thức (đánh đổi +64,3 MiB VRAM trên T4 16 GB); chuyển sang Chương. |
 
 ### Phần 4: Các tối ưu chính và bài học rút ra (19:30 – 24:30 · Chương)
 

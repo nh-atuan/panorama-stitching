@@ -50,7 +50,7 @@
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{site2-large-panorama.jpg}
-\caption{Ảnh panorama ghép từ cặp \texttt{site2/large} trong bộ ảnh Nhóm 16 (kết quả V4).}
+\caption{Ảnh panorama ghép từ cặp \texttt{site2/large} trong bộ ảnh Nhóm 16 (kết quả bản chính thức V5, khớp V0).}
 \end{figure}
 \end{columns}
 \end{frame}
@@ -103,7 +103,7 @@ V1 & CUDA cơ bản cho S1--S6 với bộ đệm trung gian device-resident. \\
 V2 & Song song hóa chấm điểm RANSAC, rút gọn inlier và refit ở S5. \\
 V3 & MSAC dùng warp-shuffle, DLT/SVD trên shared memory và chia batch ở S5. \\
 V4 & Gộp kết xuất canvas một lượt ở S6. \\
-V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3. \\
+V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3 (bản chính thức). \\
 \bottomrule
 \end{tabular}
 \end{table}

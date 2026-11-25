@@ -91,6 +91,18 @@ def normalized(text):
     return " ".join(unicodedata.normalize("NFC", text).lower().split())
 
 
+def heading_pages(page_texts, expected_sections):
+    """PDF glyph positioning may insert spaces inside accented Vietnamese words.
+
+    Ignore extraction whitespace only. Keep accents, letters and punctuation so
+    genuinely missing or incorrect headings still fail, without fuzzy matching.
+    """
+    compact = lambda text: "".join(normalized(text).split())
+    pages = [compact(text) for text in page_texts]
+    return {title: [i for i, text in enumerate(pages, 1) if compact(title) in text]
+            for title in expected_sections}
+
+
 def inspect_pdf(path, expected_sections=SECTIONS, expect_raster=False):
     from pypdf import PdfReader
     path = Path(path)
@@ -99,8 +111,10 @@ def inspect_pdf(path, expected_sections=SECTIONS, expect_raster=False):
     reader = PdfReader(path, strict=True)
     if not reader.pages:
         raise ValueError("PDF has no pages")
-    text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    missing = [s for s in expected_sections if normalized(s) not in normalized(text)]
+    page_texts = [page.extract_text() or "" for page in reader.pages]
+    text = "\n".join(page_texts)
+    headings = heading_pages(page_texts, expected_sections)
+    missing = [title for title, pages in headings.items() if not pages]
     figures = sum(len(page.images) for page in reader.pages)
     problems = []
     if missing:
@@ -111,6 +125,8 @@ def inspect_pdf(path, expected_sections=SECTIONS, expect_raster=False):
         problems.append("Raster notebook outputs exist but PDF contains no image objects")
     result = dict(pages=len(reader.pages), size_bytes=path.stat().st_size, sha256=sha256(path),
                   missing_headings=missing, raster_images=figures, problems=problems,
+                  heading_pages=headings,
+                  heading_matching="NFC/case/whitespace normalization only; diacritics retained",
                   visual_review="pending: inspect rendered pages for clipping, tables, math and captions")
     path.with_suffix(".txt").write_text(text, encoding="utf-8")
     return result

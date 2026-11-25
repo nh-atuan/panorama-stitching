@@ -1,0 +1,1295 @@
+{
+  "original_status": "failed",
+  "recovery_scope": "original PDF QA failure retained; independent revalidation required",
+  "checked_files": 268,
+  "source_sha": "cd5ee9d4bb6724b6a816d4d185f0531c47d43d17",
+  "tooling_ref": "497b08ced5ffb26f69afbe5f8e0ed83971df7ffa",
+  "notebook_sha256": "530f39f57001b0033a442fb1c937fae3a274ed65633a9f0fb2b86cb7010c2a39",
+  "input_sha256": "41e28530dc5bb24fd0d60d41352373c3d5ebce47bbc6c113cce3446a06d2427d",
+  "dataset_manifest_sha256": "99fc712988075326a351d0bf580405e418bb28d24d56d4cc1b31505c480bdd9d",
+  "benchmark_environment": {
+    "gpu": "Tesla T4, 580.82.07",
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.00GHz",
+    "time_utc": "2026-11-23T14:45:56+00:00",
+    "runs": 5,
+    "versions": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "include_challenge": true,
+    "stitch_sha256": "839d725705479e2e467733b6aeb0bc39eac5963112360647e70b06be4a6ab84a",
+    "python": "3.13.16"
+  },
+  "outputs": {
+    "status": "passed",
+    "code_cells": 20,
+    "source_sha": "cd5ee9d4bb6724b6a816d4d185f0531c47d43d17",
+    "gallery_embedded": true,
+    "sections": [
+      "Thông tin nhóm",
+      "Giới thiệu",
+      "Phương pháp đã chọn",
+      "V0 tuần tự",
+      "V1 CUDA cơ bản",
+      "Các phiên bản tối ưu",
+      "So sánh tổng hợp",
+      "Kết quả ghép ảnh",
+      "Kết luận",
+      "Tài liệu tham khảo"
+    ]
+  },
+  "configurations": [
+    {
+      "version": 0,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 1239.4255566,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 583.4141066,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 71.6990162,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 32.506682999999995,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 32.4806028,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site1",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 31.954439400000002,
+      "canvas": [
+        2420,
+        971,
+        0,
+        84
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 1636.8245318,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 523.210775,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 54.310225200000005,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 31.174494600000003,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 30.8140476,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site1",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 29.7129016,
+      "canvas": [
+        3692,
+        1496,
+        0,
+        140
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 4719.2376812,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 412.5797168,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 257.76026659999997,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 107.1543584,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 105.76072180000001,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site1",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 103.19257259999999,
+      "canvas": [
+        7399,
+        3028,
+        0,
+        313
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 1138.893744,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 933.2269544000001,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 21.471678400000002,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 21.2477658,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 21.0465616,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site2",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 20.882118600000002,
+      "canvas": [
+        2558,
+        1440,
+        0,
+        346
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 1820.4029208,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 865.1797915999999,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 27.655136199999998,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 27.835209600000002,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 27.490893999999997,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site2",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 30.566387400000004,
+      "canvas": [
+        3818,
+        2154,
+        0,
+        513
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 5822.0290492,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 503.04737379999995,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 80.5804308,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 62.521043199999994,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 62.232222,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site2",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 58.5184354,
+      "canvas": [
+        7676,
+        4348,
+        0,
+        1038
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 794.9135606,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 364.2692148,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 111.66794460000001,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 53.07935679999999,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 45.1500338,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site3",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 61.1419134,
+      "canvas": [
+        2356,
+        1241,
+        0,
+        312
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 1360.2254166,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 388.1504132,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 141.0517718,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 55.7675706,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 55.8000852,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site3",
+      "size": "medium",
+      "status": "Success",
+      "total_ms": 54.8864696,
+      "canvas": [
+        3558,
+        1791,
+        0,
+        414
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 3910.964111,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 407.9329844,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 251.9912344,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 100.62703619999999,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 100.1629398,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "site3",
+      "size": "large",
+      "status": "Success",
+      "total_ms": 97.4018362,
+      "canvas": [
+        7008,
+        3453,
+        0,
+        758
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 1108.3083451999998,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 1,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 398.60196,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 2,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 372.8890146,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 3,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 115.8454892,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 4,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 111.5344824,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 5,
+      "site": "challenge",
+      "size": "small",
+      "status": "Success",
+      "total_ms": 111.0562526,
+      "canvas": [
+        2835,
+        1551,
+        0,
+        794
+      ],
+      "drift_px": 0.0,
+      "decoded_jpeg_max_rgb": 0,
+      "jpeg_bytes_identical": true
+    },
+    {
+      "version": 0,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 1,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 2,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 3,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 4,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 5,
+      "site": "challenge",
+      "size": "medium",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 0,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 1,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 2,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 3,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 4,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    },
+    {
+      "version": 5,
+      "site": "challenge",
+      "size": "large",
+      "status": "NumericalFailure"
+    }
+  ],
+  "current_session": {
+    "V1": {
+      "vs_v0": 3.8010758206070876,
+      "vs_previous": 3.8010758206070876
+    },
+    "V2": {
+      "vs_v0": 23.920054535237103,
+      "vs_previous": 6.292969586546345
+    },
+    "V3": {
+      "vs_v0": 42.02206148849279,
+      "vs_previous": 1.7567711405753395
+    },
+    "V4": {
+      "vs_v0": 43.05212769907135,
+      "vs_previous": 1.0245125101932622
+    },
+    "V5": {
+      "vs_v0": 42.02131331053191,
+      "vs_previous": 0.9760565982767511
+    }
+  },
+  "historical_metrics": {
+    "geomean_nine": 1.0686331561124698,
+    "geomean_v5_v0": 49.876178117805956,
+    "geomean_dual_seq": 1.0364129897885086,
+    "geomean_medium_large": 1.0324309195068098,
+    "arithmetic_mean": 1.0807741427640056,
+    "ratio_of_sums": 1.0560816461015194,
+    "primary_case": 1.0568339951803958,
+    "geomean_pres4": 1.2564295264650986,
+    "faster_cases": 8,
+    "paired_median": 1.0666294197461887,
+    "beneficial_blocks": 3,
+    "overlap_min": 16.6,
+    "overlap_max": 24.5,
+    "vram_increases_mib": [
+      64.30000000000001,
+      64.30000000000001,
+      64.30000000000001
+    ]
+  },
+  "limits": [
+    "No GPU regression/memcheck rerun is present in these artifacts",
+    "JPEG parity is exported-artifact consistency, not a raw S6 pixel/ground-truth test",
+    "Original P10-T05 CSV/SQLite archive was not independently inspected",
+    "Course-provided sample pair and Colab UI Mermaid rendering need explicit review"
+  ],
+  "environment": {
+    "gpu": {
+      "name": "Tesla T4",
+      "uuid": "GPU-78433103-5fa4-8eb6-35b6-0bd1d9ee1080",
+      "driver": "580.82.07",
+      "compute_capability": "7.5",
+      "total_mib": 15360.0,
+      "free_mib": 14913.0
+    },
+    "python": "3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]",
+    "host": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "nvcc": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2025 NVIDIA Corporation\nBuilt on Wed_Aug_20_01:58:59_PM_PDT_2025\nCuda compilation tools, release 13.0, V13.0.88\nBuild cuda_13.0.r13.0/compiler.36424714_0\n",
+    "package_versions": {
+      "nbformat": "5.11.1",
+      "nbconvert": "7.17.2",
+      "nbclient": "0.10.4",
+      "playwright": "1.65.2",
+      "pypdf": "7.1.1",
+      "Pillow": "11.3.0",
+      "numpy": "2.4.6",
+      "matplotlib": "3.10.0"
+    }
+  },
+  "pdf": {
+    "pages": 59,
+    "sha256": "f80a610673578e19c447522b0f5876bc2f2bd3f397c70493e892cb11c3020fa3",
+    "size_bytes": 1235047,
+    "missing_headings": [],
+    "raster_images": 12,
+    "problems": [],
+    "heading_pages": {
+      "Thông tin nhóm": [
+        1
+      ],
+      "Giới thiệu": [
+        1,
+        4
+      ],
+      "Phương pháp đã chọn": [
+        1,
+        5
+      ],
+      "V0 tuần tự": [
+        1,
+        8
+      ],
+      "V1 CUDA cơ bản": [
+        1,
+        11
+      ],
+      "Các phiên bản tối ưu": [
+        1,
+        2,
+        15
+      ],
+      "So sánh tổng hợp": [
+        1,
+        44,
+        58
+      ],
+      "Kết quả ghép ảnh": [
+        1,
+        55
+      ],
+      "Kết luận": [
+        1,
+        16,
+        28,
+        29,
+        42,
+        57
+      ],
+      "Tài liệu tham khảo": [
+        1,
+        58
+      ]
+    },
+    "heading_matching": "NFC/case/whitespace normalization only; diacritics retained"
+  },
+  "source_freeze": {
+    "freeze_sha": "f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7",
+    "source_sha": "cd5ee9d4bb6724b6a816d4d185f0531c47d43d17",
+    "src_build_equivalent": false,
+    "production_changes": [
+      "src/v5/v5_image_branch.cu"
+    ],
+    "status": "new_production_verification_required"
+  },
+  "verdict": "P11-T06 READY FOR REVIEW",
+  "original_run": "20261123T144350Z-25b763c7",
+  "artifact_package": {
+    "archive": "Group16_P11_T06_T4_20261123_cd5ee9d_Evidence.zip",
+    "sha256": "1767ee60145df7ad5e38d47cd5b5cb924b5339ca70be372d408928ed150d4d8b",
+    "size_bytes": 158108634,
+    "files": 275,
+    "original_run": "20261123T144350Z-25b763c7",
+    "status": "P11-T06 READY FOR REVIEW",
+    "production_sha": "cd5ee9d4bb6724b6a816d4d185f0531c47d43d17"
+  },
+  "manual_review": {
+    "pdf_pages_reviewed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59
+    ],
+    "pdf_visual": "passed; no observed clipping/missing figure/broken Vietnamese glyphs",
+    "mermaid_pdf": "one diagram verified on page 5",
+    "mermaid_colab_ui": "not captured; team confirmation pending",
+    "gallery": "medium site1/site2/site3 plus explicit challenge/medium error and distorted challenge/small inspected",
+    "course_sample": "no asset identified; lead confirmation required",
+    "full_gpu_regression_memcheck": "not present in this returned run"
+  }
+}

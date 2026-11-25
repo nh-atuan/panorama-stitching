@@ -58,12 +58,14 @@ def section_structure(cells):
     if positions != sorted(positions):
         problems.append("Essential code roles are out of dependency order: setup -> producer -> methods/results -> comparison -> charts -> gallery")
     return found, problems
+NOTEBOOK_ASSETS = ("slides/generated/nsys-v4.png", "slides/generated/ncu-v4.png")
 PIN_FILES = (
     *(f"src/v{v}/v{v}_pipeline.{ 'cpp' if v == 0 else 'cu'}" for v in range(6)),
     "src/v5/v5_image_branch.h", "src/v5/v5_image_branch.cu", "src/main.cu",
     "src/versions.h", "scripts/build.py", "scripts/notebook/final_notebook.py",
     "scripts/notebook/midterm_notebook.py", "scripts/dataset/prepare_dataset.py",
     "scripts/run_benchmark.py", "scripts/fetch_and_prepare_dataset.py",
+    *NOTEBOOK_ASSETS,
 )
 FREEZE_SHA = "f2837a85b770e6c8bb2eba1bb6de7aee7fa23eb7"
 
@@ -201,26 +203,19 @@ def audit(notebook, root, frozen_source=None):
 
 
 def reconcile_apod(path):
-    """Recompute nine-case aggregates from displayed table precision, not raw runs."""
-    rows = []
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
-        fields = [v.strip() for v in line.strip().strip("|").split("|")]
-        if len(fields) == 7 and fields[0] in {"site1", "site2", "site3"}:
-            v0, v4, v5 = (float(v.replace(",", ".")) for v in fields[2:5])
-            if not all(math.isfinite(v) and v > 0 for v in (v0, v4, v5)):
-                raise ValueError("APOD timings must be finite and positive")
-            rows.append(dict(case=f"{fields[0]}/{fields[1]}", v0=v0, v4=v4, v5=v5,
-                             speedup_v4_v5=v4 / v5))
-    expected = {f"site{i}/{size}" for i in (1, 2, 3) for size in ("small", "medium", "large")}
-    if len(rows) != 9 or {row["case"] for row in rows} != expected:
-        raise ValueError("Expected exactly nine unique standard configurations")
-    ratios = [r["speedup_v4_v5"] for r in rows]
-    return dict(basis="Published rounded means; raw V5 runs not verified", rows=rows,
-                arithmetic_mean=statistics.mean(ratios),
-                geometric_mean=math.exp(statistics.mean(math.log(r) for r in ratios)),
-                ratio_of_sums=sum(r["v4"] for r in rows) / sum(r["v5"] for r in rows),
-                median_configuration_speedup=statistics.median(ratios),
-                median_paired_run_speedup=None)
+    """Use the same validated current-report analysis as the notebook."""
+    from v5_report import analyze, BENCHMARK
+    result = analyze(path)
+    metrics = result["metrics"]
+    rows = [dict(case="/".join(case), v0=r[BENCHMARK[2]], v4=r[BENCHMARK[3]],
+                 v5=r[BENCHMARK[5]], speedup_v4_v5=r[BENCHMARK[3]] / r[BENCHMARK[5]])
+            for case, r in result["benchmark"].items()]
+    return dict(basis=result["provenance"]["basis"], rows=rows,
+                arithmetic_mean=metrics["arithmetic_mean"], geometric_mean=metrics["geomean_nine"],
+                ratio_of_sums=metrics["ratio_of_sums"],
+                median_configuration_speedup=statistics.median(r["speedup_v4_v5"] for r in rows),
+                median_paired_run_speedup=metrics["paired_median"], metrics=metrics,
+                provenance=result["provenance"], decision=result["decision"])
 
 
 def reconcile_pres4(path):

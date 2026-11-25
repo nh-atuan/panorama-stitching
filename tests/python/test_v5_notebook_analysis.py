@@ -8,12 +8,15 @@ from decimal import Decimal, localcontext
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from audit_final_notebook import section_structure
+from audit_final_notebook import section_structure, constants, PIN_FILES, compare_freeze
+from v5_report import read_table, BENCHMARK
 
 
 class V5NotebookAnalysisTests(unittest.TestCase):
@@ -31,50 +34,51 @@ class V5NotebookAnalysisTests(unittest.TestCase):
                 exec(compile(cls.sources[role], role, "exec"), cls.scope)
 
     def test_derived_metrics_match_independent_decimal_calculation(self):
-        rows = self.scope["standard"]
+        rows = self.scope["p10"]["benchmark"].values()
         with localcontext() as ctx:
             ctx.prec = 40
             value = lambda row, key: Decimal(row[key].replace(",", "."))
-            ratios = [value(r, "V4 Production (ms)") / value(r, "V5 DualStream (ms)") for r in rows]
+            ratios = [Decimal(str(r[BENCHMARK[3]])) / Decimal(str(r[BENCHMARK[5]])) for r in rows]
             expected = (sum(r.ln() for r in ratios) / Decimal(9)).exp()
             self.assertAlmostEqual(self.scope["p10_metrics"]["geomean_nine"], float(expected), places=12)
             self.assertAlmostEqual(self.scope["p10_metrics"]["arithmetic_mean"], float(sum(ratios) / 9), places=12)
         metrics = self.scope["p10_metrics"]
-        self.assertAlmostEqual(metrics["primary_case"], 61.655 / 59.941, places=12)
-        self.assertAlmostEqual(metrics["geomean_medium_large"], 1.0219651473125404, places=12)
-        self.assertAlmostEqual(metrics["geomean_v5_v0"], 52.84619652459939, places=10)
+        self.assertAlmostEqual(metrics["primary_case"], 62.275 / 58.926, places=12)
+        self.assertAlmostEqual(metrics["geomean_medium_large"], 1.0324309195068098, places=12)
+        self.assertAlmostEqual(metrics["geomean_v5_v0"], 49.876178117805956, places=10)
+
+    def run_report_cell(self, transform):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for relative in (self.scope["P10_BENCHMARK"], self.scope["P10_VERIFICATION"], self.scope["P10_BASELINE"]):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                text = (ROOT / relative).read_text(encoding="utf-8")
+                path.write_text(transform(text) if relative == self.scope["P10_BENCHMARK"] else text, encoding="utf-8")
+            scope = dict(self.scope, REPO_ROOT=root)
+            scope["report_table"] = lambda relative, header: read_table(root / relative, header)
+            with contextlib.redirect_stdout(io.StringIO()):
+                exec(compile(self.sources["v5-p10-results"], "v5-p10-results", "exec"), scope)
+            return scope["p10_metrics"]
 
     def test_rounded_speedup_columns_and_challenge_do_not_drive_standard_metrics(self):
-        scope = dict(self.scope)
-        read = scope["report_table"]
-        def altered(path, header):
-            rows = read(path, header)
-            if path == scope["P10_BENCHMARK"]:
-                for row in rows:
-                    row["Speedup V5 vs V4"] = "999×"
-                    if row["Cấu hình"] == "challenge":
-                        row["V4 Production (ms)"] = "99999,000"
-            return rows
-        scope["report_table"] = altered
-        with contextlib.redirect_stdout(io.StringIO()):
-            exec(self.sources["v5-p10-results"], scope)
-        self.assertEqual(scope["p10_metrics"], self.scope["p10_metrics"])
+        metrics = self.run_report_cell(lambda s: s.replace("1151,090", "99999,000").replace("1,0686×", "999×"))
+        self.assertEqual(metrics, self.scope["p10_metrics"])
 
     def test_incomplete_standard_matrix_is_rejected(self):
-        scope = dict(self.scope)
-        read = scope["report_table"]
-        scope["report_table"] = lambda path, header: read(path, header)[1:] if path == scope["P10_BENCHMARK"] else read(path, header)
-        with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(AssertionError):
-            exec(self.sources["v5-p10-results"], scope)
+        with self.assertRaisesRegex(ValueError, "nine standard"):
+            self.run_report_cell(lambda s: "\n".join(l for l in s.splitlines() if not l.startswith("| site1 | small |")))
 
     def test_measurement_labels_and_completed_conclusion(self):
         text = self.output.getvalue()
         self.assertIn("T01 V4 instrumented probe", text)
-        self.assertIn("raw sidecars unavailable", text)
-        self.assertIn("Paired-block median", text)
-        self.assertIn("unreconciled", text)
+        self.assertIn("raw_independently_verified: False", text)
+        self.assertIn("Median tỉ số từng khối", text)
+        self.assertIn("có lợi 3/5", text)
+        self.assertNotIn("unreconciled", text)
         self.assertNotIn("V4 Production Pre-S4:", text)
-        self.assertAlmostEqual((1 - self.scope["dual"] / self.scope["seq"]) * 100, 17.178314826910523)
+        self.assertAlmostEqual((1 - self.scope["dual"] / self.scope["seq"]) * 100, (1 - 10.971 / 13.7) * 100)
+        self.assertNotIn(".group(", self.sources["v5-p10-results"])
         conclusion = self.sources["conclusion"]
         self.assertNotIn("được bổ sung sau", conclusion)
         self.assertIn("production baseline", conclusion)
@@ -82,6 +86,16 @@ class V5NotebookAnalysisTests(unittest.TestCase):
         self.assertEqual(section_structure(self.cells)[1], [])
         self.assertTrue(all(not c.get("outputs") and c.get("execution_count") is None
                             for c in self.cells if c["cell_type"] == "code"))
+
+    def test_public_pin_has_production_dependencies_and_records_new_verification(self):
+        pin = constants(self.sources["runtime-setup"])["SOURCE_REF"]
+        self.assertRegex(pin, r"^[0-9a-f]{40}$")
+        files = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", pin], cwd=ROOT, text=True).splitlines()
+        self.assertTrue(set(PIN_FILES).issubset(files))
+        comparison = compare_freeze(ROOT, pin)
+        self.assertFalse(comparison["src_build_equivalent"])
+        self.assertEqual(comparison["production_changes"], ["src/v5/v5_image_branch.cu"])
+        self.assertIn("candidate", self.sources["team"])
 
 
 if __name__ == "__main__":

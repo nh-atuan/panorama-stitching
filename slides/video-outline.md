@@ -1,4 +1,4 @@
-<!-- Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232). External source: none. -->
+<!-- Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232), Le Ha Thanh Chuong (23120195). External source: none. -->
 
 # Kịch bản phân cảnh video thuyết trình (20–30 phút) — Nhóm 16
 
@@ -21,7 +21,7 @@ Kịch bản phân cảnh chi tiết (cue sheet) cho video thuyết trình chín
 |---|---|---|
 | 00:00 – 00:45 | Slide 1–2 (Title, Roadmap) | Giới thiệu Nhóm 16 (4 thành viên), bài toán Parallel Panorama Stitching và bố cục 4 phần của video. |
 | 00:45 – 02:00 | Slide 3 (From two overlapping photos to one panorama) | Trình bày đầu vào (2 ảnh RGB chồng lấn A, B), đầu ra (canvas theo hệ tọa độ ảnh A), minh họa bằng `site2/large` (7676×4348) và mục tiêu giữ nguyên thuật toán + hành vi lỗi của V0. |
-| 02:00 – 03:45 | Slide 4–5 (Six stages, Matching/Geometry/Rendering) | Giải thích pipeline 6 stage: S1–S3 độc lập cho từng ảnh (Grayscale + Gaussian, FAST-9 + NMS + Top-K, 256-bit BRIEF); S4–S6 kết hợp hai ảnh (Hamming + Lowe ratio, MSAC RANSAC + 4-pt DLT + SVD refit, Backward bilinear + Feather blend). Nêu giả định homography và giới hạn thị sai/hoa văn lặp. |
+| 02:00 – 03:45 | Slide 4–5 (Six stages, Matching/Geometry/Rendering) | Giải thích pipeline 6 stage: S1–S3 độc lập cho từng ảnh (Grayscale + Gaussian, FAST-9 + NMS + Top-K, 256-bit BRIEF); S4–S6 kết hợp hai ảnh (Hamming + Lowe ratio, MSAC RANSAC + 4-pt DLT + SVD refit, Inverse warping + manual bilinear + 50/50 average blending). Nêu giả định homography và giới hạn thị sai/hoa văn lặp. |
 | 03:45 – 05:00 | Slide 6 (One pipeline, six versions V0–V5) | Tóm tắt kiến trúc `Device-resident` từ V1 và lộ trình 6 phiên bản V0–V5 chạy từ cùng CLI `build/stitch --version <0..5>`, giới thiệu vai trò V4 (Production baseline) và V5 (Dual-stream case study), chuyển sang Thành demo. |
 
 ### Phần 2: Live Demo chạy code trên Colab Tesla T4 (05:00 – 12:00 · Thành)

@@ -1,16 +1,29 @@
-% Authors: Le Thuong De (23120232). External source: none.
+% Authors: Le Thuong De (23120232), Nguyen Ho Anh Tuan (23120185). External source: none.
 \documentclass[aspectratio=169]{beamer}
-\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
 \usepackage{booktabs}
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{-}
+\setbeamertemplate{itemize subitem}{-}
+\setbeamertemplate{itemize subsubitem}{-}
+\setbeamertemplate{caption}[numbered]
+\setbeamerfont{caption}{size=\scriptsize}
+\addto\captionsvietnamese{%
+  \renewcommand{\figurename}{Hình}%
+  \renewcommand{\tablename}{Bảng}%
+}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{3pt}
 \graphicspath{{assets/}{generated/}}
-\title{Panorama Stitching: Performance and APOD}
-\subtitle{Group 16 -- Performance module preview (V0--V5)}
-\author{Le Thuong De -- 23120232}
-\date{November 2026}
+\title{Ghép ảnh Panorama: Hiệu năng và APOD}
+\subtitle{Nhóm 16 -- Bản xem trước module hiệu năng (V0--V5)}
+\author{Lê Thượng Đế -- 23120232}
+\date{Tháng 11/2026}
 \begin{document}
 \begin{frame}\titlepage\end{frame}
-\section{Performance and APOD}
+\section{Hiệu năng và APOD}
 \input{performance.tex}
 \end{document}

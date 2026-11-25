@@ -1,187 +1,207 @@
 % Authors: Nguyen Ho Anh Tuan (23120185), Le Thuong De (23120232), Le Ha Thanh Chuong (23120195). External source: none.
 \documentclass[aspectratio=169]{beamer}
-\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{-}
+\setbeamertemplate{itemize subitem}{-}
+\setbeamertemplate{itemize subsubitem}{-}
+\setbeamertemplate{caption}[numbered]
+\setbeamerfont{caption}{size=\scriptsize}
+\addto\captionsvietnamese{%
+  \renewcommand{\figurename}{Hình}%
+  \renewcommand{\tablename}{Bảng}%
+}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{3pt}
+\AtBeginSection[]{
+  \begin{frame}{Nội dung trình bày}
+    \tableofcontents[currentsection,hideallsubsections]
+  \end{frame}
+}
 \graphicspath{{assets/}{generated/}}
-\title{Parallel Panorama Stitching}
-\subtitle{CSC14120 Parallel Programming Final Project}
-\author[Group 16]{Nguyen Ho Anh Tuan \and Tran Huu Kim Thanh \and Le Thuong De \and Le Ha Thanh Chuong}
-\institute{Group 16 -- FIT, HCMUS}
-\date{November 2026}
+\title{Ghép ảnh Panorama song song trên GPU}
+\subtitle{Đồ án cuối kỳ CSC14120 -- Lập trình song song}
+\author[Nhóm 16]{Nguyễn Hồ Anh Tuấn \and Trần Hữu Kim Thành \and Lê Thượng Đế \and Lê Hà Thanh Chương}
+\institute[FIT, HCMUS]{Nhóm 16 -- Khoa CNTT, Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM}
+\date{Tháng 11/2026}
 \begin{document}
 
 \begin{frame}\titlepage\end{frame}
-\begin{frame}{Presentation roadmap}
+\begin{frame}{Nội dung trình bày}
 \tableofcontents[hideallsubsections]
 \end{frame}
 
-\section{Problem and approach}
-\begin{frame}{From two overlapping photos to one panorama}
+\section{Tổng quan bài toán và hướng tiếp cận}
+\begin{frame}{Từ hai ảnh chồng lấn đến một ảnh panorama}
 \begin{columns}[T]
-\column{.39\textwidth}
+\column{.40\textwidth}
 \begin{itemize}
-\item Input: two overlapping RGB images, A and B.
-\item Output: a shared canvas in A's coordinate system.
-\item Goal: accelerate the pipeline on GPU while preserving the output and failure behavior of the CPU reference.
+\item Đầu vào: hai ảnh RGB có vùng chồng lấn, ảnh A và ảnh B.
+\item Đầu ra: một khung canvas chung trong hệ tọa độ ảnh A.
+\item Mục tiêu: tăng tốc pipeline trên GPU nhưng giữ nguyên kết quả ghép và hành vi báo lỗi của bản CPU tham chiếu.
 \end{itemize}
-\column{.59\textwidth}
+\column{.58\textwidth}
+\begin{figure}
 \centering
 \includegraphics[width=\linewidth]{site2-large-panorama.jpg}
-\scriptsize Group 16 dataset, \texttt{site2/large} (V4 output).
+\caption{Ảnh panorama ghép từ cặp \texttt{site2/large} trong bộ ảnh Nhóm 16 (kết quả V4).}
+\end{figure}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Six stages from image features to canvas}
+\begin{frame}{Sáu giai đoạn từ đặc trưng ảnh đến khung canvas}
+\begin{figure}
 \centering
 \begin{tikzpicture}[
   stage/.style={draw=blue!60,fill=blue!7,rounded corners=2pt,align=center,
-    minimum height=9mm,text width=2.65cm,font=\small}, node distance=5mm and 7mm,
+    minimum height=9mm,text width=2.75cm,font=\small}, node distance=5mm and 7mm,
   link/.style={-{Stealth[length=2mm]},thick}]
-\node[stage] (s1) {S1 Preprocessing};
-\node[stage,right=of s1] (s2) {S2 Keypoints};
-\node[stage,right=of s2] (s3) {S3 Descriptors};
+\node[stage] (s1) {S1 Tiền xử lý};
+\node[stage,right=of s1] (s2) {S2 Keypoint};
+\node[stage,right=of s2] (s3) {S3 Descriptor};
 \node[stage,below=of s3] (s4) {S4 Matching};
 \node[stage,left=of s4] (s5) {S5 Homography};
-\node[stage,left=of s5] (s6) {S6 Warp and blend};
+\node[stage,left=of s5] (s6) {S6 Warp \& hòa trộn};
 \draw[link] (s1)--(s2); \draw[link] (s2)--(s3); \draw[link] (s3)--(s4);
 \draw[link] (s4)--(s5); \draw[link] (s5)--(s6);
 \end{tikzpicture}
+\caption{Kiến trúc pipeline 6 giai đoạn từ tiền xử lý đến kết xuất panorama.}
+\end{figure}
 
-\medskip
 \begin{itemize}
-\item S1--S3 process A and B independently; S4--S6 combine data from both images.
-\item S1 converts to grayscale and applies Gaussian smoothing. S2 detects FAST-9 corners (with NMS and top-K selection), and S3 computes 256-bit BRIEF descriptors.
+\item S1--S3 xử lý độc lập trên từng ảnh A và B; S4--S6 kết hợp dữ liệu từ cả hai ảnh.
+\item S1 chuyển ảnh xám và làm mượt Gaussian. S2 phát hiện góc FAST-9 (kèm NMS và chọn top-K), S3 tính descriptor BRIEF 256-bit.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Matching, geometry, and rendering}
+\begin{frame}{Khớp đặc trưng, ước lượng hình học và kết xuất}
 \begin{itemize}
-\item \textbf{S4:} Match binary descriptors by brute-force Hamming distance and filter ambiguous pairs with Lowe's ratio test.
-\item \textbf{S5:} Sample four matches per MSAC RANSAC hypothesis, score the candidate homography, and refit on all inliers (DLT + Jacobi SVD).
-\item \textbf{S6:} Compute canvas bounds, inverse-map output pixels to sources, bilinear-sample B, and blend the overlap with 50/50 averaging.
+\item S4: Khớp descriptor nhị phân bằng khoảng cách Hamming (brute-force) và lọc cặp mơ hồ qua Lowe's ratio test.
+\item S5: Lấy mẫu 4 cặp khớp cho mỗi giả thuyết MSAC RANSAC, chấm điểm homography ứng viên và khớp lại trên toàn bộ inlier (DLT + Jacobi SVD).
+\item S6: Tính biên canvas, chiếu ngược pixel đầu ra về ảnh gốc, lấy mẫu bilinear trên B và hòa trộn vùng chồng lấn bằng trung bình 50/50.
 \end{itemize}
 \medskip
-\small Homography assumes a shared plane or mostly rotational camera motion; strong parallax or repetitive textures can still cause alignment failure.
+\small Homography giả định cảnh nằm trên một mặt phẳng hoặc camera chủ yếu xoay; hiệu ứng parallax mạnh hay hoa văn lặp vẫn có thể gây lỗi căn chỉnh.
 \end{frame}
 
-\begin{frame}{One pipeline, six versions (V0--V5)}
+\begin{frame}{Một pipeline, sáu phiên bản (V0--V5)}
+\begin{table}
 \centering
-\begin{tabular}{lp{.69\linewidth}}
+\caption{Tóm tắt sáu phiên bản cài đặt của pipeline ghép ảnh (V0--V5).}
+\begin{tabular}{lp{.71\linewidth}}
 \toprule
-Version & Main implementation change \\
+Phiên bản & Thay đổi cài đặt chính \\
 \midrule
-V0 & Sequential CPU reference (frozen baseline). \\
-V1 & Basic CUDA S1--S6 with device-resident intermediate buffers. \\
-V2 & Parallel RANSAC hypothesis scoring, inlier reduction, and refit in S5. \\
-V3 & Warp-shuffle MSAC, shared-memory DLT/SVD, and batch scheduling in S5. \\
-V4 & Single-pass fused canvas renderer in S6 (\textbf{Production baseline}). \\
-V5 & Dual-stream asynchronous execution for H2D + S1--S3 (\textbf{Case study}). \\
+V0 & Bản tuần tự CPU tham chiếu (đóng băng làm chuẩn). \\
+V1 & CUDA cơ bản cho S1--S6 với bộ đệm trung gian device-resident. \\
+V2 & Song song hóa chấm điểm RANSAC, rút gọn inlier và refit ở S5. \\
+V3 & MSAC dùng warp-shuffle, DLT/SVD trên shared memory và chia batch ở S5. \\
+V4 & Gộp kết xuất canvas một lượt ở S6 (bản production chính). \\
+V5 & Thực thi bất đồng bộ hai CUDA stream cho H2D + S1--S3 (case study). \\
 \bottomrule
 \end{tabular}
+\end{table}
 \end{frame}
 
-\section{Live demonstration}
-\begin{frame}[fragile]{Build and run on Tesla T4}
-\begin{verbatim}
-nvidia-smi -L
-python3 scripts/build.py --compiler nvcc --require-t4 --target stitch
-python3 scripts/live_demo.py --dataset dataset --site site2 --size small \
-  --versions 0 4 5 --runs 1
-\end{verbatim}
+\section{Kiểm chứng, kết quả và phân tích hiệu năng}
+\begin{frame}{Kiểm chứng độ chính xác và an toàn bộ nhớ}
 \begin{itemize}
-\item The automated demo runner (\texttt{scripts/live\_demo.py}) checks the GPU, runs V0, V4, and V5 (\texttt{--v5-schedule dual}) on \texttt{site2/small}, saves all three panoramas, and prints per-stage timings.
-\item It then runs \texttt{challenge/medium} to verify that the expected \texttt{NumericalFailure} error path is handled consistently.
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Verification and memory safety}
-\begin{itemize}
-\item \textbf{Stage-by-stage parity:} Every GPU stage is verified against V0 before end-to-end pipeline testing.
-\item \textbf{Synthetic homography (6 pairs):} RMSE $\le 0.10$ px and Max $\le 0.21$ px (thresholds: 0.5 / 1.0 px), with 0 px drift across versions.
-\item \textbf{Real dataset (12 configs):} All 10 valid pairs match V0 canvas geometry with \textbf{Max RGB error = 0}; \texttt{challenge/medium} and \texttt{large} preserve the expected S6 \texttt{NumericalFailure}.
-\item \textbf{Memory safety:} \texttt{compute-sanitizer --tool memcheck --leak-check full} reports \textbf{0 errors and 0 bytes leaked} across GPU test suites and CLI runs.
+\item Đối chiếu từng stage: Mọi stage GPU đều được kiểm tra khớp với V0 trước khi tích hợp toàn pipeline.
+\item Ảnh synthetic (6 cặp): RMSE $\le 0{,}10$ px và Max $\le 0{,}21$ px (ngưỡng: 0,5 / 1,0 px), độ lệch giữa các phiên bản bằng 0 px.
+\item Bộ ảnh thật (12 cấu hình): Cả 10 ca hợp lệ khớp khung canvas V0 với Max RGB error = 0; \texttt{challenge/medium} và \texttt{large} giữ nguyên lỗi \texttt{NumericalFailure} ở S6.
+\item An toàn bộ nhớ: \texttt{compute-sanitizer --tool memcheck --leak-check full} xác nhận 0 lỗi và 0 byte rò rỉ trên cả test suite GPU lẫn CLI.
 \end{itemize}
 \medskip
-\small Full test pass on Tesla T4: 14 V0 suites (45,284 checks), 16 GPU suites covering V1--V5 (69,336 checks), and all Python verification suites.
+\small Nghiệm thu toàn bộ trên Tesla T4: 14 suite V0 (45.284 checks), 16 suite GPU cho V1--V5 (69.336 checks) và toàn bộ suite Python.
 \end{frame}
 
-\begin{frame}{Output gallery and failure case}
+\begin{frame}{Kết quả ảnh ghép và phân tích ca thất bại}
+\begin{figure}
 \centering
-\includegraphics[width=.49\linewidth]{site2-large-panorama.jpg}
-
-\small Valid outdoor scene: \texttt{site2/large} (7676$\times$4348, V4). Live demo uses \texttt{site2/small} for quick turnaround.
+\includegraphics[width=.45\linewidth]{site2-large-panorama.jpg}
+\caption{Cảnh ngoài trời hợp lệ \texttt{site2/large} (7676$\times$4348, kết quả V4).}
+\end{figure}
 \begin{itemize}
-\item \textbf{Failure case (\texttt{challenge/medium}):} Returns \texttt{[NumericalFailure] S6 warp\_blend failed} consistently across V0--V5.
-\item \textbf{Root cause:} Repetitive railing and ceiling patterns produce ambiguous 256-bit BRIEF matches, leading to a degenerate homography.
+\item Ca thất bại (\texttt{challenge/medium}): Trả về \texttt{[NumericalFailure] S6 warp\_blend failed} nhất quán từ V0 đến V5.
+\item Nguyên nhân gốc: Hoa văn lặp của lan can và trần nhà tạo ra nhiều cặp khớp BRIEF 256-bit mơ hồ, dẫn đến ma trận homography suy biến.
 \end{itemize}
 \end{frame}
 
-\section{Performance results and analysis}
 \input{performance.tex}
 
-\section{Key optimizations and lessons}
-\begin{frame}{APOD workflow: following the measured bottleneck}
-\begin{description}
-\item[Assess] Profile stage timings and inspect Nsight Systems / Compute traces.
-\item[Parallelize] V1 ports S1--S6 to CUDA with device-resident buffers to avoid intermediate H2D/D2H copies.
-\item[Optimize] V2/V3 accelerate S5; V4 fuses S6 canvas passes; V5 overlaps H2D + S1--S3 across two CUDA streams.
-\item[Deploy] Verify output parity and memory safety before accepting any optimization.
-\end{description}
+\section{Các tối ưu chính và bài học rút ra}
+\begin{frame}{Chu trình APOD: tối ưu theo điểm nghẽn đo được}
+\begin{itemize}
+\item Assess: Đo thời gian từng stage và phân tích trace Nsight Systems / Compute.
+\item Parallelize: V1 chuyển S1--S6 lên CUDA với bộ nhớ device-resident để bỏ sao chép H2D/D2H trung gian.
+\item Optimize: V2/V3 tăng tốc S5; V4 gộp các lượt ghi canvas ở S6; V5 chồng lấp H2D + S1--S3 trên hai CUDA stream.
+\item Deploy: Kiểm chứng tương đương đầu ra và an toàn bộ nhớ trước khi chấp nhận mỗi tối ưu.
+\end{itemize}
 \medskip
-Each optimization exposes the next dominant stage, until Amdahl's law caps further end-to-end gains.
+Mỗi bước tối ưu làm lộ diện điểm nghẽn kế tiếp, cho đến khi định luật Amdahl giới hạn mức tăng tốc toàn pipeline.
 \end{frame}
 
-\begin{frame}{S5 optimizations (V2 \& V3): breaking the 90\%+ bottleneck}
+\begin{frame}{Tối ưu S5 (V2 \& V3): giải quyết điểm nghẽn 90\%+}
 \begin{itemize}
-\item \textbf{Why S5 first?} In V1, sequential RANSAC on GPU accounted for 90--99\% of total runtime across all 9 standard cases.
-\item \textbf{V2 (Parallel RANSAC):} Evaluate candidate hypotheses in parallel, parallelize inlier reduction, and move the final inlier refit to GPU $\rightarrow$ \textbf{6.16$\times$} faster than V1 (\textbf{23.4$\times$} vs. V0).
-\item \textbf{V3 (Micro-architectural tuning):}
+\item Vì sao chọn S5 trước? Ở V1, RANSAC tuần tự trên GPU chiếm 90--99\% tổng thời gian trên cả 9 ca chuẩn.
+\item V2 (RANSAC song song): Đánh giá song song các giả thuyết, song song hóa rút gọn inlier và đưa bước refit cuối lên GPU $\rightarrow$ nhanh hơn V1 6,16$\times$ (23,4$\times$ so với V0).
+\item V3 (Tối ưu vi kiến trúc):
   \begin{itemize}
-  \item Warp-shuffle MSAC scoring to cut shared-memory and synchronization overhead.
-  \item Shared-memory 4-point DLT / Jacobi SVD and batch scheduling to improve SM utilization.
+  \item Chấm điểm MSAC bằng warp-shuffle giúp giảm chi phí shared memory và đồng bộ.
+  \item DLT 4 điểm / Jacobi SVD trên shared memory kèm chia batch để tăng độ khai thác SM.
   \end{itemize}
-\item \textbf{Impact:} Another \textbf{1.83$\times$} end-to-end gain (\textbf{42.7$\times$} vs. V0), shrinking S5 on \texttt{site2/large} to 12.2 ms and exposing S6 as the new bottleneck.
+\item Hiệu quả: Tăng thêm 1,83$\times$ toàn pipeline (42,7$\times$ so với V0), kéo S5 trên \texttt{site2/large} xuống 12,2 ms và làm S6 trở thành điểm nghẽn mới.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{V4 optimization: single-pass canvas fusion}
-\begin{block}{V3 renderer (3 passes)}
-Clear canvas (\texttt{cudaMemset}) $\rightarrow$ copy image A $\rightarrow$ gather and blend image B.
-\end{block}
-\begin{block}{V4 renderer (1 fused pass)}
-One thread per output pixel: check A/B bounds, sample source pixels, feather-blend, write RGB once.
-\end{block}
+\begin{frame}{Tối ưu V4: gộp kết xuất canvas trong một lượt}
 \begin{itemize}
-\item Preserves exact canvas bounds, inverse projection, bilinear interpolation, and rounding rules (Max RGB error = 0), while reusing S1--S4 (V1) and S5 (V3).
-\item Faster in 8/9 standard cases (S6 GM \textbf{1.04$\times$}, total GM \textbf{1.01$\times$}; 4/5 paired blocks on \texttt{site2/large} favor V4, median \textbf{1.03$\times$}).
-\item Trade-off: eliminates two canvas passes, though Nsight Compute shows higher DRAM traffic in the fused kernel, limiting total speedup to $\sim$1\%.
+\item Bộ kết xuất V3 (3 lượt): Xóa canvas (\texttt{cudaMemset}) $\rightarrow$ sao chép ảnh A $\rightarrow$ lấy mẫu và hòa trộn ảnh B.
+\item Bộ kết xuất V4 (1 lượt gộp): Mỗi thread xử lý một pixel đầu ra: kiểm tra biên A/B, lấy mẫu ảnh gốc, hòa trộn 50/50 và ghi RGB một lần.
+\item Giữ nguyên khung canvas, phép chiếu ngược, nội suy bilinear và quy tắc làm tròn (Max RGB error = 0); tái sử dụng S1--S4 (V1) và S5 (V3).
+\item Nhanh hơn ở 8/9 ca chuẩn (S6 GM 1,04$\times$, tổng GM 1,01$\times$; 4/5 khối ghép cặp trên \texttt{site2/large} nghiêng về V4, trung vị 1,03$\times$).
+\item Đánh đổi: Bỏ được hai lượt ghi canvas nhưng Nsight Compute cho thấy lưu lượng DRAM tăng, giới hạn speedup tổng quanh $\sim$1\%.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{V5 optimization: dual-stream concurrency}
-\begin{block}{Motivation}
-After V4, pre-S4 work (H2D + S1--S3 for both images) accounts for 11.2\% (\texttt{site3/large}), 12.2\% (\texttt{site1/large}), and 21.4\% (\texttt{site2/large}, 15.3 ms) of total time.
-\end{block}
+\begin{frame}{Tối ưu V5: xử lý song song bằng hai CUDA stream}
 \begin{itemize}
-\item Run image A and image B on two non-blocking CUDA streams (\texttt{streamA}, \texttt{streamB}) with isolated scratch buffers and pinned candidate-count memory.
-\item Prefix/suffix scheduling: enqueue H2D + S1 + S2 candidates on both branches, poll \texttt{cudaEventQuery} with \texttt{yield()}, then launch S2 top-K + S3 for whichever branch finishes first.
-\item A control stream waits on \texttt{doneA}/\texttt{doneB} via \texttt{cudaStreamWaitEvent}, merges counts, and runs S4--S6.
-\item Includes an ablation switch (\texttt{--v5-schedule sequential}) to isolate stream concurrency from memory-layout changes.
+\item Động lực: Sau V4, phần tiền S4 (H2D + S1--S3 của hai ảnh) chiếm 11,2\% (\texttt{site3/large}), 12,2\% (\texttt{site1/large}) và 21,4\% (\texttt{site2/large}, 15,3 ms) tổng thời gian.
+\item Chạy ảnh A và B trên hai CUDA stream không chặn (\texttt{streamA}, \texttt{streamB}) với scratch buffer tách biệt và pinned memory cho bộ đếm ứng viên.
+\item Lập lịch prefix/suffix: Đẩy H2D + S1 + ứng viên S2 trên cả hai nhánh, thăm dò \texttt{cudaEventQuery} kèm \texttt{yield()}, rồi chạy S2 top-K + S3 cho nhánh xong trước.
+\item Stream điều phối chờ \texttt{doneA}/\texttt{doneB} bằng \texttt{cudaStreamWaitEvent}, gộp bộ đếm rồi chạy S4--S6.
+\item Tích hợp cờ đối chứng (\texttt{--v5-schedule sequential}) để tách riêng tác dụng đồng thời của stream khỏi thay đổi bố cục bộ nhớ.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Key lessons and limitations}
+\begin{frame}{Bài học rút ra và giới hạn hiện tại}
 \begin{itemize}
-\item \textbf{Follow the data, respect Amdahl's law:} Fixing S5 gave the bulk of our speedup (42.7$\times$); later optimizations on S6 (45.7\% share) and pre-S4 (21.4\% share) faced much tighter ceilings.
-\item \textbf{Hardware counters beat intuition:} Fusing three S6 passes into one looked like a clear bandwidth win, yet Nsight Compute revealed +26\% DRAM traffic and lower L2 hit rate on \texttt{site2/large}.
-\item \textbf{Concurrency has hardware limits:} Dual streams achieved 17--25\% GPU overlap and 1.26$\times$ faster pre-S4, but SM saturation on Tesla T4 and +64.3 MiB VRAM kept V4 as the more practical production baseline.
-\item \textbf{Verify before benchmarking:} Strict parity checks (Max RGB = 0), explicit failure handling, and memcheck ensured every speedup number came from a correct, leak-free pipeline.
+\item Bám sát số đo và định luật Amdahl: Xử lý S5 mang lại phần lớn mức tăng tốc (42,7$\times$); các tối ưu sau ở S6 (45,7\%) và tiền S4 (21,4\%) bị giới hạn trần chặt hơn nhiều.
+\item Chỉ số phần cứng chính xác hơn trực giác: Gộp ba lượt S6 tưởng như tiết kiệm băng thông, nhưng Nsight Compute chỉ ra lưu lượng DRAM tăng +26\% và L2 hit rate giảm trên \texttt{site2/large}.
+\item Xử lý đồng thời chịu giới hạn phần cứng: Hai stream đạt 17--25\% chồng lấp GPU và tăng tốc tiền S4 1,26$\times$, nhưng bão hòa SM trên Tesla T4 cùng +64,3 MiB VRAM khiến V4 ổn định hơn cho bản production.
+\item Kiểm chứng trước khi đo đạc: So khớp chặt (Max RGB = 0), xử lý lỗi rõ ràng và memcheck bảo đảm mọi con số speedup đều đến từ pipeline đúng và không rò rỉ bộ nhớ.
 \end{itemize}
 \medskip
-\small All results are reproducible from \texttt{Group16\_Final.ipynb}, raw CSV logs, and Nsight traces on Google Colab Tesla T4.
+\small Toàn bộ kết quả có thể tái lập từ \texttt{Group16\_Final.ipynb}, file CSV gốc và trace Nsight trên Google Colab Tesla T4.
+\end{frame}
+
+\begin{frame}{Tài liệu tham khảo}
+\scriptsize
+\begin{itemize}
+\item ITU-R Recommendation BT.601-7 (2011). Studio encoding parameters of digital television (hệ số chuyển ảnh xám S1).
+\item Rosten, E. \& Drummond, T. (2006). Machine learning for high-speed corner detection, ECCV (thuật toán góc FAST-9 ở S2).
+\item Calonder, M., Lepetit, V., Strecha, C., \& Fua, P. (2010). BRIEF: Binary Robust Independent Elementary Features, ECCV (descriptor nhị phân 256-bit ở S3).
+\item Lowe, D. G. (2004). Distinctive Image Features from Scale-Invariant Keypoints, IJCV 60(2), 91--110 (Lowe's ratio test ở S4).
+\item Brown, M. \& Lowe, D. G. (2007). Automatic Panoramic Image Stitching using Invariant Features, IJCV 74, 59--73 (RANSAC, DLT và hòa trộn ảnh).
+\item Drmač, Z. \& Veselić, K. (2008). New Fast and Accurate Jacobi SVD Algorithm: II, LAPACK Working Note 170 (Jacobi SVD cho DLT ở S5).
+\item Szeliski, R. (2006). Image Alignment and Stitching: A Tutorial, Foundations and Trends in Computer Graphics and Vision 2(1) (hệ quy chiếu, nội suy và kết xuất canvas ở S6).
+\item NVIDIA (2025). CUDA C++ Best Practices Guide 13.0, Nsight Systems User Guide, Nsight Compute CLI và NVTX v3.
+\end{itemize}
 \end{frame}
 \end{document}

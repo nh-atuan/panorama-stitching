@@ -13,7 +13,7 @@ Kịch bản phân cảnh chi tiết (cue sheet) cho video thuyết trình chín
 | 12:00 – 19:30 | 7 phút 30 giây | **Phần 3:** Performance results and analysis | **Đế** | 6–9 phút |
 | 19:30 – 24:30 | 5 phút | **Phần 4:** Key optimizations and lessons learned | **Chương** | 4–6 phút |
 
-## 2. Phân cảnh chi tiết từng phút (tuyến tính Slide 1 → 29)
+## 2. Phân cảnh chi tiết từng phút (tuyến tính Slide 1 → 28)
 
 ### Phần 1: Tổng quan bài toán và hướng tiếp cận (00:00 – 05:00 · Tuấn)
 
@@ -39,18 +39,18 @@ Kịch bản phân cảnh chi tiết (cue sheet) cho video thuyết trình chín
 
 | Mốc | Slide / Màn hình | Nội dung trình bày |
 |---|---|---|
-| 12:00 – 13:15 | Slide 12–13 (Môi trường đo, Tổng hợp thời gian V0–V5) | Điều kiện đo chuẩn trên Tesla T4 (V0: 1 warm-up + 5 runs; GPU V1–V5: 4 warm-up + 5 runs để ổn định xung nhịp, toàn bộ đo trong cùng một phiên duy nhất). Tổng quan bước nhảy V0 → V1 (3,99×) → V2 (25,06×) → V3 (43,67×) → V4 (45,07×) → V5 (46,52× GM). |
-| 13:15 – 14:45 | Slide 14–15 (Dịch chuyển điểm nghẽn, Vì sao tối ưu S6 sau V3?) | Phân tích dịch chuyển điểm nghẽn: S5 chiếm 90–99% ở V1, giảm mạnh ở V2–V3, làm lộ diện S6 chiếm 45,9% tại `site2/large` (29,15 / 63,51 ms). Giải thích giới hạn Amdahl cho S6 (~1,30×). |
-| 14:45 – 16:45 | Slide 16–18 (Bảng V4, NSYS V4, NCU V4) | Phân tích V4: 6/9 ca nhanh hơn, S6 GM 1,06×, total GM 1,03×. Đối chiếu bảng NSYS V4 (3 pass → 1 renderer; lưu ý overhead profiler) với NCU (DRAM đọc+ghi tăng +26,0% tại `site2/large`, L2 hit giảm 76,2% → 70,8%, lưu ý `cudaMemset` V3 nằm ngoài counter). |
-| 16:45 – 19:30 | Slide 19–20 (Bảng V5, NSYS V5 & đánh đổi) | Phân tích V5 trong cùng phiên đo hợp nhất V0–V5: Pre-S4 tăng tốc GM **1,28×** (`site2/large` giảm 11,75 → 9,45 ms), toàn pipeline đạt **46,52×** GM vs V0 (`site2/large` 59,99 ms, **98,3×**), nhanh hơn V4 ở **9/9** ca chuẩn (GM **1,03×**) khi warm-up 4 lượt, đối chứng Dual/Seq đạt **1,01×** GM. Hình `nsys-v5.png` xác nhận overlap **16,6–24,5%** (2,05–2,89 ms) vs 0,0% ở V4/V5 seq và Peak VRAM tăng **+64,3 MiB** (nằm gọn trong 16 GB của T4, Max RGB = 0, 0 B rò rỉ); chuyển sang Chương. |
+| 12:00 – 13:30 | Slide 12–13 (Môi trường đo, Tổng hợp hiệu năng V0–V5) | Điều kiện đo chuẩn trên Tesla T4 (V0: 1 warm-up + 5 runs; GPU V1–V5: 4 warm-up + 5 runs để ổn định xung nhịp, toàn bộ đo trong cùng một phiên duy nhất). Bảng tổng hợp duy nhất cho cả 6 phiên bản trên đủ 3 độ phân giải: V0 → V1 (3,99×) → V2 (25,06×) → V3 (43,67×) → V4 (45,07×) → V5 (46,52× GM; `site2/large` từ 5897,7 xuống 60,0 ms, đều khớp V0). |
+| 13:30 – 15:00 | Slide 14–15 (Dịch chuyển điểm nghẽn, Vì sao tối ưu S6 sau V3?) | Phân tích dịch chuyển điểm nghẽn: S5 chiếm 90–99% ở V1, giảm mạnh ở V2–V3, làm lộ diện S6 chiếm 45,9% tại `site2/large` (29,15 / 63,51 ms). Giải thích giới hạn Amdahl cho S6 (~1,30×). |
+| 15:00 – 17:00 | Slide 16–17 (NSYS V4, NCU V4) | Phân tích V4: đối chiếu bảng NSYS V4 (3 pass → 1 renderer; S6 giảm 29,15 → 27,49 ms trên `site2/large`, GM 9 ca: S6 1,06×, tổng 1,03×, nhanh hơn 6/9 ca; lưu ý overhead profiler) với NCU (DRAM đọc+ghi tăng +26,0%, L2 hit giảm 76,2% → 70,8%, lưu ý `cudaMemset` V3 nằm ngoài counter). |
+| 17:00 – 19:30 | Slide 18–19 (Đối chứng V5 theo độ phân giải, NSYS V5 & đánh đổi) | Phân tích V5 theo 3 độ phân giải: Pre-S4 tăng tốc ổn định 1,26–1,29× (GM **1,28×**, `site2/large` giảm 11,75 → 9,45 ms), nhanh hơn V4 ở **9/9** ca chuẩn (GM **1,03×**) khi warm-up 4 lượt, đối chứng Dual/Seq đạt **1,01×** GM (8/9 ca). Hình `nsys-v5.png` xác nhận overlap **16,6–24,5%** (2,05–2,89 ms) vs 0,0% ở V4/V5 seq và Peak VRAM tăng **+64,3 MiB** (nằm gọn trong 16 GB của T4, Max RGB = 0, 0 B rò rỉ); chuyển sang Chương. |
 
 ### Phần 4: Các tối ưu chính và bài học rút ra (19:30 – 24:30 · Chương)
 
 | Mốc | Slide / Màn hình | Nội dung trình bày |
 |---|---|---|
-| 19:30 – 20:45 | Slide 21–24 (Chuyển mục 3, Chu trình APOD, S5 V2 & V3) | Nhìn lại chu trình APOD (Slide 22) và phân tích sâu bước nhảy lớn nhất ở S5: V2 (Slide 23: Parallel RANSAC + inlier reduction + GPU refit → 6,28× so với V1) và V3 (Slide 24: warp-shuffle MSAC + shared-memory DLT/SVD + batch scheduling → thêm 1,74×). |
-| 20:45 – 22:45 | Slide 25–26 (V4 fusion, V5 dual-stream) | Giải thích thiết kế kernel S6 V4 (Slide 25: 1 thread/pixel, gộp 3 pass thành 1, bảo toàn biên/nội suy/làm tròn, đánh đổi DRAM traffic) và kiến trúc hai stream V5 (Slide 26: `streamA`/`streamB`, lập lịch prefix/suffix kết hợp bitonic sort trên shared memory ở S2, `cudaStreamWaitEvent`, cờ ablation `--v5-schedule sequential`). |
-| 22:45 – 24:30 | Slide 27–29 (Bài học tối ưu, Kiểm chứng/giới hạn & Tài liệu tham khảo) | Tổng kết bài học tối ưu trên GPU (Slide 27: Amdahl, NCU counter, giới hạn SM/VRAM của dual-stream) và bài học kiểm chứng, giới hạn homography 2D cùng khả năng tái lập từ `Group16_Final.ipynb` (Slide 28–29). Chào kết. |
+| 19:30 – 20:45 | Slide 20–23 (Chuyển mục 3, Chu trình APOD, S5 V2 & V3) | Nhìn lại chu trình APOD (Slide 21) và phân tích sâu bước nhảy lớn nhất ở S5: V2 (Slide 22: Parallel RANSAC + inlier reduction + GPU refit → 6,28× so với V1) và V3 (Slide 23: warp-shuffle MSAC + shared-memory DLT/SVD + batch scheduling → thêm 1,74×). |
+| 20:45 – 22:45 | Slide 24–25 (V4 fusion, V5 dual-stream) | Giải thích thiết kế kernel S6 V4 (Slide 24: 1 thread/pixel, gộp 3 pass thành 1, bảo toàn biên/nội suy/làm tròn, đánh đổi DRAM traffic) và kiến trúc hai stream V5 (Slide 25: `streamA`/`streamB`, lập lịch prefix/suffix kết hợp bitonic sort trên shared memory ở S2, `cudaStreamWaitEvent`, cờ ablation `--v5-schedule sequential`). |
+| 22:45 – 24:30 | Slide 26–28 (Bài học tối ưu, Kiểm chứng/giới hạn & Tài liệu tham khảo) | Tổng kết bài học tối ưu trên GPU (Slide 26: Amdahl, NCU counter, giới hạn SM/VRAM của dual-stream) và bài học kiểm chứng, giới hạn homography 2D cùng khả năng tái lập từ `Group16_Final.ipynb` (Slide 27–28). Chào kết. |
 
 ## 3. Danh mục tư liệu chuẩn bị trước khi quay
 

@@ -10,26 +10,27 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Tổng hợp thời gian V0--V5 (Tesla T4)}
+\begin{frame}{Tổng hợp hiệu năng V0--V5 trên cả ba độ phân giải}
 \begin{table}
 \centering
-\caption{Thời gian chạy trên \texttt{site2/large} và speedup trung bình nhân (GM) qua sáu phiên bản V0--V5.}
-\footnotesize
-\begin{tabular}{lrrr}
+\caption{Tổng hợp thời gian (\texttt{site2/large}), speedup trung bình nhân (GM) so với V0 theo từng độ phân giải, so với bản liền trước và trạng thái kiểm chứng.}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrl}
 \toprule
-Phiên bản & \texttt{site2/large} (ms) & So với V0 (GM) & So với bản trước (GM) \\
+Phiên bản & \texttt{site2/large} & Small & Medium & Large & GM 9 ca & Bản trước & Kiểm chứng \\
 \midrule
-V0 (CPU tham chiếu) & 5897,7 & 1,00$\times$ & -- \\
-V1 (CUDA cơ bản) & 504,2 & 3,99$\times$ & 3,99$\times$ \\
-V2 (S5 song song) & 81,1 & 25,06$\times$ & 6,28$\times$ \\
-V3 (S5 vi kiến trúc) & 63,5 & 43,67$\times$ & 1,74$\times$ \\
-V4 (S6 Fusion) & 61,7 & 45,07$\times$ & 1,03$\times$ \\
-V5 (Hai CUDA stream) & 60,0 & 46,52$\times$ & 1,03$\times$ \\
+V0 (CPU tham chiếu) & 5897,7 ms & 1,00$\times$ & 1,00$\times$ & 1,00$\times$ & 1,00$\times$ & -- & tham chiếu \\
+V1 (CUDA cơ bản) & 504,2 ms & 1,78$\times$ & 3,19$\times$ & 11,21$\times$ & 3,99$\times$ & 3,99$\times$ & Khớp V0 \\
+V2 (S5 song song) & 81,0 ms & 18,68$\times$ & 29,81$\times$ & 28,24$\times$ & 25,06$\times$ & 6,28$\times$ & Khớp V0 \\
+V3 (S5 vi kiến trúc) & 63,5 ms & 30,81$\times$ & 48,97$\times$ & 55,18$\times$ & 43,67$\times$ & 1,74$\times$ & Khớp V0 \\
+V4 (S6 Fusion) & 61,6 ms & 33,27$\times$ & 49,16$\times$ & 55,97$\times$ & 45,07$\times$ & 1,03$\times$ & Khớp V0 \\
+V5 (Hai CUDA stream) & 60,0 ms & 34,40$\times$ & 51,45$\times$ & 56,89$\times$ & 46,52$\times$ & 1,03$\times$ & Khớp V0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\scriptsize Trung bình nhân (GM) tính trên 9 cấu hình chuẩn trong cùng một phiên Tesla T4 (V0: 1 warm-up + 5 lượt đo; GPU V1--V5: 4 warm-up + 5 lượt đo).
+\scriptsize Các cột Small, Medium, Large và GM 9 ca là speedup trung bình nhân so với V0 trong cùng một phiên Tesla T4 (V0: 1 warm-up + 5 lượt đo; GPU V1--V5: 4 warm-up + 5 lượt đo). Khớp V0: Max RGB = 0 trên cả 9 ca chuẩn, 0 byte rò rỉ.
 \end{frame}
 
 \begin{frame}{Sự dịch chuyển điểm nghẽn qua các phiên bản}
@@ -62,10 +63,6 @@ Tổng pipeline (ms) & 81,05 & 63,51 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Benchmark V4: gộp một lượt so với V3}
-\input{generated/v4-table.tex}
-\end{frame}
-
 \begin{frame}{Nsight Systems V4: gộp ba lượt canvas thành một lượt}
 \begin{table}
 \centering
@@ -84,11 +81,11 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 27,49 \\
 \begin{itemize}
 \item Trace Nsight Systems xác nhận V4 loại bỏ hoàn toàn lượt \texttt{cudaMemset} (100,1 MB) và \texttt{copy\_a\_kernel} riêng lẻ.
 \item Trong trace có gắn profiler, kernel gộp V4 tốn 32,54 ms (nhỉnh hơn 29,80 ms của V3) do overhead của profiler.
-\item Khi tắt profiler ở benchmark 5 lượt, S6 cải thiện từ 29,15 ms (V3) xuống 27,49 ms (V4), khẳng định cần đánh giá hiệu năng trên lượt đo chuẩn.
+\item Ở benchmark chuẩn không gắn profiler, S6 cải thiện từ 29,15 xuống 27,49 ms trên \texttt{site2/large} (GM 9 ca chuẩn: S6 1,06$\times$, toàn pipeline 1,03$\times$, nhanh hơn ở 6/9 ca).
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Nsight Compute: lưu lượng DRAM tăng ở kernel lấy mẫu}
+\begin{frame}{Nsight Compute V4: lưu lượng DRAM tăng ở kernel lấy mẫu}
 \begin{figure}
 \centering
 \includegraphics[width=.88\linewidth]{generated/ncu-v4.png}
@@ -101,7 +98,7 @@ V4 & \texttt{render\_canvas\_kernel} (1 lượt gộp) & 32,54 & 27,49 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Benchmark V5: hai CUDA stream so với V0 và V4}
+\begin{frame}{Đối chứng V5: hai CUDA stream theo độ phân giải}
 \input{generated/v5-table.tex}
 \end{frame}
 

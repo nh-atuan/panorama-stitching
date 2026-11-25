@@ -2,26 +2,22 @@
 % Generated from unified single-session Tesla T4 benchmark (25 Nov 2026, SHA f6dc3ee).
 \begin{table}
 \centering
-\caption{Kết quả benchmark V5 hai CUDA stream so với V0 và V4 (cùng phiên Tesla T4).}
+\caption{Tóm tắt đối chứng V5 hai CUDA stream theo độ phân giải (trung bình nhân trên 3 địa điểm chuẩn, Tesla T4).}
 \scriptsize
-\begin{tabular}{llrrrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Site & Size & V0 (ms) & V4 (ms) & V5 Seq & V5 Dual & V5/V0 & Dual/Seq & Pre-S4$\times$ \\
+Độ phân giải & V4 (ms) & V5 Seq (ms) & V5 Dual (ms) & V5/V4 & Dual/Seq & Pre-S4$\times$ \\
 \midrule
-site1 & small & 1107,8 & 32,70 & 31,82 & 31,32 & 35,4$\times$ & 1,02$\times$ & 1,32$\times$ \\
-site1 & medium & 1825,4 & 30,95 & 29,58 & 29,05 & 62,8$\times$ & 1,02$\times$ & 1,28$\times$ \\
-site1 & large & 4877,6 & 107,66 & 107,29 & 107,17 & 45,5$\times$ & 1,00$\times$ & 1,26$\times$ \\
-site2 & small & 1334,8 & 20,95 & 20,33 & 19,85 & 67,2$\times$ & 1,02$\times$ & 1,31$\times$ \\
-site2 & medium & 1949,3 & 27,43 & 26,68 & 25,90 & 75,3$\times$ & 1,03$\times$ & 1,30$\times$ \\
-site2 & large & 5897,7 & 61,65 & 60,66 & 59,99 & 98,3$\times$ & 1,01$\times$ & 1,24$\times$ \\
-site3 & small & 763,9 & 44,80 & 44,38 & 44,65 & 17,1$\times$ & 0,99$\times$ & 1,25$\times$ \\
-site3 & medium & 1600,2 & 56,44 & 55,97 & 55,58 & 28,8$\times$ & 1,01$\times$ & 1,29$\times$ \\
-site3 & large & 4158,3 & 102,79 & 103,63 & 101,04 & 41,2$\times$ & 1,03$\times$ & 1,27$\times$ \\
+small & 31,31 & 30,62 & 30,28 & 1,03$\times$ & 1,01$\times$ & 1,29$\times$ \\
+medium & 36,32 & 35,35 & 34,71 & 1,05$\times$ & 1,02$\times$ & 1,29$\times$ \\
+large & 88,03 & 87,70 & 86,61 & 1,02$\times$ & 1,01$\times$ & 1,26$\times$ \\
 \midrule
-challenge & small & 991,1 & 113,31 & 113,67 & 115,06 & 8,6$\times$ & 0,99$\times$ & 1,34$\times$ \\
+GM 9 ca chuẩn & -- & -- & -- & 1,03$\times$ & 1,01$\times$ & 1,28$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
-\centering
-\scriptsize GM 9 ca chuẩn: V5/V0 = 46,52$\times$, V5/V4 = 1,03$\times$ (nhanh hơn 9/9 ca), Dual/Seq = 1,01$\times$, Pre-S4 = 1,28$\times$.
-\par\tiny Tesla T4 (cùng phiên đo hợp nhất V0--V5, 25/11/2026; V0: 1 warm-up + 5 lượt đo, GPU V1--V5: 4 warm-up + 5 lượt đo).
+\smallskip
+\begin{itemize}
+\item V5 hai stream nhanh hơn V4 ở cả 9/9 cấu hình chuẩn (từ 1,005$\times$ đến 1,065$\times$) và nhanh hơn chế độ chạy nối tiếp ở 8/9 cấu hình.
+\item Đoạn tiền S4 (H2D + S1--S3) tăng tốc ổn định 1,26--1,29$\times$ ở cả ba độ phân giải (\texttt{site2/large}: 11,75 $\rightarrow$ 9,45 ms; tổng 59,99 ms, 98,3$\times$ so với V0).
+\end{itemize}
